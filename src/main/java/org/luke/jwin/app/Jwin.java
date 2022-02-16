@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.lang.module.ModuleDescriptor.Version;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -277,8 +279,8 @@ public class Jwin extends Application {
 					Consumer<String> append = path -> cpc.append(cpc.isEmpty() ? "" : ";").append(path);
 					append.accept(preBuildLibs.getAbsolutePath().concat("/*"));
 					cp.forEach(file -> append.accept(file.getAbsolutePath()));
-					Command compileCommand = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d "
-							+ preBuildBin.getAbsolutePath() + " " + launcher.getValue().getAbsolutePath());
+					Command compileCommand = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \""
+							+ preBuildBin.getAbsolutePath() + "\" \"" + launcher.getValue().getAbsolutePath()+ "\"");
 					try {
 						compileCommand
 								.execute(binDir,
@@ -324,19 +326,19 @@ public class Jwin extends Application {
 						x.printStackTrace();
 					}
 
-					File b2e = new File(getClass().getResource("/b2e.exe").getFile());
+					File b2e = new File(URLDecoder.decode(getClass().getResource("/b2e.exe").getFile(), Charset.defaultCharset()));
 
-					String convertCommand = b2e.getAbsolutePath() + " /bat " + preBuildBat.getAbsolutePath() + " /exe "
-							+ preBuildBat.getAbsolutePath().replace(".bat", ".exe") + " /invisible";
+					String convertCommand = "b2e /bat \"" + preBuildBat.getAbsolutePath() + "\" /exe \""
+							+ preBuildBat.getAbsolutePath().replace(".bat", ".exe") + "\" /invisible";
 
 					if (icon.getValue() != null) {
-						convertCommand += " /icon " + icon.getValue().getAbsolutePath();
+						convertCommand += " /icon \"" + icon.getValue().getAbsolutePath() + "\"";
 					}
 
 					Command convert = new Command("cmd.exe", "/C", convertCommand);
 
 					try {
-						convert.execute(preBuild).waitFor();
+						convert.execute(b2e.getParentFile()).waitFor();
 					} catch (InterruptedException e1) {
 						e1.printStackTrace();
 						Thread.currentThread().interrupt();
@@ -357,7 +359,7 @@ public class Jwin extends Application {
 							System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 					FileDealer.write(template, buildScript);
 
-					File ise = new File(getClass().getResource("/is/ISCC.exe").getFile());
+					File ise = new File(URLDecoder.decode(getClass().getResource("/is/ISCC.exe").getFile(), Charset.defaultCharset()));
 
 					int fileCount = countDir(preBuild);
 					int[] compressCount = new int[] { 0 };
@@ -369,21 +371,21 @@ public class Jwin extends Application {
 						}
 					};
 					Command build = new Command(buildLine, buildLine, "cmd.exe", "/C",
-							ise.getAbsolutePath() + " " + buildScript.getAbsolutePath());
+							"ISCC \"" + buildScript.getAbsolutePath() +"\"");
 
 					try {
-						build.execute(preBuild).waitFor();
+						build.execute(ise.getParentFile()).waitFor();
 					} catch (InterruptedException e1) {
 						e1.printStackTrace();
 						Thread.currentThread().interrupt();
 					}
 
-					try {
-						Files.walk(preBuild.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
-								.forEach(File::delete);
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
+//					try {
+//						Files.walk(preBuild.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
+//								.forEach(File::delete);
+//					} catch (IOException e1) {
+//						e1.printStackTrace();
+//					}
 
 					Platform.runLater(() -> {
 						state.setText("done");

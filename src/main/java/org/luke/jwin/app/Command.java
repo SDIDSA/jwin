@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
@@ -18,6 +20,10 @@ public class Command {
 		this.command = command;
 		this.inputHandler = inputHandler;
 		this.errorHandler = errorHandler;
+		
+		for(int i = 0; i<command.length;i++) {
+			command[i] = URLDecoder.decode(command[i], Charset.defaultCharset());
+		}
 	}
 
 	public Command(Consumer<String> inputHandler, String... command) {
@@ -40,6 +46,7 @@ public class Command {
 				String line;
 				try {
 					while ((line = br.readLine()) != null) {
+						System.out.println(line);
 						if (inputHandler != null)
 							inputHandler.accept(line);
 					}
@@ -55,6 +62,7 @@ public class Command {
 				String line;
 				try {
 					while ((line = br.readLine()) != null) {
+						System.out.println(line);
 						if (errorHandler != null)
 							errorHandler.accept(line);
 					}
