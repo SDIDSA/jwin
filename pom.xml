@@ -1,0 +1,24 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.luke</groupId>
+	<artifactId>jwin</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<description>a java tool to deploy java projects as windows apps</description>
+
+	<dependencies>
+	
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-controls</artifactId>
+			<version>19-ea+2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openjfx</groupId>
+			<artifactId>javafx-swing</artifactId>
+			<version>19-ea+2</version>
+		</dependency>
+		
+	</dependencies>
+</project>
