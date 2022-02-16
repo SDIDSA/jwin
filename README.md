@@ -17,3 +17,8 @@ a simple java tool to deploy maven based java apps to windows (planning to suppo
 ## how it works
 
 This tool will compile your source code (using the selected jdk) into a temp folder alongside with your resources / dependencies and the jre you selected, the generates a .bat file that runs the compiled code using the copied jre, then converts the bat into an exe using the Bat To Exe CLI, then packs everything with innoSetup CLI using a generated innoSetup script.
+
+## problems and notes
+
+- all the fields are required.
+- resources and java code can't exist within the same classpath entry, resources in an entry that contains java code will not be copied (working on a fix).
