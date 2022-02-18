@@ -1,5 +1,5 @@
 # jwin
-a simple java tool to deploy maven based java apps to windows (planning to support plain java projects in the next version).
+a simple java tool to deploy java apps to windows (supports plain java projects and maven projects for now).
 
 ## how to use
 
@@ -8,8 +8,9 @@ a simple java tool to deploy maven based java apps to windows (planning to suppo
 - select the jdk to be used to compile the java code. (can be automatically detected if you hava javac in your environment variable [path])
 - select the jre to be packed and deployed with your app. (an as or more recent version than the selected jdk)
 - select the icon (.ico) to be used for the launcher and the installer.
-- click "resolve" to resolve dependencies. (only works with the pom.xml dependencies for now, planning to add the option to include plain jars in the next version)
+- click "resolve" to resolve maven dependencies or "add jars" to add your dependencies manually.
 - enter app name, version and publisher.
+- save your project so you can use it later
 - click "build" and select the destination folder for your installer.
 - wait for the process to finish.
 - that's it, find your installer in the selected location.
