@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javafx.scene.control.Label;
+
 public class JavaParam extends Param {
 
 	protected File value;
@@ -53,6 +55,16 @@ public class JavaParam extends Param {
 	public boolean isJdk() {
 		File javac = new File(value.getAbsolutePath().concat("/bin/javac.exe"));
 		return javac.exists();
+	}
+
+	public void set(File dir) {
+		Entry<String, File> version = getVersionFromDir(dir);
+		if (version != null && version.getKey() != null) {
+			this.version = version.getKey().replace("\"", "");
+			list.getChildren().clear();
+			this.value = version.getValue();
+			addFile(value, value.getName(), new Label(this.version));
+		}
 	}
 
 	protected static HashMap<String, String> parseInputStream(InputStream is) throws IOException {

@@ -73,10 +73,9 @@ public class MainClassParam extends Param {
 						className.setEffect(ef);
 						className.setOnAction(a-> {
 							File file = new File(classNames.get(e).getAbsolutePath().concat("/").concat(e));
-							value = Map.entry(className.getText(), file);
+							Entry<String, File> preVal = Map.entry(className.getText(), file);
 							classChooser.close();
-							list.getChildren().clear();
-							addFile(file, className.getText());
+							set(preVal);
 						});
 						Platform.runLater(()-> results.getChildren().add(className));
 					});
@@ -98,6 +97,12 @@ public class MainClassParam extends Param {
 			classChooser.show();
 			classNames = classLister.get();
 		});
+	}
+	
+	public void set(Entry<String, File> value) {
+		this.value = value;
+		list.getChildren().clear();
+		addFile(value.getValue(), value.getKey());
 	}
 
 	public Entry<String, File> getValue() {

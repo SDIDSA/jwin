@@ -16,12 +16,16 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.Random;
+import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.luke.jwin.app.file.FileDealer;
+import org.luke.jwin.app.file.JWinProject;
 import org.luke.jwin.app.param.ClasspathParam;
 import org.luke.jwin.app.param.DependenciesParam;
 import org.luke.jwin.app.param.IconParam;
@@ -32,10 +36,13 @@ import org.luke.jwin.app.param.MainClassParam;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
@@ -48,12 +55,16 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 
 public class Jwin extends Application {
 
 	Random random = new Random();
 
+	private JWinProject projectFile;
+	
 	@Override
 	public void start(Stage ps) throws Exception {
 		HBox preRoot = new HBox(15);
@@ -67,7 +78,7 @@ public class Jwin extends Application {
 
 		MainClassParam mainClass = new MainClassParam(ps, classpath::listClasses);
 
-		DependenciesParam dependencies = new DependenciesParam(classpath::getPom);
+		DependenciesParam dependencies = new DependenciesParam(ps, classpath::getPom);
 
 		JdkParam jdk = new JdkParam(ps);
 		JreParam jre = new JreParam(ps);
@@ -78,11 +89,19 @@ public class Jwin extends Application {
 
 		Button compile = new Button("Build");
 		compile.setPadding(pad);
-		compile.setMinWidth(100);
+		compile.setMinWidth(60);
+
+		Button save = new Button("Save");
+		save.setPadding(pad);
+		save.setMinWidth(60);
+
+		Button load = new Button("Load");
+		load.setPadding(pad);
+		load.setMinWidth(60);
 
 		DirectoryChooser fc = new DirectoryChooser();
 
-		HBox bottom = new HBox(15);
+		HBox bottom = new HBox(10);
 		bottom.setAlignment(Pos.BOTTOM_CENTER);
 
 		ProgressBar progress = new ProgressBar();
@@ -102,13 +121,44 @@ public class Jwin extends Application {
 		TextVal version = new TextVal("Version");
 		TextVal publisher = new TextVal("Publisher");
 
+		CheckBox console = new CheckBox("Console");
+
+		TextField guid = new TextField();
+		guid.setPromptText("GUID");
+		guid.setEditable(false);
+		HBox.setHgrow(guid, Priority.ALWAYS);
+		
+		Button generate = new Button("Generate");
+		generate.setOnAction(e->guid.setText(UUID.randomUUID().toString()));
+		
+		Supplier<JWinProject> export = () -> new JWinProject(
+				classpath.getFiles(), 
+				mainClass.getValue(), 
+				jdk.getValue(), 
+				jre.getValue(), 
+				icon.getValue(), 
+				dependencies.getResolvedJars(), 
+				dependencies.getManualJars(), 
+				appName.getValue(), 
+				version.getValue(), 
+				publisher.getValue(), 
+				console.isSelected(),
+				guid.getText()
+		);
+		
+		HBox preConsole = new HBox(10);
+		preConsole.setAlignment(Pos.CENTER);
+		
+		preConsole.getChildren().addAll(console, new Separator(Orientation.VERTICAL), new Label("GUID"),guid, generate);
+		
 		HBox preBottom = new HBox(15, appName, version, publisher);
 
-		bottom.getChildren().addAll(progressCont, compile);
+		bottom.getChildren().addAll(progressCont, compile, save, load);
 
 		root1.getChildren().addAll(classpath, new Separator(), mainClass, vSpace(), jdk, jre);
 
-		root2.getChildren().addAll(icon, new Separator(), dependencies, vSpace(), preBottom, new Separator(), bottom);
+		root2.getChildren().addAll(icon, new Separator(), dependencies, preBottom, new Separator(), preConsole,
+				bottom);
 
 		preRoot.getChildren().addAll(root1, root2);
 
@@ -181,6 +231,30 @@ public class Jwin extends Application {
 				warn("Using JDK as a runtime", "not recommended unless required by your app (increases package size)");
 			}
 
+			if(projectFile == null) {
+				alert("Do you want to save the project before building ?", "It is recommended to save this project so you can use the same GUID when you build it again, do not use the same GUID with different projects", AlertType.CONFIRMATION, res -> {
+					if(res.equals(ButtonType.OK)) {
+						save.fire();
+						return;
+					}
+				});
+			}else {
+				List<String> diffs = export.get().compare(projectFile);
+				
+				if(!diffs.isEmpty()) {
+					StringBuilder diffStr = new StringBuilder();
+					diffs.forEach(diff -> diffStr.append("\t").append(diff).append("\n"));
+					
+					alert("Do you want to save the changes you made ?", "You made changes to the following properties : \n\t" + diffStr.toString().trim(), AlertType.CONFIRMATION, res -> {
+						if(res.equals(ButtonType.OK)) {
+							save.fire();
+							return;
+						}
+					});
+				}
+			}
+			
+			alert("Select output directory", "select the directory where you want to save the generated installer", AlertType.INFORMATION);
 			File saveTo = fc.showDialog(ps);
 			if (saveTo != null) {
 				compile.setDisable(true);
@@ -280,7 +354,7 @@ public class Jwin extends Application {
 					append.accept(preBuildLibs.getAbsolutePath().concat("/*"));
 					cp.forEach(file -> append.accept(file.getAbsolutePath()));
 					Command compileCommand = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \""
-							+ preBuildBin.getAbsolutePath() + "\" \"" + launcher.getValue().getAbsolutePath()+ "\"");
+							+ preBuildBin.getAbsolutePath() + "\" \"" + launcher.getValue().getAbsolutePath() + "\"");
 					try {
 						compileCommand
 								.execute(binDir,
@@ -326,11 +400,15 @@ public class Jwin extends Application {
 						x.printStackTrace();
 					}
 
-					File b2e = new File(URLDecoder.decode(getClass().getResource("/b2e.exe").getFile(), Charset.defaultCharset()));
+					File b2e = new File(
+							URLDecoder.decode(getClass().getResource("/b2e.exe").getFile(), Charset.defaultCharset()));
 
 					String convertCommand = "b2e /bat \"" + preBuildBat.getAbsolutePath() + "\" /exe \""
-							+ preBuildBat.getAbsolutePath().replace(".bat", ".exe") + "\" /invisible";
+							+ preBuildBat.getAbsolutePath().replace(".bat", ".exe") + "\"";
 
+					if (!console.isSelected()) {
+						convertCommand += " /invisible";
+					}
 					if (icon.getValue() != null) {
 						convertCommand += " /icon \"" + icon.getValue().getAbsolutePath() + "\"";
 					}
@@ -354,12 +432,14 @@ public class Jwin extends Application {
 									appName.getValue().concat("_").concat(version.getValue().replace(".", "-"))
 											.concat("_installer"))
 							.replace(key("app_icon"), icon.getValue().getAbsolutePath())
-							.replace(key("prebuild_path"), preBuild.getAbsolutePath());
+							.replace(key("prebuild_path"), preBuild.getAbsolutePath())
+							.replace(key("GUID"), guid.getText());
 					File buildScript = new File(
 							System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 					FileDealer.write(template, buildScript);
 
-					File ise = new File(URLDecoder.decode(getClass().getResource("/is/ISCC.exe").getFile(), Charset.defaultCharset()));
+					File ise = new File(URLDecoder.decode(getClass().getResource("/is/ISCC.exe").getFile(),
+							Charset.defaultCharset()));
 
 					int fileCount = countDir(preBuild);
 					int[] compressCount = new int[] { 0 };
@@ -371,7 +451,7 @@ public class Jwin extends Application {
 						}
 					};
 					Command build = new Command(buildLine, buildLine, "cmd.exe", "/C",
-							"ISCC \"" + buildScript.getAbsolutePath() +"\"");
+							"ISCC \"" + buildScript.getAbsolutePath() + "\"");
 
 					try {
 						build.execute(ise.getParentFile()).waitFor();
@@ -380,12 +460,12 @@ public class Jwin extends Application {
 						Thread.currentThread().interrupt();
 					}
 
-//					try {
-//						Files.walk(preBuild.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
-//								.forEach(File::delete);
-//					} catch (IOException e1) {
-//						e1.printStackTrace();
-//					}
+					try {
+						Files.walk(preBuild.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
+								.forEach(File::delete);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
 
 					Platform.runLater(() -> {
 						state.setText("done");
@@ -394,6 +474,40 @@ public class Jwin extends Application {
 					});
 				}).start();
 
+			}
+		});
+		
+		FileChooser saver = new FileChooser();
+		saver.getExtensionFilters().add(new ExtensionFilter("jWin Project", "*.jwp"));
+		save.setOnAction(e-> {
+			JWinProject project = export.get();
+			File saveTo = saver.showSaveDialog(ps);
+			if(saveTo != null) {
+				FileDealer.write(project.serialize(), saveTo);
+				projectFile = project;
+			}
+			
+		});
+		
+		load.setOnAction(e-> {
+			File loadFrom = saver.showOpenDialog(ps);
+			if(loadFrom != null) {
+				JWinProject project = JWinProject.deserialize(FileDealer.read(loadFrom));
+				
+				project.getClasspath().forEach(classpath::add);
+				mainClass.set(project.getMainClass());
+				jdk.set(project.getJdk());
+				jre.set(project.getJre());
+				icon.set(project.getIcon());
+				project.getResolvedJars().forEach(dependencies::addResolvedJar);
+				project.getManualJars().forEach(dependencies::addManualJar);
+				appName.setValue(project.getAppName());
+				version.setValue(project.getAppVersion());
+				publisher.setValue(project.getAppPublisher());
+				console.setSelected(project.isConsole());
+				guid.setText(project.getGuid());
+				
+				projectFile = project;
 			}
 		});
 	}
@@ -444,10 +558,17 @@ public class Jwin extends Application {
 	}
 
 	private void alert(String head, String content, AlertType type) {
+		alert(head, content, type, null);
+	}
+	
+	private void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes) {
 		Alert al = new Alert(type);
 		al.setHeaderText(head);
 		al.setContentText(content);
-		al.showAndWait();
+		Optional<ButtonType> res = al.showAndWait();
+		if(onRes != null && res.isPresent()) {
+			onRes.accept(res.get());
+		}
 	}
 
 	private Pane vSpace() {

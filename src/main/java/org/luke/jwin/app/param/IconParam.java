@@ -18,11 +18,15 @@ public class IconParam extends Param {
 		addButton("select", e-> {
 			File ico = fc.showOpenDialog(ps);
 			if(ico != null) {
-				list.getChildren().clear();
-				value = ico;
-				addFile(ico, ico.getName());
+				set(ico);
 			}
 		});
+	}
+	
+	public void set(File ico) {
+		list.getChildren().clear();
+		value = ico;
+		addFile(ico, ico.getName());
 	}
 	
 	public File getValue() {

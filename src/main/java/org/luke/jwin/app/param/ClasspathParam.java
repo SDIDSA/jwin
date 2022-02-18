@@ -15,26 +15,36 @@ public class ClasspathParam extends Param {
 
 	private ArrayList<File> files;
 
+	private DirectoryChooser dc;
+	
 	public ClasspathParam(Stage ps) {
 		super("Classpath");
 		files = new ArrayList<>();
 
-		DirectoryChooser dc = new DirectoryChooser();
+		dc = new DirectoryChooser();
 		addButton("add", e -> {
 			File dir = dc.showDialog(ps);
 			if (dir != null) {
-				File projectRoot = findProjectRoot(dir);
-				dc.setInitialDirectory(projectRoot);
-
-				Hyperlink remove = new Hyperlink("remove");
-				HBox line = addFile(dir, projectRoot.toURI().relativize(dir.toURI()).toString(), remove);
-				files.add(dir);
-
-				remove.setOnAction(ev -> {
-					list.getChildren().remove(line);
-					files.remove(dir);
-				});
+				add(dir);
 			}
+		});
+	}
+	
+	public void add(File dir) {
+		File projectRoot = findProjectRoot(dir);
+		dc.setInitialDirectory(projectRoot);
+
+		Hyperlink remove = new Hyperlink("remove");
+		HBox line = addFile(dir,
+				projectRoot == null
+						? dir.getParentFile().getParentFile().toURI().relativize(dir.toURI()).toString()
+						: projectRoot.toURI().relativize(dir.toURI()).toString(),
+				remove);
+		files.add(dir);
+
+		remove.setOnAction(ev -> {
+			list.getChildren().remove(line);
+			files.remove(dir);
 		});
 	}
 
@@ -71,6 +81,10 @@ public class ClasspathParam extends Param {
 		File parent = file.getParentFile();
 		File pom = null;
 
+		if (parent == null) {
+			return parent;
+		}
+
 		for (File sf : parent.listFiles()) {
 			if (sf.getName().equals("pom.xml")) {
 				pom = sf;
@@ -89,10 +103,13 @@ public class ClasspathParam extends Param {
 		ArrayList<File> res = new ArrayList<>();
 
 		for (File file : files) {
-			for (File sf : findProjectRoot(file).listFiles()) {
-				if (sf.getName().equals("pom.xml") && !res.contains(sf)) {
-					res.add(sf);
-					break;
+			File root = findProjectRoot(file);
+			if(root != null) {
+				for (File sf : root.listFiles()) {
+					if (sf.getName().equals("pom.xml") && !res.contains(sf)) {
+						res.add(sf);
+						break;
+					}
 				}
 			}
 		}

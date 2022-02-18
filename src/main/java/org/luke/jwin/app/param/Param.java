@@ -40,6 +40,8 @@ public class Param extends StackPane {
 	private VBox root;
 	private ProgressIndicator pi;
 	
+	protected ScrollPane sp;
+	
 	public Param(String name) {
 		setMinWidth(424);
 		root = new VBox(10);
@@ -62,7 +64,7 @@ public class Param extends StackPane {
 		list.setPadding(new Insets(10));
 		list.setAlignment(Pos.CENTER);
 		
-		ScrollPane sp = new ScrollPane(list);
+		sp = new ScrollPane(list);
 		sp.setFitToWidth(true);
 		
 		list.minHeightProperty().bind(sp.heightProperty().subtract(4));
@@ -106,6 +108,17 @@ public class Param extends StackPane {
 		}
 		
 		list.getChildren().addAll(line);
+		
+		return line;
+	}
+	
+	protected HBox generateLine(File file, String name, Node... post) {
+		HBox line = new HBox(10, new ImageView(typeIcon(file)), new Label(name), hSpace());
+		line.setAlignment(Pos.CENTER);
+		
+		for(Node inf : post) {
+			line.getChildren().add(inf);
+		}
 		
 		return line;
 	}

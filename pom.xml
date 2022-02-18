@@ -8,17 +8,22 @@
 	<description>a java tool to deploy java projects as windows apps</description>
 
 	<dependencies>
-	
+
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-controls</artifactId>
-			<version>19-ea+2</version>
+			<version>17.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-swing</artifactId>
-			<version>19-ea+2</version>
+			<version>17.0.2</version>
 		</dependency>
-		
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20210307</version>
+		</dependency>
+
 	</dependencies>
 </project>

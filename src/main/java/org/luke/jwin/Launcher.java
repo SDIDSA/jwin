@@ -1,6 +1,7 @@
 package org.luke.jwin;
 
 import org.luke.jwin.app.Jwin;
+
 import javafx.application.Application;
 
 public class Launcher {

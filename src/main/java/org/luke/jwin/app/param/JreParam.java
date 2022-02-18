@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.zip.ZipFile;
 
 import javafx.scene.control.Label;
@@ -24,13 +23,7 @@ public class JreParam extends JavaParam {
 		addButton("directory", e -> {
 			File dir = dc.showDialog(ps);
 			if (dir != null) {
-				Entry<String, File> version = getVersionFromDir(dir);
-				if (version != null && version.getKey() != null) {
-					this.version = version.getKey().replace("\"", "");
-					list.getChildren().clear();
-					this.value = version.getValue();
-					addFile(value, value.getName(), new Label(this.version));
-				}
+				set(dir);
 			}
 		});
 
@@ -39,15 +32,24 @@ public class JreParam extends JavaParam {
 		addButton("archive", e -> {
 			File file = fc.showOpenDialog(ps);
 			if (file != null) {
-				String version = getVersionFromZip(file);
-				if (version != null) {
-					this.version = version.replace("\"", "");
-					list.getChildren().clear();
-					this.value = file;
-					addFile(file, file.getName(), new Label(this.version));
-				}
+				set(file);
 			}
 		});
+	}
+	
+	@Override
+	public void set(File file) {
+		if(file.isDirectory()) {
+			super.set(file);
+		}else {
+			String version = getVersionFromZip(file);
+			if (version != null) {
+				this.version = version.replace("\"", "");
+				list.getChildren().clear();
+				this.value = file;
+				addFile(file, file.getName(), new Label(this.version));
+			}
+		}
 	}
 
 	public static String getVersionFromZip(File file) {
