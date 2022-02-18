@@ -10,7 +10,7 @@ a simple java tool to deploy java apps to windows (supports plain java projects 
 - select the icon (.ico) to be used for the launcher and the installer.
 - click "resolve" to resolve maven dependencies or "add jars" to add your dependencies manually.
 - enter app name, version and publisher.
-- save your project so you can use it later
+- save your project so you can use it later.
 - click "build" and select the destination folder for your installer.
 - wait for the process to finish.
 - that's it, find your installer in the selected location.

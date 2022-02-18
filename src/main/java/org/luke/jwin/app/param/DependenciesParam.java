@@ -156,4 +156,13 @@ public class DependenciesParam extends Param {
 		return manualJars;
 	}
 
+	@Override
+	public void clear() {
+		manualJars.clear();
+		resolvedJars.clear();
+		
+		manualList.getChildren().clear();
+		resolvedList.getChildren().clear();
+	}
+
 }

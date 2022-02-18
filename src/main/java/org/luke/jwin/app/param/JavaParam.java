@@ -6,10 +6,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.zip.ZipFile;
 
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 
 public class JavaParam extends Param {
@@ -20,11 +24,11 @@ public class JavaParam extends Param {
 	public JavaParam(String name) {
 		super(name);
 	}
-	
+
 	public File getValue() {
 		return value;
 	}
-	
+
 	public String getVersion() {
 		return version;
 	}
@@ -51,20 +55,74 @@ public class JavaParam extends Param {
 
 		return null;
 	}
-	
+
+	public static String getVersionFromZip(File file) {
+		try {
+			ZipFile arch = new ZipFile(file);
+			HashMap<String, String> meta = new HashMap<>();
+			arch.entries().asIterator().forEachRemaining(entry -> {
+				Path path = Paths.get(entry.getName());
+				if (path.endsWith("release")) {
+					try {
+						InputStream is = arch.getInputStream(entry);
+
+						meta.putAll(parseInputStream(is));
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+				}
+			});
+			arch.close();
+			return meta.get("JAVA_VERSION");
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		return null;
+	}
+
 	public boolean isJdk() {
 		File javac = new File(value.getAbsolutePath().concat("/bin/javac.exe"));
 		return javac.exists();
 	}
 
-	public void set(File dir) {
-		Entry<String, File> version = getVersionFromDir(dir);
-		if (version != null && version.getKey() != null) {
-			this.version = version.getKey().replace("\"", "");
-			list.getChildren().clear();
-			this.value = version.getValue();
-			addFile(value, value.getName(), new Label(this.version));
+	public void set(File file) {
+		if (file.isDirectory()) {
+			setDir(file);
+		} else {
+			setZip(file);
 		}
+	}
+
+	public void setDir(File dir) {
+		startLoading();
+		new Thread(() -> {
+			Entry<String, File> version = getVersionFromDir(dir);
+			if (version != null && version.getKey() != null) {
+				this.version = version.getKey().replace("\"", "");
+				this.value = version.getValue();
+				Platform.runLater(() -> {
+					list.getChildren().clear();
+					addFile(value, value.getName(), new Label(this.version));
+				});
+			}
+			Platform.runLater(this::stopLoading);
+		}).start();
+	}
+
+	public void setZip(File file) {
+		startLoading();
+		new Thread(() -> {
+			String version = getVersionFromZip(file);
+			if (version != null) {
+				this.version = version.replace("\"", "");
+				this.value = file;
+				Platform.runLater(() -> {
+					list.getChildren().clear();
+					addFile(file, file.getName(), new Label(this.version));
+				});
+			}
+			Platform.runLater(this::stopLoading);
+		}).start();
 	}
 
 	protected static HashMap<String, String> parseInputStream(InputStream is) throws IOException {
@@ -82,5 +140,12 @@ public class JavaParam extends Param {
 		br.close();
 
 		return data;
+	}
+
+	@Override
+	public void clear() {
+		value = null;
+		version = null;
+		list.getChildren().clear();
 	}
 }

@@ -33,4 +33,10 @@ public class IconParam extends Param {
 		return value;
 	}
 
+	@Override
+	public void clear() {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

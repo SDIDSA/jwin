@@ -109,4 +109,10 @@ public class MainClassParam extends Param {
 		return value;
 	}
 
+	@Override
+	public void clear() {
+		value = null;
+		list.getChildren().clear();
+	}
+
 }

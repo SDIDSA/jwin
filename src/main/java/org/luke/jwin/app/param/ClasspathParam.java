@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.application.Platform;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
@@ -31,22 +32,38 @@ public class ClasspathParam extends Param {
 	}
 	
 	public void add(File dir) {
-		File projectRoot = findProjectRoot(dir);
-		dc.setInitialDirectory(projectRoot);
+		startLoading();
+		new Thread(()-> {
+			File projectRoot = findProjectRoot(dir);
+			dc.setInitialDirectory(projectRoot);
 
-		Hyperlink remove = new Hyperlink("remove");
-		HBox line = addFile(dir,
-				projectRoot == null
-						? dir.getParentFile().getParentFile().toURI().relativize(dir.toURI()).toString()
-						: projectRoot.toURI().relativize(dir.toURI()).toString(),
-				remove);
-		files.add(dir);
+			Hyperlink remove = new Hyperlink("remove");
+			HBox line = generateLine(dir,
+					projectRoot == null
+							? dir.getParentFile().getParentFile().toURI().relativize(dir.toURI()).toString()
+							: projectRoot.toURI().relativize(dir.toURI()).toString(),
+					remove);
+			files.add(dir);
 
-		remove.setOnAction(ev -> {
-			list.getChildren().remove(line);
-			files.remove(dir);
-		});
+			remove.setOnAction(ev -> {
+				list.getChildren().remove(line);
+				files.remove(dir);
+			});
+			
+			Platform.runLater(()-> {
+				list.getChildren().add(line);
+				stopLoading();
+			});
+		}).start();	
 	}
+	
+	@Override
+	public void clear() {
+		files.clear();
+		list.getChildren().clear();
+	}
+	
+	
 
 	public Map<String, File> listClasses() {
 		HashMap<String, File> res = new HashMap<>();

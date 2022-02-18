@@ -32,6 +32,7 @@ import org.luke.jwin.app.param.IconParam;
 import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.app.param.JreParam;
 import org.luke.jwin.app.param.MainClassParam;
+import org.luke.jwin.app.param.Param;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -45,6 +46,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -64,9 +66,14 @@ public class Jwin extends Application {
 	Random random = new Random();
 
 	private JWinProject projectFile;
-	
+
 	@Override
 	public void start(Stage ps) throws Exception {
+		StackPane loader = new StackPane();
+		ProgressIndicator loading = new ProgressIndicator();
+		loading.setMouseTransparent(true);
+		loading.setVisible(false);
+
 		HBox preRoot = new HBox(15);
 		preRoot.setPadding(new Insets(15));
 
@@ -127,42 +134,32 @@ public class Jwin extends Application {
 		guid.setPromptText("GUID");
 		guid.setEditable(false);
 		HBox.setHgrow(guid, Priority.ALWAYS);
-		
+
 		Button generate = new Button("Generate");
-		generate.setOnAction(e->guid.setText(UUID.randomUUID().toString()));
-		
-		Supplier<JWinProject> export = () -> new JWinProject(
-				classpath.getFiles(), 
-				mainClass.getValue(), 
-				jdk.getValue(), 
-				jre.getValue(), 
-				icon.getValue(), 
-				dependencies.getResolvedJars(), 
-				dependencies.getManualJars(), 
-				appName.getValue(), 
-				version.getValue(), 
-				publisher.getValue(), 
-				console.isSelected(),
-				guid.getText()
-		);
-		
+		generate.setOnAction(e -> guid.setText(UUID.randomUUID().toString()));
+
+		Supplier<JWinProject> export = () -> new JWinProject(classpath.getFiles(), mainClass.getValue(), jdk.getValue(),
+				jre.getValue(), icon.getValue(), dependencies.getResolvedJars(), dependencies.getManualJars(),
+				appName.getValue(), version.getValue(), publisher.getValue(), console.isSelected(), guid.getText());
+
 		HBox preConsole = new HBox(10);
 		preConsole.setAlignment(Pos.CENTER);
-		
-		preConsole.getChildren().addAll(console, new Separator(Orientation.VERTICAL), new Label("GUID"),guid, generate);
-		
+
+		preConsole.getChildren().addAll(console, new Separator(Orientation.VERTICAL), new Label("GUID"), guid,
+				generate);
+
 		HBox preBottom = new HBox(15, appName, version, publisher);
 
 		bottom.getChildren().addAll(progressCont, compile, save, load);
 
 		root1.getChildren().addAll(classpath, new Separator(), mainClass, vSpace(), jdk, jre);
 
-		root2.getChildren().addAll(icon, new Separator(), dependencies, preBottom, new Separator(), preConsole,
-				bottom);
+		root2.getChildren().addAll(icon, new Separator(), dependencies, preBottom, new Separator(), preConsole, bottom);
 
 		preRoot.getChildren().addAll(root1, root2);
 
-		Scene scene = new Scene(preRoot);
+		loader.getChildren().addAll(preRoot, loading);
+		Scene scene = new Scene(loader);
 
 		ps.setScene(scene);
 		ps.setHeight(516);
@@ -231,30 +228,43 @@ public class Jwin extends Application {
 				warn("Using JDK as a runtime", "not recommended unless required by your app (increases package size)");
 			}
 
-			if(projectFile == null) {
-				alert("Do you want to save the project before building ?", "It is recommended to save this project so you can use the same GUID when you build it again, do not use the same GUID with different projects", AlertType.CONFIRMATION, res -> {
-					if(res.equals(ButtonType.OK)) {
-						save.fire();
-						return;
-					}
-				});
-			}else {
+			if (projectFile == null) {
+				alert("Do you want to save the project before building ?",
+						"It is recommended to save this project so you can use the same GUID when you build it again, do not use the same GUID with different projects",
+						AlertType.CONFIRMATION, res -> {
+							if (res.equals(ButtonType.OK)) {
+								save.fire();
+								return;
+							}
+						});
+			} else {
 				List<String> diffs = export.get().compare(projectFile);
-				
-				if(!diffs.isEmpty()) {
+
+				if (!diffs.isEmpty()) {
 					StringBuilder diffStr = new StringBuilder();
 					diffs.forEach(diff -> diffStr.append("\t").append(diff).append("\n"));
-					
-					alert("Do you want to save the changes you made ?", "You made changes to the following properties : \n\t" + diffStr.toString().trim(), AlertType.CONFIRMATION, res -> {
-						if(res.equals(ButtonType.OK)) {
-							save.fire();
-							return;
-						}
-					});
+
+					alert("Do you want to save the changes you made ?",
+							"You made changes to the following properties : \n\t" + diffStr.toString().trim(),
+							AlertType.CONFIRMATION, res -> {
+								if (res.equals(ButtonType.OK)) {
+									save.fire();
+									return;
+								}
+							});
 				}
 			}
-			
-			alert("Select output directory", "select the directory where you want to save the generated installer", AlertType.INFORMATION);
+
+			boolean[] contin = new boolean[] { false };
+			alert("Select output directory", "select the directory where you want to save the generated installer",
+					AlertType.CONFIRMATION, res -> {
+						if (res.equals(ButtonType.OK)) {
+							contin[0] = true;
+						}
+					});
+			if (!contin[0]) {
+				return;
+			}
 			File saveTo = fc.showDialog(ps);
 			if (saveTo != null) {
 				compile.setDisable(true);
@@ -476,40 +486,65 @@ public class Jwin extends Application {
 
 			}
 		});
-		
+
 		FileChooser saver = new FileChooser();
 		saver.getExtensionFilters().add(new ExtensionFilter("jWin Project", "*.jwp"));
-		save.setOnAction(e-> {
+		save.setOnAction(e -> {
 			JWinProject project = export.get();
 			File saveTo = saver.showSaveDialog(ps);
-			if(saveTo != null) {
+			if (saveTo != null) {
 				FileDealer.write(project.serialize(), saveTo);
 				projectFile = project;
 			}
-			
+
 		});
-		
-		load.setOnAction(e-> {
+
+		load.setOnAction(e -> {
 			File loadFrom = saver.showOpenDialog(ps);
-			if(loadFrom != null) {
-				JWinProject project = JWinProject.deserialize(FileDealer.read(loadFrom));
-				
-				project.getClasspath().forEach(classpath::add);
-				mainClass.set(project.getMainClass());
-				jdk.set(project.getJdk());
-				jre.set(project.getJre());
-				icon.set(project.getIcon());
-				project.getResolvedJars().forEach(dependencies::addResolvedJar);
-				project.getManualJars().forEach(dependencies::addManualJar);
-				appName.setValue(project.getAppName());
-				version.setValue(project.getAppVersion());
-				publisher.setValue(project.getAppPublisher());
-				console.setSelected(project.isConsole());
-				guid.setText(project.getGuid());
-				
-				projectFile = project;
+			if (loadFrom != null) {
+				preRoot.setDisable(true);
+				loading.setVisible(true);
+				new Thread(() -> {
+					JWinProject project = JWinProject.deserialize(FileDealer.read(loadFrom));
+
+					runOnUiThread(Param::clearAll);
+					project.getClasspath().forEach(f -> runOnUiThread(() -> classpath.add(f)));
+					runOnUiThread(() -> mainClass.set(project.getMainClass()));
+					runOnUiThread(() -> jdk.set(project.getJdk()));
+					runOnUiThread(() -> jre.set(project.getJre()));
+					runOnUiThread(() -> icon.set(project.getIcon()));
+					runOnUiThread(() -> appName.setValue(project.getAppName()));
+					runOnUiThread(() -> version.setValue(project.getAppVersion()));
+					runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
+					runOnUiThread(() -> console.setSelected(project.isConsole()));
+					runOnUiThread(() -> guid.setText(project.getGuid()));
+
+					project.getResolvedJars().forEach(f -> runOnUiThread(() -> dependencies.addResolvedJar(f)));
+					project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
+
+					projectFile = project;
+
+					Platform.runLater(() -> {
+						preRoot.setDisable(false);
+						loading.setVisible(false);
+					});
+				}).start();
 			}
 		});
+	}
+
+	private static void runOnUiThread(Runnable r) {
+		Platform.runLater(r);
+		sleep(50);
+	}
+
+	private static void sleep(long dur) {
+		try {
+			Thread.sleep(dur);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	private String key(String val) {
@@ -560,13 +595,13 @@ public class Jwin extends Application {
 	private void alert(String head, String content, AlertType type) {
 		alert(head, content, type, null);
 	}
-	
+
 	private void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes) {
 		Alert al = new Alert(type);
 		al.setHeaderText(head);
 		al.setContentText(content);
 		Optional<ButtonType> res = al.showAndWait();
-		if(onRes != null && res.isPresent()) {
+		if (onRes != null && res.isPresent()) {
 			onRes.accept(res.get());
 		}
 	}
