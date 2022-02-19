@@ -108,6 +108,16 @@ public class DependenciesParam extends Param {
 					for (File f : temp.listFiles()) {
 						Platform.runLater(() -> addResolvedJar(f));
 					}
+					
+					final File folder = temp;
+					
+					Runtime.getRuntime().addShutdownHook(new Thread(()-> {
+						for(File file : folder.listFiles()) {
+							file.delete();
+						}
+						
+						folder.delete();
+					}));
 				});
 
 				Platform.runLater(() -> {

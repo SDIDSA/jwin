@@ -323,6 +323,15 @@ public class Jwin extends Application {
 							System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
 					preBuild.mkdir();
 
+					Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+						try {
+							Files.walk(preBuild.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
+									.forEach(File::delete);
+						} catch (IOException e1) {
+							e1.printStackTrace();
+						}
+					}));
+
 					Platform.runLater(() -> state.setText("Copying dependencies"));
 					File preBuildLibs = dependencies.copy(preBuild, progress);
 
@@ -434,22 +443,6 @@ public class Jwin extends Application {
 						Thread.currentThread().interrupt();
 					}
 
-					try {
-						Files.walk(preBuild.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
-								.forEach(File::delete);
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-
-					dependencies.getResolvedJars().forEach(file -> {
-						boolean last = file.getParentFile().listFiles().length == 1;
-
-						file.delete();
-						if (last) {
-							file.getParentFile().delete();
-						}
-					});
-
 					Platform.runLater(() -> {
 						state.setText("done");
 						progress.setProgress(-1);
@@ -494,7 +487,7 @@ public class Jwin extends Application {
 				project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
 				runOnUiThread(() -> moreSettings.setFileTypeAssociation(project.getFileTypeAsso()));
-				
+
 				projectFile = project;
 
 				Platform.runLater(() -> {
