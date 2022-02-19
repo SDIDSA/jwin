@@ -22,4 +22,3 @@ This tool will compile your source code (using the selected jdk) into a temp fol
 ## problems and notes
 
 - all the fields are required.
-- resources and java code can't exist within the same classpath entry, resources in an entry that contains java code will not be copied (working on a fix).
