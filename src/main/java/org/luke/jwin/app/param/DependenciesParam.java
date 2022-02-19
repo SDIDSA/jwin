@@ -1,6 +1,9 @@
 package org.luke.jwin.app.param;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -13,6 +16,7 @@ import javafx.geometry.Insets;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Hyperlink;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -154,6 +158,27 @@ public class DependenciesParam extends Param {
 	
 	public List<File> getManualJars() {
 		return manualJars;
+	}
+	
+	public File copy(File preBuild, ProgressBar progress) {
+		List<File> deps = getJars();
+		
+		File preBuildLibs = new File(preBuild.getAbsolutePath().concat("/lib"));
+		preBuildLibs.mkdir();
+		
+		for (int i = 0; i < deps.size(); i++) {
+			File dep = deps.get(i);
+			try {
+				Files.copy(dep.toPath(),
+						Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+			final int fi = i;
+			Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
+		}
+		
+		return preBuildLibs;
 	}
 
 	@Override

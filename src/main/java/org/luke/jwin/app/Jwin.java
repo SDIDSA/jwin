@@ -1,11 +1,7 @@
 package org.luke.jwin.app;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.lang.module.ModuleDescriptor.Version;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
@@ -13,7 +9,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -21,11 +16,10 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.Random;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
 import org.luke.jwin.app.file.FileDealer;
+import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.JWinProject;
+import org.luke.jwin.app.more.MoreSettings;
 import org.luke.jwin.app.param.ClasspathParam;
 import org.luke.jwin.app.param.DependenciesParam;
 import org.luke.jwin.app.param.IconParam;
@@ -107,10 +101,10 @@ public class Jwin extends Application {
 		load.setMinWidth(60);
 
 		VBox saveLoad = new VBox(5, save, load);
-		
+
 		compile.minHeightProperty().bind(saveLoad.heightProperty());
 		advanced.minHeightProperty().bind(saveLoad.heightProperty());
-		
+
 		DirectoryChooser fc = new DirectoryChooser();
 
 		HBox bottom = new HBox(10);
@@ -142,6 +136,10 @@ public class Jwin extends Application {
 		Button generate = new Button("Generate");
 		generate.setOnAction(e -> guid.setText(UUID.randomUUID().toString()));
 
+		MoreSettings moreSettings = new MoreSettings(ps);
+
+		advanced.setOnAction(e -> moreSettings.show());
+
 		Supplier<JWinProject> export = () -> new JWinProject(classpath.getFiles(), mainClass.getValue(), jdk.getValue(),
 				jre.getValue(), icon.getValue(), dependencies.getResolvedJars(), dependencies.getManualJars(),
 				appName.getValue(), version.getValue(), publisher.getValue(), console.isSelected(), guid.getText());
@@ -164,7 +162,7 @@ public class Jwin extends Application {
 
 		HBox.setHgrow(root2, Priority.ALWAYS);
 		HBox.setHgrow(root1, Priority.ALWAYS);
-		
+
 		loader.getChildren().addAll(preRoot, loading);
 		Scene scene = new Scene(loader);
 
@@ -197,8 +195,6 @@ public class Jwin extends Application {
 				error("Main class required", "You didn't specify the main class for your application");
 				return;
 			}
-
-			List<File> deps = dependencies.getJars();
 
 			File dk = jdk.getValue();
 
@@ -233,45 +229,46 @@ public class Jwin extends Application {
 				return;
 			}
 
-
 			boolean[] contin = new boolean[] { true };
-			
+
 			ButtonType useDefault = new ButtonType("use default");
 			ButtonType select = new ButtonType("select now");
-			if(icon.getValue() == null || !icon.getValue().exists()) {
+			if (icon.getValue() == null || !icon.getValue().exists()) {
 				contin[0] = false;
 				alert("Missing icon", "you didn't select an icon for your app", AlertType.WARNING, res -> {
-					if(res.equals(select)) {
+					if (res.equals(select)) {
 						icon.select(ps);
-						if(icon.getValue() != null) {
+						if (icon.getValue() != null) {
 							contin[0] = true;
 						}
-					}else if(res.equals(useDefault)) {
-						icon.set(new File(URLDecoder.decode(getClass().getResource("/def.ico").getFile(), Charset.defaultCharset())));
-						if(icon.getValue() != null) {
+					} else if (res.equals(useDefault)) {
+						icon.set(new File(URLDecoder.decode(getClass().getResource("/def.ico").getFile(),
+								Charset.defaultCharset())));
+						if (icon.getValue() != null) {
 							contin[0] = true;
 						}
 					}
-			
+
 				}, useDefault, select, ButtonType.CANCEL);
 			}
-			
-			if(!contin[0]) {
+
+			if (!contin[0]) {
 				return;
 			}
-			
-			if(appName.getValue().isBlank()) {
+
+			if (appName.getValue().isBlank()) {
 				error("Missing app name", "The application name field is required");
 				return;
 			}
-			
-			if(appName.getValue().isBlank()) {
+
+			if (appName.getValue().isBlank()) {
 				error("Missing app version", "The application version field is required");
 				return;
 			}
-			
-			if(guid.getText().isBlank()) {
-				error("Missing app GUID", "click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
+
+			if (guid.getText().isBlank()) {
+				error("Missing app GUID",
+						"click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
 				return;
 			}
 
@@ -306,7 +303,7 @@ public class Jwin extends Application {
 							});
 				}
 			}
-			
+
 			contin[0] = false;
 			alert("Select output directory", "select the directory where you want to save the generated installer",
 					AlertType.CONFIRMATION, res -> {
@@ -326,141 +323,25 @@ public class Jwin extends Application {
 					preBuild.mkdir();
 
 					Platform.runLater(() -> state.setText("Copying dependencies"));
-					File preBuildLibs = new File(preBuild.getAbsolutePath().concat("/lib"));
-					preBuildLibs.mkdir();
-					for (int i = 0; i < deps.size(); i++) {
-						File dep = deps.get(i);
-						try {
-							Files.copy(dep.toPath(),
-									Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						}
-						final int fi = i;
-						Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
-					}
+					File preBuildLibs = dependencies.copy(preBuild, progress);
 
 					Platform.runLater(() -> state.setText("Copying runtime"));
-					File preBuildRt = new File(preBuild.getAbsolutePath().concat("/rt"));
-					preBuildRt.mkdir();
-					if (rt.isFile()) {
-						try {
-							ZipFile zip = new ZipFile(rt);
-
-							String[] rootEntryPath = new String[1];
-
-							Iterator<? extends ZipEntry> it = zip.entries().asIterator();
-							int entryCount = 0;
-							while (it.hasNext()) {
-								entryCount++;
-								Path path = Path.of(it.next().getName());
-								if (path.endsWith("java.exe")) {
-									String rootPath = "";
-									for (int i = 0; i < path.getNameCount() - 2; i++) {
-										rootPath = rootPath.concat(path.getName(i).toString()).concat("/");
-									}
-									rootEntryPath[0] = rootPath;
-								}
-							}
-
-							String rootPath = rootEntryPath[0];
-							if (rootPath != null) {
-								final int ec = entryCount;
-								int[] copyCount = new int[] { 0 };
-								zip.entries().asIterator().forEachRemaining(entry -> {
-									copyCount[0]++;
-									String newName = entry.getName().replace(rootPath, "");
-
-									if (!newName.isBlank()) {
-										if (entry.isDirectory()) {
-											File entryDir = new File(
-													preBuildRt.getAbsolutePath().concat("/").concat(newName));
-											entryDir.mkdir();
-										} else {
-											try {
-												InputStream src = zip.getInputStream(entry);
-												FileOutputStream dest = new FileOutputStream(
-														preBuildRt.getAbsolutePath().concat("/").concat(newName));
-												dest.write(src.readAllBytes());
-												dest.close();
-											} catch (IOException x) {
-												x.printStackTrace();
-											}
-										}
-									}
-
-									Platform.runLater(
-											() -> progress.setProgress(.2 + (copyCount[0] / (double) ec) * .2));
-								});
-							}
-
-							zip.close();
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						}
-					} else {
-						int count = countDir(rt);
-						int[] copyCount = new int[] { 0 };
-						copyDirCont(rt, preBuildRt, () -> {
-							copyCount[0]++;
-							Platform.runLater(() -> progress.setProgress(.2 + (copyCount[0] / (double) count) * .2));
-						});
-					}
+					jre.copy(preBuild, progress);
 
 					Platform.runLater(() -> state.setText("Compiling source code"));
-					File preBuildBin = new File(preBuild.getAbsolutePath().concat("/bin"));
-					preBuildBin.mkdir();
-					File binDir = new File(dk.getAbsolutePath().concat("/bin"));
-					StringBuilder cpc = new StringBuilder();
-					Consumer<String> append = path -> cpc.append(cpc.isEmpty() ? "" : ";").append(path);
-					append.accept(preBuildLibs.getAbsolutePath().concat("/*"));
-					cp.forEach(file -> append.accept(file.getAbsolutePath()));
-					Command compileCommand = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \""
-							+ preBuildBin.getAbsolutePath() + "\" \"" + launcher.getValue().getAbsolutePath() + "\"");
-					try {
-						compileCommand
-								.execute(binDir,
-										() -> progress.setProgress(Math.min(.6, progress.getProgress() + .005)))
-								.waitFor();
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-						Thread.currentThread().interrupt();
-					}
+					classpath.compile(preBuild, preBuildLibs, dk, launcher.getValue(), progress);
 
 					Platform.runLater(() -> state.setText("Copying resources"));
-					File preBuildRes = new File(preBuild.getAbsolutePath().concat("/res"));
-					preBuildRes.mkdir();
-
-					int[] resCount = new int[] { 0 };
-					cp.forEach(file -> {
-						if (ClasspathParam.listClasses(file, file).isEmpty()) {
-							resCount[0] += countDir(file);
-						}
-					});
-					int[] resCopyCount = new int[] { 0 };
-					cp.forEach(file -> {
-						if (ClasspathParam.listClasses(file, file).isEmpty()) {
-							copyDirCont(file, preBuildRes, () -> {
-								resCopyCount[0]++;
-								Platform.runLater(
-										() -> progress.setProgress(.6 + (resCopyCount[0] / (double) resCount[0]) * .2));
-							});
-						}
-					});
+					classpath.copyRes(preBuild, progress);
 
 					Platform.runLater(() -> state.setText("Generating launcher"));
 
 					File preBuildBat = new File(
 							preBuild.getAbsolutePath().concat("/").concat(appName.getValue()).concat(".bat"));
-					try {
-						BufferedWriter bw = new BufferedWriter(
-								new OutputStreamWriter(new FileOutputStream(preBuildBat)));
-						bw.append("\"rt/bin/java\" -cp \"res;bin;lib/*\" " + launcher.getKey());
-						bw.flush();
-						bw.close();
-					} catch (IOException x) {
-						x.printStackTrace();
-					}
+					
+					FileDealer.write("set batdir=%~dp0 \n"
+							+ "pushd \"%batdir%\" \n"
+							+ "\"rt/bin/java\" -cp \"res;bin;lib/*\" " + launcher.getKey() + " %*", preBuildBat);
 
 					File b2e = new File(
 							URLDecoder.decode(getClass().getResource("/b2e.exe").getFile(), Charset.defaultCharset()));
@@ -496,6 +377,35 @@ public class Jwin extends Application {
 							.replace(key("app_icon"), icon.getValue().getAbsolutePath())
 							.replace(key("prebuild_path"), preBuild.getAbsolutePath())
 							.replace(key("GUID"), guid.getText());
+
+					FileTypeAssociation fta = moreSettings.getFileTypeAssociation();
+
+					if (fta == null) {
+						template = template.replace(key("add_define"), "")
+								.replace(key("add_to_setup"), "")
+								.replace(key("add_to_file"), "");
+					} else {
+						if(fta.getIcon() != null) {
+							try {
+								Files.copy(fta.getIcon().toPath(), new File(preBuild.getAbsolutePath().concat("/").concat(fta.getIcon().getName())).toPath());
+							} catch (IOException e1) {
+								e1.printStackTrace();
+							}
+						}
+						
+						String typeDef = FileDealer.read("/type_def.txt").replace(key("type_name"), fta.getTypeName())
+								.replace(key("type_extension"), fta.getTypeExtension());
+
+						String typeReg = FileDealer.read("/type_reg.txt")
+								.replace(key("type_extension"), fta.getTypeExtension())
+								.replace(key("type_icon"), fta.getIcon() == null ? appName.getValue().concat(".exe") : fta.getIcon().getName());
+						
+						template = template.replace(key("add_define"), typeDef)
+								.replace(key("add_to_setup"), "ChangesAssociations=yes")
+								.replace(key("add_to_file"), typeReg);
+					}
+
+					System.out.println(template);
 					File buildScript = new File(
 							System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 					FileDealer.write(template, buildScript);
@@ -551,43 +461,55 @@ public class Jwin extends Application {
 
 		});
 
+		Consumer<File> importer = loadFrom -> {
+			preRoot.setDisable(true);
+			loading.setVisible(true);
+			new Thread(() -> {
+				JWinProject project = JWinProject.deserialize(FileDealer.read(loadFrom));
+
+				runOnUiThread(Param::clearAll);
+				project.getClasspath().forEach(f -> runOnUiThread(() -> classpath.add(f)));
+				runOnUiThread(() -> mainClass.set(project.getMainClass()));
+				runOnUiThread(() -> jdk.set(project.getJdk()));
+				runOnUiThread(() -> jre.set(project.getJre()));
+				runOnUiThread(() -> icon.set(project.getIcon()));
+				runOnUiThread(() -> appName.setValue(project.getAppName()));
+				runOnUiThread(() -> version.setValue(project.getAppVersion()));
+				runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
+				runOnUiThread(() -> console.setSelected(project.isConsole()));
+				runOnUiThread(() -> guid.setText(project.getGuid()));
+
+				project.getResolvedJars().forEach(f -> runOnUiThread(() -> dependencies.addResolvedJar(f)));
+				project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
+
+				projectFile = project;
+
+				Platform.runLater(() -> {
+					preRoot.setDisable(false);
+					loading.setVisible(false);
+				});
+			}).start();
+		};
+		
 		load.setOnAction(e -> {
 			File loadFrom = saver.showOpenDialog(ps);
 			if (loadFrom != null) {
-				preRoot.setDisable(true);
-				loading.setVisible(true);
-				new Thread(() -> {
-					JWinProject project = JWinProject.deserialize(FileDealer.read(loadFrom));
-
-					runOnUiThread(Param::clearAll);
-					project.getClasspath().forEach(f -> runOnUiThread(() -> classpath.add(f)));
-					runOnUiThread(() -> mainClass.set(project.getMainClass()));
-					runOnUiThread(() -> jdk.set(project.getJdk()));
-					runOnUiThread(() -> jre.set(project.getJre()));
-					runOnUiThread(() -> icon.set(project.getIcon()));
-					runOnUiThread(() -> appName.setValue(project.getAppName()));
-					runOnUiThread(() -> version.setValue(project.getAppVersion()));
-					runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
-					runOnUiThread(() -> console.setSelected(project.isConsole()));
-					runOnUiThread(() -> guid.setText(project.getGuid()));
-
-					project.getResolvedJars().forEach(f -> runOnUiThread(() -> dependencies.addResolvedJar(f)));
-					project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
-
-					projectFile = project;
-
-					Platform.runLater(() -> {
-						preRoot.setDisable(false);
-						loading.setVisible(false);
-					});
-				}).start();
+				importer.accept(loadFrom);
 			}
 		});
+		
+		for(String param : getParameters().getRaw()) {
+			String ext = param.substring(param.lastIndexOf(".") + 1);
+			if(ext.equalsIgnoreCase("jwp")) {
+				importer.accept(new File(param));
+				return;
+			}
+		}
 	}
 
 	private static void runOnUiThread(Runnable r) {
 		Platform.runLater(r);
-		sleep(50);
+		sleep(100);
 	}
 
 	private static void sleep(long dur) {
@@ -603,7 +525,7 @@ public class Jwin extends Application {
 		return "$".concat(val).concat("$");
 	}
 
-	private void copyDirCont(File src, File dest, Runnable onItemCopied) {
+	public static void copyDirCont(File src, File dest, Runnable onItemCopied) {
 		for (File file : src.listFiles()) {
 			Path relative = src.toPath().relativize(file.toPath());
 			File target = Paths.get(dest.getAbsolutePath(), relative.toString()).toFile();
@@ -622,7 +544,7 @@ public class Jwin extends Application {
 		}
 	}
 
-	private int countDir(File dir) {
+	public static int countDir(File dir) {
 		int count = 0;
 
 		for (File f : dir.listFiles()) {
@@ -648,15 +570,15 @@ public class Jwin extends Application {
 		alert(head, content, type, null);
 	}
 
-	private void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes, ButtonType...types) {
+	private void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes, ButtonType... types) {
 		Alert al = new Alert(type);
 		al.setHeaderText(head);
 		al.setContentText(content);
-		
-		if(types.length != 0) {
+
+		if (types.length != 0) {
 			al.getButtonTypes().setAll(types);
 		}
-		
+
 		Optional<ButtonType> res = al.showAndWait();
 		if (onRes != null && res.isPresent()) {
 			onRes.accept(res.get());
@@ -669,7 +591,7 @@ public class Jwin extends Application {
 		return space;
 	}
 
-	static class TextVal extends VBox {
+	public static class TextVal extends VBox {
 		private TextField field;
 
 		public TextVal(String name) {
@@ -677,7 +599,7 @@ public class Jwin extends Application {
 			field = new TextField();
 
 			field.setMinWidth(0);
-			
+
 			HBox.setHgrow(this, Priority.ALWAYS);
 			getChildren().addAll(new Label(name), field);
 		}

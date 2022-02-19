@@ -22,10 +22,8 @@ import javafx.stage.StageStyle;
 public class MainClassParam extends Param {
 	private Entry<String, File> value;
 
-	boolean bound = false;
-
 	private Map<String, File> classNames;
-	
+
 	private Thread searcher;
 
 	public MainClassParam(Stage ps, Supplier<Map<String, File>> classLister) {
@@ -45,9 +43,14 @@ public class MainClassParam extends Param {
 			classChooser.setX(ps.getX() + ps.getWidth() / 2 - classChooser.getWidth() / 2);
 		};
 		ChangeListener<Number> listener = (obs, ov, nv) -> adapt.run();
+
+		classChooser.setOnShown(e -> {
+			ps.getScene().getRoot().setDisable(true);
+			adapt.run();
+		});
 		
-		classChooser.setOnShown(e-> adapt.run());
-		
+		classChooser.setOnHidden(e-> ps.getScene().getRoot().setDisable(false));
+
 		ps.widthProperty().addListener(listener);
 		ps.heightProperty().addListener(listener);
 		ps.xProperty().addListener(listener);
@@ -59,29 +62,31 @@ public class MainClassParam extends Param {
 		VBox results = new VBox();
 
 		Effect ef = new ColorAdjust(0, 0, -.5, 0);
-		
+
 		search.textProperty().addListener((obs, ov, nv) -> {
 
-			if(searcher != null) {
+			if (searcher != null) {
 				searcher.interrupt();
 			}
-			
+
 			results.getChildren().clear();
-			
+
 			if (nv.length() >= 3) {
-				searcher = new Thread(()-> {	
-					List<String> found = classNames.keySet().stream().filter(item -> item.toLowerCase().contains(nv.toLowerCase())).toList();
-				
-					found.forEach(e-> {
-						Hyperlink className = new Hyperlink(e.replace("/", ".").replace("\\", ".").replace(".java", ""));
+				searcher = new Thread(() -> {
+					List<String> found = classNames.keySet().stream()
+							.filter(item -> item.toLowerCase().contains(nv.toLowerCase())).toList();
+
+					found.forEach(e -> {
+						Hyperlink className = new Hyperlink(
+								e.replace("/", ".").replace("\\", ".").replace(".java", ""));
 						className.setEffect(ef);
-						className.setOnAction(a-> {
+						className.setOnAction(a -> {
 							File file = new File(classNames.get(e).getAbsolutePath().concat("/").concat(e));
 							Entry<String, File> preVal = Map.entry(className.getText(), file);
 							classChooser.close();
 							set(preVal);
 						});
-						Platform.runLater(()-> results.getChildren().add(className));
+						Platform.runLater(() -> results.getChildren().add(className));
 					});
 				});
 				searcher.start();
@@ -91,18 +96,14 @@ public class MainClassParam extends Param {
 		root.getChildren().addAll(search, new Separator(), results);
 
 		addButton("select", e -> {
-			if (!bound) {
-				ps.getScene().getRoot().disableProperty().bind(classChooser.showingProperty());
-
-				bound = true;
-			}
 			results.getChildren().clear();
 			search.clear();
+			adapt.run();
 			classChooser.show();
 			classNames = classLister.get();
 		});
 	}
-	
+
 	public void set(Entry<String, File> value) {
 		this.value = value;
 		list.getChildren().clear();

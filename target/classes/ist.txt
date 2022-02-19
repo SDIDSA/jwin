@@ -6,6 +6,8 @@
 #define MyAppPublisher "$app_publisher$"
 #define MyAppExeName "$app_name$.exe"
 
+$add_define$
+
 [Setup]
 AppId={{$GUID$}
 AppName={#MyAppName}

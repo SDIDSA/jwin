@@ -1,0 +1,3 @@
+#define MyAppAssocName "$type_name$"
+#define MyAppAssocExt "$type_extension$"
+#define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
