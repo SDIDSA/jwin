@@ -132,8 +132,6 @@ public class JWinProject {
 	
 	private boolean compare(Object o1, Object o2) {
 		if(o1 instanceof List<?> list1 && o2 instanceof List<?> list2) {
-			System.out.println("here");
-			System.out.println(list1.containsAll(list2) && list2.containsAll(list1));
 			return list1.containsAll(list2) && list2.containsAll(list1);
 		}
 		return o1.equals(o2);
@@ -186,10 +184,8 @@ public class JWinProject {
 	}
 	
 	private static List<File> deserializeFileList(JSONArray arr) {
-		ArrayList<File> res = new ArrayList<>();
-		
+		ArrayList<File> res = new ArrayList<>();	
 		arr.forEach(obj -> res.add(new File((String) obj)));
-		
 		return res;
 	}
 }

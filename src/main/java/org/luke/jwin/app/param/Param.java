@@ -52,6 +52,7 @@ public abstract class Param extends StackPane {
 		all.add(this);
 
 		setMinWidth(424);
+		
 		root = new VBox(10);
 
 		top = new HBox(10);

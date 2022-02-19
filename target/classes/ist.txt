@@ -22,6 +22,7 @@ SetupIconFile=$app_icon$
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
+$add_to_setup$
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -33,6 +34,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "$prebuild_path$\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "$prebuild_path$\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+
+$add_to_file$
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

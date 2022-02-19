@@ -56,6 +56,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -92,20 +93,24 @@ public class Jwin extends Application {
 
 		IconParam icon = new IconParam(ps);
 
-		Insets pad = new Insets(8, 10, 8, 10);
-
 		Button compile = new Button("Build");
-		compile.setPadding(pad);
 		compile.setMinWidth(60);
 
+		Button advanced = new Button("more\nsettings");
+		advanced.setMinWidth(60);
+		advanced.setTextAlignment(TextAlignment.CENTER);
+
 		Button save = new Button("Save");
-		save.setPadding(pad);
 		save.setMinWidth(60);
 
 		Button load = new Button("Load");
-		load.setPadding(pad);
 		load.setMinWidth(60);
 
+		VBox saveLoad = new VBox(5, save, load);
+		
+		compile.minHeightProperty().bind(saveLoad.heightProperty());
+		advanced.minHeightProperty().bind(saveLoad.heightProperty());
+		
 		DirectoryChooser fc = new DirectoryChooser();
 
 		HBox bottom = new HBox(10);
@@ -113,10 +118,9 @@ public class Jwin extends Application {
 
 		ProgressBar progress = new ProgressBar();
 		Label state = new Label("doing nothing");
-		state.setPadding(pad);
 
 		StackPane progressCont = new StackPane(progress, state);
-		progressCont.setAlignment(Pos.BOTTOM_LEFT);
+		progressCont.setAlignment(Pos.CENTER);
 		progress.prefWidthProperty().bind(progressCont.widthProperty());
 
 		HBox.setHgrow(progressCont, Priority.ALWAYS);
@@ -150,19 +154,25 @@ public class Jwin extends Application {
 
 		HBox preBottom = new HBox(15, appName, version, publisher);
 
-		bottom.getChildren().addAll(progressCont, compile, save, load);
+		bottom.getChildren().addAll(progressCont, compile, advanced, saveLoad);
 
 		root1.getChildren().addAll(classpath, new Separator(), mainClass, vSpace(), jdk, jre);
 
-		root2.getChildren().addAll(icon, new Separator(), dependencies, preBottom, new Separator(), preConsole, bottom);
+		root2.getChildren().addAll(icon, new Separator(), dependencies, preBottom, preConsole, bottom);
 
 		preRoot.getChildren().addAll(root1, root2);
 
+		HBox.setHgrow(root2, Priority.ALWAYS);
+		HBox.setHgrow(root1, Priority.ALWAYS);
+		
 		loader.getChildren().addAll(preRoot, loading);
 		Scene scene = new Scene(loader);
 
 		ps.setScene(scene);
 		ps.setHeight(516);
+		ps.setMinHeight(516);
+		ps.setWidth(424 * 2 + 15 * 4);
+		ps.setMinWidth(424 * 2 + 15 * 4);
 		ps.setTitle("jWin");
 		ps.setOnShown(e -> ps.centerOnScreen());
 
@@ -223,6 +233,48 @@ public class Jwin extends Application {
 				return;
 			}
 
+
+			boolean[] contin = new boolean[] { true };
+			
+			ButtonType useDefault = new ButtonType("use default");
+			ButtonType select = new ButtonType("select now");
+			if(icon.getValue() == null || !icon.getValue().exists()) {
+				contin[0] = false;
+				alert("Missing icon", "you didn't select an icon for your app", AlertType.WARNING, res -> {
+					if(res.equals(select)) {
+						icon.select(ps);
+						if(icon.getValue() != null) {
+							contin[0] = true;
+						}
+					}else if(res.equals(useDefault)) {
+						icon.set(new File(URLDecoder.decode(getClass().getResource("/def.ico").getFile(), Charset.defaultCharset())));
+						if(icon.getValue() != null) {
+							contin[0] = true;
+						}
+					}
+			
+				}, useDefault, select, ButtonType.CANCEL);
+			}
+			
+			if(!contin[0]) {
+				return;
+			}
+			
+			if(appName.getValue().isBlank()) {
+				error("Missing app name", "The application name field is required");
+				return;
+			}
+			
+			if(appName.getValue().isBlank()) {
+				error("Missing app version", "The application version field is required");
+				return;
+			}
+			
+			if(guid.getText().isBlank()) {
+				error("Missing app GUID", "click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
+				return;
+			}
+
 			// Check for warnings
 			if (jre.isJdk()) {
 				warn("Using JDK as a runtime", "not recommended unless required by your app (increases package size)");
@@ -254,8 +306,8 @@ public class Jwin extends Application {
 							});
 				}
 			}
-
-			boolean[] contin = new boolean[] { false };
+			
+			contin[0] = false;
 			alert("Select output directory", "select the directory where you want to save the generated installer",
 					AlertType.CONFIRMATION, res -> {
 						if (res.equals(ButtonType.OK)) {
@@ -596,10 +648,15 @@ public class Jwin extends Application {
 		alert(head, content, type, null);
 	}
 
-	private void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes) {
+	private void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes, ButtonType...types) {
 		Alert al = new Alert(type);
 		al.setHeaderText(head);
 		al.setContentText(content);
+		
+		if(types.length != 0) {
+			al.getButtonTypes().setAll(types);
+		}
+		
 		Optional<ButtonType> res = al.showAndWait();
 		if (onRes != null && res.isPresent()) {
 			onRes.accept(res.get());
@@ -619,6 +676,9 @@ public class Jwin extends Application {
 			super(5);
 			field = new TextField();
 
+			field.setMinWidth(0);
+			
+			HBox.setHgrow(this, Priority.ALWAYS);
 			getChildren().addAll(new Label(name), field);
 		}
 

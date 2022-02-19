@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.function.Supplier;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Hyperlink;
@@ -32,6 +33,7 @@ public class MainClassParam extends Param {
 
 		Stage classChooser = new Stage(StageStyle.UTILITY);
 		classChooser.setTitle("Main class");
+		classChooser.setAlwaysOnTop(true);
 
 		VBox root = new VBox(15);
 		root.setPadding(new Insets(15));
@@ -39,15 +41,17 @@ public class MainClassParam extends Param {
 		classChooser.setScene(new Scene(root, 400, 400));
 
 		Runnable adapt = () -> {
-			classChooser.setY(ps.getY());
-			classChooser.setX(ps.getX() + ps.getWidth() + 10);
+			classChooser.setY(ps.getY() + ps.getHeight() / 2 - classChooser.getHeight() / 2);
+			classChooser.setX(ps.getX() + ps.getWidth() / 2 - classChooser.getWidth() / 2);
 		};
-
-		ps.widthProperty().addListener((obs, ov, nv) -> adapt.run());
-
-		ps.xProperty().addListener((obs, ov, nv) -> adapt.run());
-
-		ps.yProperty().addListener((obs, ov, nv) -> adapt.run());
+		ChangeListener<Number> listener = (obs, ov, nv) -> adapt.run();
+		
+		classChooser.setOnShown(e-> adapt.run());
+		
+		ps.widthProperty().addListener(listener);
+		ps.heightProperty().addListener(listener);
+		ps.xProperty().addListener(listener);
+		ps.yProperty().addListener(listener);
 
 		TextField search = new TextField();
 		search.setPromptText("search...");

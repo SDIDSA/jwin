@@ -10,17 +10,23 @@ public class IconParam extends Param {
 
 	private File value;
 	
+	private FileChooser fc;
 	public IconParam(Stage ps) {
 		super("Executable Icon");
 
-		FileChooser fc = new FileChooser();
+		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("icon", "*.ico"));
+		
 		addButton("select", e-> {
-			File ico = fc.showOpenDialog(ps);
-			if(ico != null) {
-				set(ico);
-			}
+			select(ps);
 		});
+	}
+	
+	public void select(Stage ps) {
+		File ico = fc.showOpenDialog(ps);
+		if(ico != null) {
+			set(ico);
+		}
 	}
 	
 	public void set(File ico) {

@@ -15,7 +15,7 @@ public class JreParam extends JavaParam {
 		addButton("directory", e -> {
 			File dir = dc.showDialog(ps);
 			if (dir != null) {
-				setDir(dir);
+				set(dir);
 			}
 		});
 
@@ -24,7 +24,7 @@ public class JreParam extends JavaParam {
 		addButton("archive", e -> {
 			File file = fc.showOpenDialog(ps);
 			if (file != null) {
-				setDir(file);
+				set(file);
 			}
 		});
 	}
