@@ -2,6 +2,8 @@ package org.luke.jwin.app.param;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,7 +47,7 @@ public class DependenciesParam extends Param {
 		sp.setBorder(null);
 		list.setBackground(null);
 		VBox.setVgrow(this, Priority.ALWAYS);
-		
+
 		manualJars = new ArrayList<>();
 		resolvedJars = new ArrayList<>();
 
@@ -70,44 +72,50 @@ public class DependenciesParam extends Param {
 		});
 
 		addButton("resolve", e -> {
-			resolvedList.getChildren().clear();
-			resolvedJars.clear();
-			List<File> poms = pomSupplier.get();
-			if (poms.isEmpty()) {
-				Alert al = new Alert(AlertType.WARNING);
-				al.setContentText("no pom.xml files found for the selected classpath");
-				al.showAndWait();
-			} else {
-				startLoading();
-				new Thread(() -> {
-					poms.forEach(pom -> {
-						File temp = new File(
-								System.getProperty("java.io.tmpdir") + "/lib_dep_" + new Random().nextInt(999999));
-						temp.mkdir();
-
-						Command command = new Command("cmd.exe", "/C",
-								"mvn dependency:copy-dependencies -DoutputDirectory=\"" + temp.getAbsolutePath()
-										+ "\" -Dhttps.protocols=TLSv1.2");
-
-						try {
-							command.execute(pom.getParentFile()).waitFor();
-						} catch (InterruptedException e1) {
-							e1.printStackTrace();
-							Thread.currentThread().interrupt();
-						}
-
-						for (File f : temp.listFiles()) {
-							Platform.runLater(() -> addResolvedJar(f));
-						}
-					});
-
-					Platform.runLater(() -> {
-						stopLoading();
-						disp.setExpandedPane(resolvedDisp);
-					});
-				}).start();
-			}
+			resolve(pomSupplier);
 		});
+	}
+
+	public void resolve(Supplier<List<File>> pomSupplier) {
+		resolvedList.getChildren().clear();
+		resolvedJars.clear();
+		List<File> poms = pomSupplier.get();
+		if (poms.isEmpty()) {
+			Alert al = new Alert(AlertType.WARNING);
+			al.setContentText("no pom.xml files found for the selected classpath");
+			al.showAndWait();
+		} else {
+			startLoading();
+			new Thread(() -> {
+				poms.forEach(pom -> {
+					File temp = new File(
+							System.getProperty("java.io.tmpdir") + "/lib_dep_" + new Random().nextInt(999999));
+					temp.mkdir();
+
+					File mvn = new File(URLDecoder.decode(getClass().getResource("/mvn/bin/mvn").getFile(), Charset.defaultCharset()));
+					
+					Command command = new Command("cmd.exe", "/C",
+							"mvn -f \"" + pom.getAbsolutePath() + "\" dependency:copy-dependencies -DoutputDirectory=\"" + temp.getAbsolutePath()
+									+ "\" -Dhttps.protocols=TLSv1.2");
+
+					try {
+						command.execute(mvn.getParentFile()).waitFor();
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+						Thread.currentThread().interrupt();
+					}
+
+					for (File f : temp.listFiles()) {
+						Platform.runLater(() -> addResolvedJar(f));
+					}
+				});
+
+				Platform.runLater(() -> {
+					stopLoading();
+					disp.setExpandedPane(resolvedDisp);
+				});
+			}).start();
+		}
 	}
 
 	public void addResolvedJar(File jar) {
@@ -123,12 +131,12 @@ public class DependenciesParam extends Param {
 			resolvedList.getChildren().remove(line);
 			resolvedJars.remove(jar);
 		});
-		
-		if(disp.getExpandedPane() != resolvedDisp) {
+
+		if (disp.getExpandedPane() != resolvedDisp) {
 			disp.setExpandedPane(resolvedDisp);
 		}
 	}
-	
+
 	public void addManualJar(File jar) {
 		manualJars.add(jar);
 		Hyperlink remove = new Hyperlink("remove");
@@ -138,12 +146,12 @@ public class DependenciesParam extends Param {
 			manualList.getChildren().remove(line);
 			manualJars.remove(jar);
 		});
-		
-		if(disp.getExpandedPane() != manualDisp) {
+
+		if (disp.getExpandedPane() != manualDisp) {
 			disp.setExpandedPane(manualDisp);
 		}
 	}
-	
+
 	public List<File> getJars() {
 		ArrayList<File> allJars = new ArrayList<>();
 		allJars.addAll(manualJars);
@@ -151,33 +159,32 @@ public class DependenciesParam extends Param {
 
 		return allJars;
 	}
-	
+
 	public List<File> getResolvedJars() {
 		return resolvedJars;
 	}
-	
+
 	public List<File> getManualJars() {
 		return manualJars;
 	}
-	
+
 	public File copy(File preBuild, ProgressBar progress) {
 		List<File> deps = getJars();
-		
+
 		File preBuildLibs = new File(preBuild.getAbsolutePath().concat("/lib"));
 		preBuildLibs.mkdir();
-		
+
 		for (int i = 0; i < deps.size(); i++) {
 			File dep = deps.get(i);
 			try {
-				Files.copy(dep.toPath(),
-						Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
+				Files.copy(dep.toPath(), Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
 			} catch (IOException e1) {
 				e1.printStackTrace();
 			}
 			final int fi = i;
 			Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
 		}
-		
+
 		return preBuildLibs;
 	}
 
@@ -185,7 +192,7 @@ public class DependenciesParam extends Param {
 	public void clear() {
 		manualJars.clear();
 		resolvedJars.clear();
-		
+
 		manualList.getChildren().clear();
 		resolvedList.getChildren().clear();
 	}

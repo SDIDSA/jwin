@@ -76,4 +76,13 @@ public class FileTypeParam extends VBox {
 	public File getIcon() {
 		return icon;
 	}
+	
+	public void set(FileTypeAssociation fileTypeAsso) {
+		if(fileTypeAsso != null) {
+			typeName.setValue(fileTypeAsso.getTypeName());
+			typeExtension.setValue(fileTypeAsso.getTypeExtension());
+			set(fileTypeAsso.getIcon());
+			enable.setSelected(true);
+		}
+	}
 }

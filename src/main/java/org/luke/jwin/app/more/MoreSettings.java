@@ -53,6 +53,10 @@ public class MoreSettings extends Stage {
 	public FileTypeAssociation getFileTypeAssociation() {
 		return fileTypeParam.getValue();
 	}
+	
+	public void setFileTypeAssociation(FileTypeAssociation fileTypeAsso) {
+		fileTypeParam.set(fileTypeAsso);
+	}
 
 	private VBox makeParam(String name, Node node) {
 		VBox root = new VBox(10);

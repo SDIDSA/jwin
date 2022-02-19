@@ -141,8 +141,8 @@ public class Jwin extends Application {
 		advanced.setOnAction(e -> moreSettings.show());
 
 		Supplier<JWinProject> export = () -> new JWinProject(classpath.getFiles(), mainClass.getValue(), jdk.getValue(),
-				jre.getValue(), icon.getValue(), dependencies.getResolvedJars(), dependencies.getManualJars(),
-				appName.getValue(), version.getValue(), publisher.getValue(), console.isSelected(), guid.getText());
+				jre.getValue(), icon.getValue(), dependencies.getManualJars(), appName.getValue(), version.getValue(),
+				publisher.getValue(), console.isSelected(), guid.getText(), moreSettings.getFileTypeAssociation());
 
 		HBox preConsole = new HBox(10);
 		preConsole.setAlignment(Pos.CENTER);
@@ -287,7 +287,8 @@ public class Jwin extends Application {
 							}
 						});
 			} else {
-				List<String> diffs = export.get().compare(projectFile);
+				JWinProject exported = export.get();
+				List<String> diffs = exported.compare(projectFile);
 
 				if (!diffs.isEmpty()) {
 					StringBuilder diffStr = new StringBuilder();
@@ -338,9 +339,8 @@ public class Jwin extends Application {
 
 					File preBuildBat = new File(
 							preBuild.getAbsolutePath().concat("/").concat(appName.getValue()).concat(".bat"));
-					
-					FileDealer.write("set batdir=%~dp0 \n"
-							+ "pushd \"%batdir%\" \n"
+
+					FileDealer.write("set batdir=%~dp0 \n" + "pushd \"%batdir%\" \n"
 							+ "\"rt/bin/java\" -cp \"res;bin;lib/*\" " + launcher.getKey() + " %*", preBuildBat);
 
 					File b2e = new File(
@@ -381,25 +381,27 @@ public class Jwin extends Application {
 					FileTypeAssociation fta = moreSettings.getFileTypeAssociation();
 
 					if (fta == null) {
-						template = template.replace(key("add_define"), "")
-								.replace(key("add_to_setup"), "")
+						template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "")
 								.replace(key("add_to_file"), "");
 					} else {
-						if(fta.getIcon() != null) {
+						if (fta.getIcon() != null) {
 							try {
-								Files.copy(fta.getIcon().toPath(), new File(preBuild.getAbsolutePath().concat("/").concat(fta.getIcon().getName())).toPath());
+								Files.copy(fta.getIcon().toPath(),
+										new File(preBuild.getAbsolutePath().concat("/").concat(fta.getIcon().getName()))
+												.toPath());
 							} catch (IOException e1) {
 								e1.printStackTrace();
 							}
 						}
-						
+
 						String typeDef = FileDealer.read("/type_def.txt").replace(key("type_name"), fta.getTypeName())
 								.replace(key("type_extension"), fta.getTypeExtension());
 
 						String typeReg = FileDealer.read("/type_reg.txt")
 								.replace(key("type_extension"), fta.getTypeExtension())
-								.replace(key("type_icon"), fta.getIcon() == null ? appName.getValue().concat(".exe") : fta.getIcon().getName());
-						
+								.replace(key("type_icon"), fta.getIcon() == null ? appName.getValue().concat(".exe")
+										: fta.getIcon().getName());
+
 						template = template.replace(key("add_define"), typeDef)
 								.replace(key("add_to_setup"), "ChangesAssociations=yes")
 								.replace(key("add_to_file"), typeReg);
@@ -438,6 +440,15 @@ public class Jwin extends Application {
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
+
+					dependencies.getResolvedJars().forEach(file -> {
+						boolean last = file.getParentFile().listFiles().length == 1;
+
+						file.delete();
+						if (last) {
+							file.getParentFile().delete();
+						}
+					});
 
 					Platform.runLater(() -> {
 						state.setText("done");
@@ -479,9 +490,11 @@ public class Jwin extends Application {
 				runOnUiThread(() -> console.setSelected(project.isConsole()));
 				runOnUiThread(() -> guid.setText(project.getGuid()));
 
-				project.getResolvedJars().forEach(f -> runOnUiThread(() -> dependencies.addResolvedJar(f)));
+				runOnUiThread(() -> dependencies.resolve(classpath::getPom));
 				project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
+				runOnUiThread(() -> moreSettings.setFileTypeAssociation(project.getFileTypeAsso()));
+				
 				projectFile = project;
 
 				Platform.runLater(() -> {
@@ -490,17 +503,17 @@ public class Jwin extends Application {
 				});
 			}).start();
 		};
-		
+
 		load.setOnAction(e -> {
 			File loadFrom = saver.showOpenDialog(ps);
 			if (loadFrom != null) {
 				importer.accept(loadFrom);
 			}
 		});
-		
-		for(String param : getParameters().getRaw()) {
+
+		for (String param : getParameters().getRaw()) {
 			String ext = param.substring(param.lastIndexOf(".") + 1);
-			if(ext.equalsIgnoreCase("jwp")) {
+			if (ext.equalsIgnoreCase("jwp")) {
 				importer.accept(new File(param));
 				return;
 			}
@@ -509,7 +522,7 @@ public class Jwin extends Application {
 
 	private static void runOnUiThread(Runnable r) {
 		Platform.runLater(r);
-		sleep(100);
+		sleep(50);
 	}
 
 	private static void sleep(long dur) {

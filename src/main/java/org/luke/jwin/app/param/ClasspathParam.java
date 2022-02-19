@@ -1,14 +1,17 @@
 package org.luke.jwin.app.param;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.luke.jwin.app.Command;
-import org.luke.jwin.app.Jwin;
 
 import javafx.application.Platform;
 import javafx.scene.control.Hyperlink;
@@ -36,6 +39,7 @@ public class ClasspathParam extends Param {
 		});
 	}
 
+	private Semaphore mutex = new Semaphore(1);
 	public void add(File dir) {
 		startLoading();
 		new Thread(() -> {
@@ -47,7 +51,9 @@ public class ClasspathParam extends Param {
 					projectRoot == null ? dir.getParentFile().getParentFile().toURI().relativize(dir.toURI()).toString()
 							: projectRoot.toURI().relativize(dir.toURI()).toString(),
 					remove);
+			mutex.acquireUninterruptibly();
 			files.add(dir);
+			mutex.release();
 
 			remove.setOnAction(ev -> {
 				list.getChildren().remove(line);
@@ -63,6 +69,7 @@ public class ClasspathParam extends Param {
 
 	@Override
 	public void clear() {
+		System.out.println("clearing");
 		files.clear();
 		list.getChildren().clear();
 	}
@@ -84,7 +91,6 @@ public class ClasspathParam extends Param {
 
 	public static List<String> listClasses(File dir, File root) {
 		ArrayList<String> res = new ArrayList<>();
-
 		for (File file : dir.listFiles()) {
 			if (file.isDirectory()) {
 				res.addAll(listClasses(file, root));
@@ -92,7 +98,20 @@ public class ClasspathParam extends Param {
 				res.add(root.toPath().relativize(file.toPath()).toString());
 			}
 		}
-
+		return res;
+	}
+	
+	public static List<File> listResources(File dir) {
+		ArrayList<File> res = new ArrayList<>();
+		
+		for (File file : dir.listFiles()) {
+			if (file.isDirectory()) {
+				res.addAll(listResources(file));
+			} else if (!file.getName().toLowerCase().contains(".java")) {
+				res.add(file);
+			}
+		}
+		
 		return res;
 	}
 
@@ -157,6 +176,8 @@ public class ClasspathParam extends Param {
 			e1.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
+		
+		
 	}
 
 	public void copyRes(File preBuild, ProgressBar progress) {
@@ -164,19 +185,60 @@ public class ClasspathParam extends Param {
 		preBuildRes.mkdir();
 
 		int[] resCount = new int[] { 0 };
-
-		ArrayList<File> valid = new ArrayList<>();
+		
+		HashMap<File, List<File>> resourcesToCopy = new HashMap<>();
+		
 		files.forEach(file -> {
-			if (ClasspathParam.listClasses(file, file).isEmpty()) {
-				resCount[0] += Jwin.countDir(file);
-				valid.add(file);
+			List<File> resources = listResources(file);
+			if (!resources.isEmpty()) {
+				resCount[0] += resources.size();
+				resourcesToCopy.put(file, resources);
 			}
 		});
 		int[] resCopyCount = new int[] { 0 };
-		valid.forEach(file -> Jwin.copyDirCont(file, preBuildRes, () -> {
-			resCopyCount[0]++;
-			Platform.runLater(() -> progress.setProgress(.6 + (resCopyCount[0] / (double) resCount[0]) * .2));
-		}));
+		
+		resourcesToCopy.keySet().forEach(key -> {
+			List<File> resources = resourcesToCopy.get(key);
+			resources.forEach(resource -> {
+				resCopyCount[0]++;
+				copyResource(resource, key, preBuildRes);
+				Platform.runLater(() -> progress.setProgress(.6 + (resCopyCount[0] / (double) resCount[0]) * .2));
+			});
+		});
+	}
+	
+	private void copyResource(File src, File srcRoot, File destRoot) {
+		File dest = new File(src.getAbsolutePath().replace(srcRoot.getAbsolutePath(), destRoot.getAbsolutePath()));
+		
+		System.out.println(src.getAbsolutePath() + " => " + dest.getAbsolutePath());
+		
+		List<File> parents = getParentsUntil(dest, destRoot);
+		Collections.sort(parents);
+		parents.forEach(e-> {
+			if(!e.exists()) {
+				e.mkdir();
+			}
+		});
+		
+		try {
+			Files.copy(src.toPath(), dest.toPath());
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+	}
+	
+	private List<File> getParentsUntil(File src, File root) {
+		ArrayList<File> res = new ArrayList<>();
+		
+		File parent = src.getParentFile();
+		if(parent.equals(root)) {
+			return res;
+		}else {
+			res.add(parent);
+			res.addAll(getParentsUntil(parent, root));
+		}
+		
+		return res;
 	}
 
 }
