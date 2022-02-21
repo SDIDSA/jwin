@@ -32,6 +32,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 public abstract class Param extends StackPane {
 	private static ArrayList<Param> all = new ArrayList<>();
@@ -45,10 +46,12 @@ public abstract class Param extends StackPane {
 
 	protected VBox root;
 	private ProgressIndicator pi;
+	private Label loadingLabel;
+	private HBox loadingRoot;
 
 	protected ScrollPane sp;
 
-	public Param(String name) {
+	protected Param(String name) {
 		all.add(this);
 
 		setMinWidth(424);
@@ -60,11 +63,6 @@ public abstract class Param extends StackPane {
 
 		Label head = new Label(name);
 		head.setFont(Font.font("Segoe UI", 12));
-
-		pi = new ProgressIndicator();
-		pi.setMinSize(0, 0);
-		pi.setMaxSize(40, 40);
-		pi.setVisible(false);
 
 		top.getChildren().addAll(head, hSpace());
 
@@ -86,17 +84,33 @@ public abstract class Param extends StackPane {
 		StackPane listCont = new StackPane(sp);
 
 		root.getChildren().addAll(top, listCont);
+		
+		pi = new ProgressIndicator();
+		pi.setMinSize(0, 0);
+		pi.setMaxSize(40, 40);
+		
+		loadingLabel = new Label("");
+		loadingLabel.setFont(Font.font("", FontWeight.BOLD, 16));
 
-		getChildren().addAll(root, pi);
+		loadingRoot = new HBox(15, pi, loadingLabel);
+		loadingRoot.setAlignment(Pos.CENTER);
+		loadingRoot.setVisible(false);
+		
+		getChildren().addAll(root, loadingRoot);
 	}
 
 	protected void startLoading() {
-		pi.setVisible(true);
+		startLoading("Working on it ...");
+	}
+	
+	protected void startLoading(String loadingText) {
+		loadingLabel.setText(loadingText);
+		loadingRoot.setVisible(true);
 		root.setDisable(true);
 	}
 
 	protected void stopLoading() {
-		pi.setVisible(false);
+		loadingRoot.setVisible(false);
 		root.setDisable(false);
 	}
 

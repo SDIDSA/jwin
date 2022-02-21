@@ -75,18 +75,20 @@ public class DependenciesParam extends Param {
 		});
 
 		addButton("resolve", e -> {
-			resolve(pomSupplier);
+			resolve(pomSupplier, true);
 		});
 	}
 
-	public void resolve(Supplier<List<File>> pomSupplier) {
+	public void resolve(Supplier<List<File>> pomSupplier, boolean alert) {
 		resolvedList.getChildren().clear();
 		resolvedJars.clear();
 		List<File> poms = pomSupplier.get();
 		if (poms.isEmpty()) {
-			Alert al = new Alert(AlertType.WARNING);
-			al.setContentText("no pom.xml files found for the selected classpath");
-			al.showAndWait();
+			if(alert) {
+				Alert al = new Alert(AlertType.WARNING);
+				al.setContentText("no pom.xml files found for the selected classpath");
+				al.showAndWait();
+			}
 		} else {
 			startLoading();
 			new Thread(() -> {

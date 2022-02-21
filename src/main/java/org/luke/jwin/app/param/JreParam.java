@@ -49,11 +49,10 @@ public class JreParam extends JavaParam {
 			}
 		});
 
-		Hyperlink generateFromJdk = new Hyperlink("Generate using jlink");
+		Hyperlink generateFromJdk = new Hyperlink("Generate jre using jlink");
 		generateFromJdk.setTextFill(Color.CYAN.darker().darker());
-		root.setSpacing(5);
 		root.setAlignment(Pos.CENTER_RIGHT);
-		root.getChildren().add(1, generateFromJdk);
+		root.getChildren().add(0, generateFromJdk);
 
 		generateFromJdk.setOnAction(e -> generateFromJdk(ps, cp, jdk, dependencies, mc));
 	}
@@ -106,6 +105,7 @@ public class JreParam extends JavaParam {
 			File jdkBin = new File(jdk.getValue().getAbsolutePath().concat("/bin"));
 			try {
 
+				Platform.runLater(() -> startLoading("Analyzing dependencies ..."));
 				Predicate<String> isValid = dep -> dep.indexOf("java.") == 0 || dep.indexOf("jdk.") == 0;
 				// analyze code for module dependencies
 				Command analCode = new Command(line -> {
@@ -124,33 +124,35 @@ public class JreParam extends JavaParam {
 				analCode.execute(jdkBin).waitFor();
 				deps.remove("bin");
 
-				System.out.println("******************************");
 				// analyze libs for moduleDependencies
-				StringBuilder sb = new StringBuilder();
-				for (File lib : preGenLibs.listFiles()) {
-					sb.append(" \"").append(lib.getAbsolutePath()).append("\"");
-				}
-
-				Command analLibs = new Command(line -> {
-					String[] parts = line.split("\\s+");
-					if (parts.length == 3) {
-						String dep = parts[parts.length - 1];
-
-						if (!deps.contains(dep) && isValid.test(dep)) {
-							deps.add(dep);
-						}
+				if (preGenLibs.listFiles().length != 0) {
+					StringBuilder sb = new StringBuilder();
+					for (File lib : preGenLibs.listFiles()) {
+						sb.append(" \"").append(lib.getAbsolutePath()).append("\"");
 					}
-				}, "cmd", "/c", "jdeps" + sb);
-				analLibs.execute(jdkBin).waitFor();
+
+					Command analLibs = new Command(line -> {
+						String[] parts = line.split("\\s+");
+						if (parts.length == 3) {
+							String dep = parts[parts.length - 1];
+
+							if (!deps.contains(dep) && isValid.test(dep)) {
+								deps.add(dep);
+							}
+						}
+					}, "cmd", "/c", "jdeps" + sb);
+					analLibs.execute(jdkBin).waitFor();
+				}
 
 				deps.forEach(dep -> {
 					System.out.println(dep);
 				});
 
+				Platform.runLater(() -> startLoading("Generating JRE ..."));
 				Command gen = new Command("cmd", "/c",
-						"jlink --no-header-files --no-man-pages --strip-debug --module-path \"" + preGenLibs.getAbsolutePath() + "\" --add-modules "
-								+ String.join(",", deps) + " --output \"" + preGen.getAbsolutePath().concat("/rt")
-								+ "\"");
+						"jlink --no-header-files --no-man-pages --strip-debug --module-path \""
+								+ preGenLibs.getAbsolutePath() + "\" --add-modules " + String.join(",", deps)
+								+ " --output \"" + preGen.getAbsolutePath().concat("/rt") + "\"");
 
 				gen.execute(jdkBin).waitFor();
 
@@ -165,7 +167,8 @@ public class JreParam extends JavaParam {
 								if (saveTo != null) {
 									startLoading();
 									new Thread(() -> {
-										File saveToRt = new File(saveTo.getAbsolutePath().concat("/custom_jre"));
+										File saveToRt = new File(saveTo.getAbsolutePath()
+												.concat("/custom_jre_" + new Random().nextInt(999)));
 										saveToRt.mkdir();
 										Jwin.copyDirCont(preGenRt, saveToRt, null);
 										Platform.runLater(() -> {
@@ -177,7 +180,7 @@ public class JreParam extends JavaParam {
 							}
 						}, ButtonType.YES, ButtonType.NO);
 
-				set(preGenRt);
+				Platform.runLater(() -> set(preGenRt));
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();

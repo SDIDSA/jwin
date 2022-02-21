@@ -169,8 +169,8 @@ public class Jwin extends Application {
 		Scene scene = new Scene(loader);
 
 		ps.setScene(scene);
-		ps.setHeight(540);
-		ps.setMinHeight(540);
+		ps.setHeight(550);
+		ps.setMinHeight(550);
 		ps.setWidth(424 * 2 + 15 * 4);
 		ps.setMinWidth(424 * 2 + 15 * 4);
 		ps.setTitle("jWin");
@@ -278,7 +278,7 @@ public class Jwin extends Application {
 				Jwin.warn("Resolving dependencies", "try again after dependencies are successfully resolved");
 				return;
 			}
-			
+
 			// Check for warnings
 			if (jre.isJdk()) {
 				warn("Using JDK as a runtime", "not recommended unless required by your app (increases package size)");
@@ -310,17 +310,22 @@ public class Jwin extends Application {
 				}
 			}
 
-			contin[0] = false;
-			alert("Select output directory", "select the directory where you want to save the generated installer",
-					AlertType.CONFIRMATION, res -> {
-						if (res.equals(ButtonType.OK)) {
-							contin[0] = true;
-						}
-					});
-			if (!contin[0]) {
-				return;
+			File preSaveTo = fileInUse == null ? null : fileInUse.getParentFile();
+			if (preSaveTo == null) {
+				contin[0] = false;
+				alert("Select output directory", "select the directory where you want to save the generated installer",
+						AlertType.CONFIRMATION, res -> {
+							if (res.equals(ButtonType.OK)) {
+								contin[0] = true;
+							}
+						});
+				if (!contin[0]) {
+					return;
+				}
+				preSaveTo = fc.showDialog(ps);
 			}
-			File saveTo = fc.showDialog(ps);
+			
+			final File saveTo = preSaveTo;
 			if (saveTo != null) {
 				compile.setDisable(true);
 				new Thread(() -> {
@@ -482,7 +487,7 @@ public class Jwin extends Application {
 				runOnUiThread(() -> console.setSelected(project.isConsole()));
 				runOnUiThread(() -> guid.setText(project.getGuid()));
 
-				runOnUiThread(() -> dependencies.resolve(classpath::getPom));
+				runOnUiThread(() -> dependencies.resolve(classpath::getPom, false));
 				project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
 				runOnUiThread(() -> moreSettings.setFileTypeAssociation(project.getFileTypeAsso()));
@@ -542,7 +547,7 @@ public class Jwin extends Application {
 			} else {
 				try {
 					Files.copy(file.toPath(), target.toPath());
-					if(onItemCopied != null) {
+					if (onItemCopied != null) {
 						onItemCopied.run();
 					}
 				} catch (IOException e) {

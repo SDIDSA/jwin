@@ -94,6 +94,9 @@ public class JavaParam extends Param {
 	}
 
 	public void setDir(File dir) {
+		if(!dir.exists()) {
+			return;
+		}
 		startLoading();
 		new Thread(() -> {
 			Entry<String, File> version = getVersionFromDir(dir);
