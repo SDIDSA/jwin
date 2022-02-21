@@ -40,6 +40,7 @@ public class ClasspathParam extends Param {
 	}
 
 	private Semaphore mutex = new Semaphore(1);
+
 	public void add(File dir) {
 		startLoading();
 		new Thread(() -> {
@@ -100,10 +101,10 @@ public class ClasspathParam extends Param {
 		}
 		return res;
 	}
-	
+
 	public static List<File> listResources(File dir) {
 		ArrayList<File> res = new ArrayList<>();
-		
+
 		for (File file : dir.listFiles()) {
 			if (file.isDirectory()) {
 				res.addAll(listResources(file));
@@ -111,7 +112,7 @@ public class ClasspathParam extends Param {
 				res.add(file);
 			}
 		}
-		
+
 		return res;
 	}
 
@@ -159,7 +160,7 @@ public class ClasspathParam extends Param {
 		return files;
 	}
 
-	public void compile(File preBuild, File preBuildLibs, File jdk, File launcher, ProgressBar progress) {
+	public File compile(File preBuild, File preBuildLibs, File jdk, File launcher, ProgressBar progress) {
 		File preBuildBin = new File(preBuild.getAbsolutePath().concat("/bin"));
 		preBuildBin.mkdir();
 		File binDir = new File(jdk.getAbsolutePath().concat("/bin"));
@@ -170,14 +171,17 @@ public class ClasspathParam extends Param {
 		Command compileCommand = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \""
 				+ preBuildBin.getAbsolutePath() + "\" \"" + launcher.getAbsolutePath() + "\"");
 		try {
-			compileCommand.execute(binDir, () -> progress.setProgress(Math.min(.6, progress.getProgress() + .005)))
-					.waitFor();
+			compileCommand.execute(binDir, () -> {
+				if (progress != null)
+					progress.setProgress(Math.min(.6, progress.getProgress() + .005));
+			}).waitFor();
+			
+			return preBuildBin;
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
-		
-		
+		return null;
 	}
 
 	public void copyRes(File preBuild, ProgressBar progress) {
@@ -185,9 +189,9 @@ public class ClasspathParam extends Param {
 		preBuildRes.mkdir();
 
 		int[] resCount = new int[] { 0 };
-		
+
 		HashMap<File, List<File>> resourcesToCopy = new HashMap<>();
-		
+
 		files.forEach(file -> {
 			List<File> resources = listResources(file);
 			if (!resources.isEmpty()) {
@@ -196,7 +200,7 @@ public class ClasspathParam extends Param {
 			}
 		});
 		int[] resCopyCount = new int[] { 0 };
-		
+
 		resourcesToCopy.keySet().forEach(key -> {
 			List<File> resources = resourcesToCopy.get(key);
 			resources.forEach(resource -> {
@@ -206,38 +210,38 @@ public class ClasspathParam extends Param {
 			});
 		});
 	}
-	
+
 	private void copyResource(File src, File srcRoot, File destRoot) {
 		File dest = new File(src.getAbsolutePath().replace(srcRoot.getAbsolutePath(), destRoot.getAbsolutePath()));
-		
+
 		System.out.println(src.getAbsolutePath() + " => " + dest.getAbsolutePath());
-		
+
 		List<File> parents = getParentsUntil(dest, destRoot);
 		Collections.sort(parents);
-		parents.forEach(e-> {
-			if(!e.exists()) {
+		parents.forEach(e -> {
+			if (!e.exists()) {
 				e.mkdir();
 			}
 		});
-		
+
 		try {
 			Files.copy(src.toPath(), dest.toPath());
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
 	}
-	
+
 	private List<File> getParentsUntil(File src, File root) {
 		ArrayList<File> res = new ArrayList<>();
-		
+
 		File parent = src.getParentFile();
-		if(parent.equals(root)) {
+		if (parent.equals(root)) {
 			return res;
-		}else {
+		} else {
 			res.add(parent);
 			res.addAll(getParentsUntil(parent, root));
 		}
-		
+
 		return res;
 	}
 

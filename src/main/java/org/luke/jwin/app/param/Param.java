@@ -43,7 +43,7 @@ public abstract class Param extends StackPane {
 
 	protected HBox top;
 
-	private VBox root;
+	protected VBox root;
 	private ProgressIndicator pi;
 
 	protected ScrollPane sp;

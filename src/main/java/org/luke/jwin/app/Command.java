@@ -27,7 +27,7 @@ public class Command {
 	}
 
 	public Command(Consumer<String> inputHandler, String... command) {
-		this(inputHandler, null, command);
+		this(inputHandler, inputHandler, command);
 	}
 
 	public Command(String... command) {

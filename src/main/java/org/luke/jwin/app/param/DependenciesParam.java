@@ -192,7 +192,9 @@ public class DependenciesParam extends Param {
 				e1.printStackTrace();
 			}
 			final int fi = i;
-			Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
+			if(progress != null) {
+				Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
+			}
 		}
 
 		return preBuildLibs;

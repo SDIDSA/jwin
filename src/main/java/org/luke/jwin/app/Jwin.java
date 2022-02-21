@@ -83,7 +83,7 @@ public class Jwin extends Application {
 		DependenciesParam dependencies = new DependenciesParam(ps, classpath::getPom);
 
 		JdkParam jdk = new JdkParam(ps);
-		JreParam jre = new JreParam(ps);
+		JreParam jre = new JreParam(ps, classpath, jdk, dependencies, mainClass);
 
 		IconParam icon = new IconParam(ps);
 
@@ -167,8 +167,8 @@ public class Jwin extends Application {
 		Scene scene = new Scene(loader);
 
 		ps.setScene(scene);
-		ps.setHeight(516);
-		ps.setMinHeight(516);
+		ps.setHeight(540);
+		ps.setMinHeight(540);
 		ps.setWidth(424 * 2 + 15 * 4);
 		ps.setMinWidth(424 * 2 + 15 * 4);
 		ps.setTitle("jWin");
@@ -564,19 +564,19 @@ public class Jwin extends Application {
 		return count;
 	}
 
-	private void warn(String head, String content) {
+	public static void warn(String head, String content) {
 		alert(head, content, AlertType.WARNING);
 	}
 
-	private void error(String head, String content) {
+	public static void error(String head, String content) {
 		alert(head, content, AlertType.ERROR);
 	}
 
-	private void alert(String head, String content, AlertType type) {
+	public static void alert(String head, String content, AlertType type) {
 		alert(head, content, type, null);
 	}
 
-	private void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes, ButtonType... types) {
+	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes, ButtonType... types) {
 		Alert al = new Alert(type);
 		al.setHeaderText(head);
 		al.setContentText(content);
