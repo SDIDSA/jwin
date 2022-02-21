@@ -6,7 +6,7 @@ a simple java tool to deploy java apps to windows (supports plain java projects 
 - select the source folders for your project.
 - select the main class.
 - select the jdk to be used to compile the java code. (can be automatically detected if you hava javac in your environment variable [path])
-- select the jre to be packed and deployed with your app. (an as or more recent version than the selected jdk)
+- select the jre to be packed and deployed with your app. (or generate it with jlink if your jdk has it)
 - select the icon (.ico) to be used for the launcher and the installer.
 - click "resolve" to resolve maven dependencies or "add jars" to add your dependencies manually.
 - enter app name, version and publisher.
