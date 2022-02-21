@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -17,8 +17,10 @@ import org.luke.jwin.app.Jwin;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -53,19 +55,25 @@ public class JreParam extends JavaParam {
 		root.setAlignment(Pos.CENTER_RIGHT);
 		root.getChildren().add(1, generateFromJdk);
 
-		generateFromJdk.setOnAction(e -> generateFromJdk(cp, jdk, dependencies, mc));
+		generateFromJdk.setOnAction(e -> generateFromJdk(ps, cp, jdk, dependencies, mc));
 	}
 
-	public void generateFromJdk(ClasspathParam cp, JdkParam jdk, DependenciesParam dependencies, MainClassParam mc) {
+	public void generateFromJdk(Stage ps, ClasspathParam cp, JdkParam jdk, DependenciesParam dependencies,
+			MainClassParam mc) {
 		startLoading();
 
 		new Thread(() -> {
-
 			Runnable cancel = this::stopLoading;
 			Runnable invalidJdk = () -> {
 				cancel.run();
 				Jwin.error("Invalid jdk", "The jdk you have specified can not be used to generate a jre");
 			};
+
+			if (dependencies.isResolving()) {
+				cancel.run();
+				Jwin.warn("Resolving dependencies", "try again after dependencies are successfully resolved");
+				return;
+			}
 
 			if (jdk.getValue() == null) {
 				cancel.run();
@@ -90,23 +98,23 @@ public class JreParam extends JavaParam {
 			File preGen = new File(System.getProperty("java.io.tmpdir") + "/jwin_preGen_" + new Random().nextInt(9999));
 			preGen.mkdir();
 
+			Jwin.deleteDirOnShutdown(preGen);
+
 			File preGenLibs = dependencies.copy(preGen, null);
 
 			File preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue().getValue(), null);
 			File jdkBin = new File(jdk.getValue().getAbsolutePath().concat("/bin"));
 			try {
 
-				Function<String, Boolean> isValid = (dep) -> {
-					return dep.indexOf("java.") == 0 || dep.indexOf("jdk.") == 0;
-				};
+				Predicate<String> isValid = dep -> dep.indexOf("java.") == 0 || dep.indexOf("jdk.") == 0;
 				// analyze code for module dependencies
 				Command analCode = new Command(line -> {
 					String[] parts = line.split("\\s+");
 
 					if (parts.length == 3) {
 						String dep = parts[parts.length - 1];
-						
-						if (!deps.contains(dep) && isValid.apply(dep).booleanValue()) {
+
+						if (!deps.contains(dep) && isValid.test(dep)) {
 							deps.add(dep);
 						}
 					}
@@ -128,7 +136,7 @@ public class JreParam extends JavaParam {
 					if (parts.length == 3) {
 						String dep = parts[parts.length - 1];
 
-						if (!deps.contains(dep) && isValid.apply(dep).booleanValue()) {
+						if (!deps.contains(dep) && isValid.test(dep)) {
 							deps.add(dep);
 						}
 					}
@@ -138,15 +146,38 @@ public class JreParam extends JavaParam {
 				deps.forEach(dep -> {
 					System.out.println(dep);
 				});
-				
+
 				Command gen = new Command("cmd", "/c",
 						"jlink --module-path \"" + preGenLibs.getAbsolutePath() + "\" --add-modules "
 								+ String.join(",", deps) + " --output \"" + preGen.getAbsolutePath().concat("/rt")
 								+ "\"");
 
 				gen.execute(jdkBin).waitFor();
-				
-				set(new File(preGen.getAbsolutePath().concat("/rt")));
+
+				File preGenRt = new File(preGen.getAbsolutePath().concat("/rt"));
+
+				Jwin.alert("Save this runtime",
+						"Your custom runtime was generated successfully, do you want to save it for future use ?",
+						AlertType.CONFIRMATION, result -> {
+							if (result.equals(ButtonType.YES)) {
+								DirectoryChooser dc = new DirectoryChooser();
+								File saveTo = dc.showDialog(ps);
+								if (saveTo != null) {
+									startLoading();
+									new Thread(() -> {
+										File saveToRt = new File(saveTo.getAbsolutePath().concat("/custom_jre"));
+										saveToRt.mkdir();
+										Jwin.copyDirCont(preGenRt, saveToRt, null);
+										Platform.runLater(() -> {
+											stopLoading();
+											set(saveToRt);
+										});
+									}).start();
+								}
+							}
+						}, ButtonType.YES, ButtonType.NO);
+
+				set(preGenRt);
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();

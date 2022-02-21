@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import java.util.Random;
 import java.util.UUID;
 import org.luke.jwin.app.file.FileDealer;
@@ -61,6 +62,7 @@ public class Jwin extends Application {
 	Random random = new Random();
 
 	private JWinProject projectFile;
+	private File fileInUse;
 
 	@Override
 	public void start(Stage ps) throws Exception {
@@ -272,6 +274,11 @@ public class Jwin extends Application {
 				return;
 			}
 
+			if (dependencies.isResolving()) {
+				Jwin.warn("Resolving dependencies", "try again after dependencies are successfully resolved");
+				return;
+			}
+			
 			// Check for warnings
 			if (jre.isJdk()) {
 				warn("Using JDK as a runtime", "not recommended unless required by your app (increases package size)");
@@ -283,7 +290,6 @@ public class Jwin extends Application {
 						AlertType.CONFIRMATION, res -> {
 							if (res.equals(ButtonType.OK)) {
 								save.fire();
-								return;
 							}
 						});
 			} else {
@@ -298,8 +304,7 @@ public class Jwin extends Application {
 							"You made changes to the following properties : \n\t" + diffStr.toString().trim(),
 							AlertType.CONFIRMATION, res -> {
 								if (res.equals(ButtonType.OK)) {
-									save.fire();
-									return;
+									FileDealer.write(exported.serialize(), fileInUse);
 								}
 							});
 				}
@@ -323,14 +328,7 @@ public class Jwin extends Application {
 							System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
 					preBuild.mkdir();
 
-					Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-						try {
-							Files.walk(preBuild.toPath()).sorted(Comparator.reverseOrder()).map(Path::toFile)
-									.forEach(File::delete);
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						}
-					}));
+					deleteDirOnShutdown(preBuild);
 
 					Platform.runLater(() -> state.setText("Copying dependencies"));
 					File preBuildLibs = dependencies.copy(preBuild, progress);
@@ -461,6 +459,7 @@ public class Jwin extends Application {
 			if (saveTo != null) {
 				FileDealer.write(project.serialize(), saveTo);
 				projectFile = project;
+				fileInUse = saveTo;
 			}
 
 		});
@@ -489,6 +488,7 @@ public class Jwin extends Application {
 				runOnUiThread(() -> moreSettings.setFileTypeAssociation(project.getFileTypeAsso()));
 
 				projectFile = project;
+				fileInUse = loadFrom;
 
 				Platform.runLater(() -> {
 					preRoot.setDisable(false);
@@ -542,7 +542,9 @@ public class Jwin extends Application {
 			} else {
 				try {
 					Files.copy(file.toPath(), target.toPath());
-					onItemCopied.run();
+					if(onItemCopied != null) {
+						onItemCopied.run();
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -564,6 +566,16 @@ public class Jwin extends Application {
 		return count;
 	}
 
+	public static void deleteDirOnShutdown(File dir) {
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+			try (Stream<Path> stream = Files.walk(dir.toPath())) {
+				stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}));
+	}
+
 	public static void warn(String head, String content) {
 		alert(head, content, AlertType.WARNING);
 	}
@@ -576,18 +588,27 @@ public class Jwin extends Application {
 		alert(head, content, type, null);
 	}
 
-	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes, ButtonType... types) {
-		Alert al = new Alert(type);
-		al.setHeaderText(head);
-		al.setContentText(content);
+	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes,
+			ButtonType... types) {
+		Runnable exe = () -> {
+			Alert al = new Alert(type);
+			al.setHeaderText(head);
+			al.setContentText(content);
 
-		if (types.length != 0) {
-			al.getButtonTypes().setAll(types);
-		}
+			if (types.length != 0) {
+				al.getButtonTypes().setAll(types);
+			}
 
-		Optional<ButtonType> res = al.showAndWait();
-		if (onRes != null && res.isPresent()) {
-			onRes.accept(res.get());
+			Optional<ButtonType> res = al.showAndWait();
+			if (onRes != null && res.isPresent()) {
+				onRes.accept(res.get());
+			}
+		};
+
+		if (Platform.isFxApplicationThread()) {
+			exe.run();
+		} else {
+			Platform.runLater(exe);
 		}
 	}
 

@@ -12,6 +12,7 @@ import java.util.Random;
 import java.util.function.Supplier;
 
 import org.luke.jwin.app.Command;
+import org.luke.jwin.app.Jwin;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -39,6 +40,8 @@ public class DependenciesParam extends Param {
 
 	private VBox resolvedList;
 	private VBox manualList;
+
+	private boolean resolving = false;
 
 	public DependenciesParam(Stage ps, Supplier<List<File>> pomSupplier) {
 		super("Dependencies");
@@ -87,16 +90,20 @@ public class DependenciesParam extends Param {
 		} else {
 			startLoading();
 			new Thread(() -> {
+				resolving = true;
 				poms.forEach(pom -> {
 					File temp = new File(
 							System.getProperty("java.io.tmpdir") + "/lib_dep_" + new Random().nextInt(999999));
 					temp.mkdir();
 
-					File mvn = new File(URLDecoder.decode(getClass().getResource("/mvn/bin/mvn").getFile(), Charset.defaultCharset()));
-					
+					Jwin.deleteDirOnShutdown(temp);
+
+					File mvn = new File(URLDecoder.decode(getClass().getResource("/mvn/bin/mvn").getFile(),
+							Charset.defaultCharset()));
+
 					Command command = new Command("cmd.exe", "/C",
-							"mvn -f \"" + pom.getAbsolutePath() + "\" dependency:copy-dependencies -DoutputDirectory=\"" + temp.getAbsolutePath()
-									+ "\" -Dhttps.protocols=TLSv1.2");
+							"mvn -f \"" + pom.getAbsolutePath() + "\" dependency:copy-dependencies -DoutputDirectory=\""
+									+ temp.getAbsolutePath() + "\" -Dhttps.protocols=TLSv1.2");
 
 					try {
 						command.execute(mvn.getParentFile()).waitFor();
@@ -108,24 +115,19 @@ public class DependenciesParam extends Param {
 					for (File f : temp.listFiles()) {
 						Platform.runLater(() -> addResolvedJar(f));
 					}
-					
-					final File folder = temp;
-					
-					Runtime.getRuntime().addShutdownHook(new Thread(()-> {
-						for(File file : folder.listFiles()) {
-							file.delete();
-						}
-						
-						folder.delete();
-					}));
 				});
 
 				Platform.runLater(() -> {
 					stopLoading();
 					disp.setExpandedPane(resolvedDisp);
 				});
+				resolving = false;
 			}).start();
 		}
+	}
+	
+	public boolean isResolving() {
+		return resolving;
 	}
 
 	public void addResolvedJar(File jar) {
@@ -192,7 +194,7 @@ public class DependenciesParam extends Param {
 				e1.printStackTrace();
 			}
 			final int fi = i;
-			if(progress != null) {
+			if (progress != null) {
 				Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
 			}
 		}
