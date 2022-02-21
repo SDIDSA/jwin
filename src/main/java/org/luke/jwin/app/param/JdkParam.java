@@ -16,7 +16,7 @@ public class JdkParam extends JavaParam {
 		addButton("select", e -> {
 			File dir = dc.showDialog(ps);
 			if (dir != null) {
-				setDir(dir);
+				set(dir);
 			}
 		});
 
@@ -39,7 +39,7 @@ public class JdkParam extends JavaParam {
 				if (source[0] != null) {
 					File javac = new File(source[0]);
 					if (javac.exists()) {
-						setDir(javac.getParentFile().getParentFile());
+						set(javac.getParentFile().getParentFile(), " (found in your system)");
 					}
 				}
 

@@ -30,6 +30,9 @@ public class IconParam extends Param {
 	}
 	
 	public void set(File ico) {
+		if(!ico.exists()) {
+			return;
+		}
 		list.getChildren().clear();
 		value = ico;
 		addFile(ico, ico.getName());

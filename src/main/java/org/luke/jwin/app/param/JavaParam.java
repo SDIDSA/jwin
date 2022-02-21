@@ -85,15 +85,23 @@ public class JavaParam extends Param {
 		return javac.exists();
 	}
 
+
 	public void set(File file) {
+		set(file,"");
+	}
+	
+	public void set(File file, String additional) {
+		if(!file.exists()) {
+			return;
+		}
 		if (file.isDirectory()) {
-			setDir(file);
+			setDir(file, additional);
 		} else {
-			setZip(file);
+			setZip(file, additional);
 		}
 	}
 
-	public void setDir(File dir) {
+	public void setDir(File dir, String additional) {
 		if(!dir.exists()) {
 			return;
 		}
@@ -105,14 +113,14 @@ public class JavaParam extends Param {
 				this.value = version.getValue();
 				Platform.runLater(() -> {
 					list.getChildren().clear();
-					addFile(value, value.getName(), new Label(this.version));
+					addFile(value, value.getName() + additional, new Label(this.version));
 				});
 			}
 			Platform.runLater(this::stopLoading);
 		}).start();
 	}
 
-	public void setZip(File file) {
+	public void setZip(File file, String additional) {
 		startLoading();
 		new Thread(() -> {
 			String version = getVersionFromZip(file);
@@ -121,7 +129,7 @@ public class JavaParam extends Param {
 				this.value = file;
 				Platform.runLater(() -> {
 					list.getChildren().clear();
-					addFile(file, file.getName(), new Label(this.version));
+					addFile(file, file.getName() + additional, new Label(this.version));
 				});
 			}
 			Platform.runLater(this::stopLoading);

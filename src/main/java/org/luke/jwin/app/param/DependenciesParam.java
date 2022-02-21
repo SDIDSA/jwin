@@ -152,6 +152,9 @@ public class DependenciesParam extends Param {
 	}
 
 	public void addManualJar(File jar) {
+		if(!jar.exists()) {
+			return;
+		}
 		manualJars.add(jar);
 		Hyperlink remove = new Hyperlink("remove");
 		HBox line = generateLine(jar, jar.getName(), remove);

@@ -42,6 +42,9 @@ public class ClasspathParam extends Param {
 	private Semaphore mutex = new Semaphore(1);
 
 	public void add(File dir) {
+		if (!dir.exists() || !dir.isDirectory()) {
+			return;
+		}
 		startLoading();
 		new Thread(() -> {
 			File projectRoot = findProjectRoot(dir);
@@ -70,7 +73,6 @@ public class ClasspathParam extends Param {
 
 	@Override
 	public void clear() {
-		System.out.println("clearing");
 		files.clear();
 		list.getChildren().clear();
 	}
@@ -160,7 +162,8 @@ public class ClasspathParam extends Param {
 		return files;
 	}
 
-	public File compile(File preBuild, File preBuildLibs, File jdk, File launcher, ProgressBar progress) {
+	public File compile(File preBuild, File preBuildLibs, File jdk, File launcher, ProgressBar progress)
+			throws IllegalStateException {
 		File preBuildBin = new File(preBuild.getAbsolutePath().concat("/bin"));
 		preBuildBin.mkdir();
 		File binDir = new File(jdk.getAbsolutePath().concat("/bin"));
@@ -168,20 +171,41 @@ public class ClasspathParam extends Param {
 		Consumer<String> append = path -> cpc.append(cpc.isEmpty() ? "" : ";").append(path);
 		append.accept(preBuildLibs.getAbsolutePath().concat("/*"));
 		files.forEach(file -> append.accept(file.getAbsolutePath()));
-		Command compileCommand = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \""
-				+ preBuildBin.getAbsolutePath() + "\" \"" + launcher.getAbsolutePath() + "\"");
+		ArrayList<String> x = new ArrayList<>();
+		Command compileCommand = new Command(line -> {
+			if (!line.isBlank()) {
+				x.add(line);
+			}
+		}, "cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\" \""
+				+ launcher.getAbsolutePath() + "\"");
 		try {
 			compileCommand.execute(binDir, () -> {
 				if (progress != null)
 					progress.setProgress(Math.min(.6, progress.getProgress() + .005));
 			}).waitFor();
-			
+
+			if (!x.isEmpty()) {
+				IllegalStateException ex = new IllegalStateException("Failed to Compile");
+				ex.initCause(new IllegalStateException(String.join("\n", x)));
+
+				throw ex;
+			}
 			return preBuildBin;
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 		return null;
+	}
+
+	public boolean isValidMainClass(File mainClass) {
+		for (File root : files) {
+			if (mainClass.getAbsolutePath().contains(root.getAbsolutePath())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public void copyRes(File preBuild, ProgressBar progress) {

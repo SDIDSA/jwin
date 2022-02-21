@@ -101,7 +101,27 @@ public class JreParam extends JavaParam {
 
 			File preGenLibs = dependencies.copy(preGen, null);
 
-			File preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue().getValue(), null);
+			if(mc.getValue() == null) {
+				cancel.run();
+				Jwin.error("Main class required", "You didn't specify the main class for your application");
+				return;
+			}
+			
+			if(!cp.isValidMainClass(mc.getValue().getValue())) {
+				cancel.run();
+				Jwin.error("invalid mainClass", "The main class you selected doesn't belong in any of your classpath entries, are you sure you didn't remove it?");
+				return;
+			}
+			
+			File preGenBin = null;
+			try {
+				preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue().getValue(), null);
+			}catch(Exception x) {
+				cancel.run();
+				Jwin.error("Failed to compile", "please check your code and classpath settings for potential errors, also don't forget to resolve dependencies");
+				return;
+			}
+			
 			File jdkBin = new File(jdk.getValue().getAbsolutePath().concat("/bin"));
 			try {
 
@@ -173,14 +193,14 @@ public class JreParam extends JavaParam {
 										Jwin.copyDirCont(preGenRt, saveToRt, null);
 										Platform.runLater(() -> {
 											stopLoading();
-											set(saveToRt);
+											set(saveToRt, " (generated with jlink)");
 										});
 									}).start();
 								}
 							}
 						}, ButtonType.YES, ButtonType.NO);
 
-				Platform.runLater(() -> set(preGenRt));
+				Platform.runLater(() -> set(preGenRt, " (generated with jlink)"));
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();

@@ -105,6 +105,9 @@ public class MainClassParam extends Param {
 	}
 
 	public void set(Entry<String, File> value) {
+		if(!value.getValue().exists()) {
+			return;
+		}
 		this.value = value;
 		list.getChildren().clear();
 		addFile(value.getValue(), value.getKey());
