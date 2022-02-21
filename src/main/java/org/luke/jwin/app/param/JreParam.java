@@ -148,7 +148,7 @@ public class JreParam extends JavaParam {
 				});
 
 				Command gen = new Command("cmd", "/c",
-						"jlink --module-path \"" + preGenLibs.getAbsolutePath() + "\" --add-modules "
+						"jlink --no-header-files --no-man-pages --strip-debug --module-path \"" + preGenLibs.getAbsolutePath() + "\" --add-modules "
 								+ String.join(",", deps) + " --output \"" + preGen.getAbsolutePath().concat("/rt")
 								+ "\"");
 
