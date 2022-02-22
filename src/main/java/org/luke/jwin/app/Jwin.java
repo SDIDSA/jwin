@@ -28,22 +28,23 @@ import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.app.param.JreParam;
 import org.luke.jwin.app.param.MainClassParam;
 import org.luke.jwin.app.param.Param;
+import org.luke.jwin.ui.Button;
+import org.luke.jwin.ui.CheckBox;
+import org.luke.jwin.ui.ProgressBar;
+import org.luke.jwin.ui.TextField;
 
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Separator;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
@@ -131,7 +132,6 @@ public class Jwin extends Application {
 		CheckBox console = new CheckBox("Console");
 
 		TextField guid = new TextField();
-		guid.setPromptText("GUID");
 		guid.setEditable(false);
 		HBox.setHgrow(guid, Priority.ALWAYS);
 
@@ -171,8 +171,8 @@ public class Jwin extends Application {
 		ps.setScene(scene);
 		ps.setHeight(550);
 		ps.setMinHeight(550);
-		ps.setWidth(424 * 2 + 15 * 4);
-		ps.setMinWidth(424 * 2 + 15 * 4);
+		ps.setWidth((double) 424 * 2 + 15 * 4);
+		ps.setMinWidth((double) 424 * 2 + 15 * 4);
 		ps.setTitle("jWin");
 		ps.setOnShown(e -> ps.centerOnScreen());
 
@@ -324,7 +324,7 @@ public class Jwin extends Application {
 				}
 				preSaveTo = fc.showDialog(ps);
 			}
-			
+
 			final File saveTo = preSaveTo;
 			if (saveTo != null) {
 				compile.setDisable(true);
@@ -376,7 +376,12 @@ public class Jwin extends Application {
 						e1.printStackTrace();
 						Thread.currentThread().interrupt();
 					}
-					System.out.println(preBuildBat.delete());
+
+					try {
+						Files.delete(preBuildBat.toPath());
+					} catch (IOException e2) {
+						e2.printStackTrace();
+					}
 
 					Platform.runLater(() -> state.setText("Generating installer"));
 					String template = FileDealer.read("/ist.txt").replace(key("app_name"), appName.getValue())
@@ -419,7 +424,6 @@ public class Jwin extends Application {
 								.replace(key("add_to_file"), typeReg);
 					}
 
-					System.out.println(template);
 					File buildScript = new File(
 							System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 					FileDealer.write(template, buildScript);
@@ -433,7 +437,7 @@ public class Jwin extends Application {
 						if (line.trim().indexOf("Compressing") == 0) {
 							compressCount[0]++;
 							Platform.runLater(
-									() -> progress.setProgress(.8 + (compressCount[0] / (double) fileCount) * .2));
+									() -> progress.setProgress(.6 + (compressCount[0] / (double) fileCount) * .4));
 						}
 					};
 					Command build = new Command(buildLine, buildLine, "cmd.exe", "/C",
@@ -572,13 +576,15 @@ public class Jwin extends Application {
 	}
 
 	public static void deleteDirOnShutdown(File dir) {
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-			try (Stream<Path> stream = Files.walk(dir.toPath())) {
-				stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-		}));
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDir(dir)));
+	}
+
+	public static void deleteDir(File dir) {
+		try (Stream<Path> stream = Files.walk(dir.toPath())) {
+			stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
 	}
 
 	public static void warn(String head, String content) {
@@ -626,14 +632,23 @@ public class Jwin extends Application {
 	public static class TextVal extends VBox {
 		private TextField field;
 
+		private HBox bottom;
+
 		public TextVal(String name) {
 			super(5);
 			field = new TextField();
 
 			field.setMinWidth(0);
 
+			bottom = new HBox(10, field);
+
 			HBox.setHgrow(this, Priority.ALWAYS);
-			getChildren().addAll(new Label(name), field);
+			HBox.setHgrow(field, Priority.ALWAYS);
+			getChildren().addAll(new Label(name), bottom);
+		}
+
+		public void addToBottom(Node node) {
+			bottom.getChildren().add(node);
 		}
 
 		public String getValue() {

@@ -9,6 +9,7 @@ import javax.swing.filechooser.FileSystemView;
 
 import org.luke.jwin.app.utils.Backgrounds;
 import org.luke.jwin.app.utils.Borders;
+import org.luke.jwin.ui.Button;
 
 import java.awt.Graphics2D;
 import java.awt.image.*;
@@ -19,7 +20,6 @@ import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
@@ -67,7 +67,7 @@ public abstract class Param extends StackPane {
 		top.getChildren().addAll(head, hSpace());
 
 		list = new VBox(10);
-		list.setBackground(Backgrounds.make(Color.WHITE, 3));
+		list.setBackground(Backgrounds.make(Color.WHITE));
 		list.setPadding(new Insets(10));
 		list.setAlignment(Pos.CENTER);
 
@@ -76,8 +76,8 @@ public abstract class Param extends StackPane {
 
 		list.minHeightProperty().bind(sp.heightProperty().subtract(4));
 
-		sp.setBackground(Backgrounds.make(Color.WHITE, 4));
-		sp.setBorder(Borders.make(Color.LIGHTGRAY, 4));
+		sp.setBackground(Backgrounds.make(Color.WHITE));
+		sp.setBorder(Borders.make(Color.LIGHTGRAY));
 		sp.setMaxHeight(150);
 		sp.setMinHeight(47);
 

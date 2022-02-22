@@ -21,7 +21,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -50,7 +49,6 @@ public class JreParam extends JavaParam {
 		});
 
 		Hyperlink generateFromJdk = new Hyperlink("Generate jre using jlink");
-		generateFromJdk.setTextFill(Color.CYAN.darker().darker());
 		root.setAlignment(Pos.CENTER_RIGHT);
 		root.getChildren().add(0, generateFromJdk);
 
@@ -164,10 +162,6 @@ public class JreParam extends JavaParam {
 					analLibs.execute(jdkBin).waitFor();
 				}
 
-				deps.forEach(dep -> {
-					System.out.println(dep);
-				});
-
 				Platform.runLater(() -> startLoading("Generating JRE ..."));
 				Command gen = new Command("cmd", "/c",
 						"jlink --no-header-files --no-man-pages --strip-debug --module-path \""
@@ -260,7 +254,7 @@ public class JreParam extends JavaParam {
 							}
 						}
 
-						Platform.runLater(() -> progress.setProgress(.2 + (copyCount[0] / (double) ec) * .2));
+						Platform.runLater(() -> progress.setProgress(.1 + (copyCount[0] / (double) ec) * .1));
 					});
 				}
 
@@ -273,7 +267,7 @@ public class JreParam extends JavaParam {
 			int[] copyCount = new int[] { 0 };
 			Jwin.copyDirCont(value, preBuildRt, () -> {
 				copyCount[0]++;
-				Platform.runLater(() -> progress.setProgress(.2 + (copyCount[0] / (double) count) * .2));
+				Platform.runLater(() -> progress.setProgress(.1 + (copyCount[0] / (double) count) * .1));
 			});
 		}
 	}

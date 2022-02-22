@@ -13,21 +13,26 @@ import java.util.function.Supplier;
 
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.Jwin;
+import org.luke.jwin.app.utils.Backgrounds;
+import org.luke.jwin.app.utils.Borders;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TitledPane;
+import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-import javafx.scene.control.Alert.AlertType;
 
 public class DependenciesParam extends Param {
 
@@ -55,12 +60,18 @@ public class DependenciesParam extends Param {
 		resolvedJars = new ArrayList<>();
 
 		resolvedList = new VBox(5);
+		resolvedList.setBackground(Backgrounds.make(Color.WHITE));
 		resolvedDisp = new TitledPane("Resolved Dependencies", resolvedList);
+		style(resolvedDisp);
 
 		manualList = new VBox(5);
+		manualList.setBackground(Backgrounds.make(Color.WHITE));
 		manualDisp = new TitledPane("Manual Dependencies", manualList);
+		style(manualDisp);
 
 		disp = new Accordion(resolvedDisp, manualDisp);
+		disp.setBorder(Borders.make(Color.LIGHTGRAY));
+		disp.setBackground(Backgrounds.make(Color.WHITE));
 
 		list.getChildren().add(disp);
 
@@ -74,9 +85,7 @@ public class DependenciesParam extends Param {
 			}
 		});
 
-		addButton("resolve", e -> {
-			resolve(pomSupplier, true);
-		});
+		addButton("resolve", e -> resolve(pomSupplier, true));
 	}
 
 	public void resolve(Supplier<List<File>> pomSupplier, boolean alert) {
@@ -84,7 +93,7 @@ public class DependenciesParam extends Param {
 		resolvedJars.clear();
 		List<File> poms = pomSupplier.get();
 		if (poms.isEmpty()) {
-			if(alert) {
+			if (alert) {
 				Alert al = new Alert(AlertType.WARNING);
 				al.setContentText("no pom.xml files found for the selected classpath");
 				al.showAndWait();
@@ -127,7 +136,7 @@ public class DependenciesParam extends Param {
 			}).start();
 		}
 	}
-	
+
 	public boolean isResolving() {
 		return resolving;
 	}
@@ -152,7 +161,7 @@ public class DependenciesParam extends Param {
 	}
 
 	public void addManualJar(File jar) {
-		if(!jar.exists()) {
+		if (!jar.exists()) {
 			return;
 		}
 		manualJars.add(jar);
@@ -200,7 +209,7 @@ public class DependenciesParam extends Param {
 			}
 			final int fi = i;
 			if (progress != null) {
-				Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
+				Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .1));
 			}
 		}
 
@@ -214,6 +223,16 @@ public class DependenciesParam extends Param {
 
 		manualList.getChildren().clear();
 		resolvedList.getChildren().clear();
+	}
+	
+	private void style(TitledPane tp) {
+		Platform.runLater(() -> {
+			Region content = (Region) tp.getChildrenUnmodifiable().get(0);
+			Region title = (Region) tp.getChildrenUnmodifiable().get(1);
+			
+			title.setBackground(Backgrounds.make(Color.WHITE));
+			content.setBorder(Borders.make(Color.LIGHTGRAY, new BorderWidths(1, 0, 0, 0)));
+		});
 	}
 
 }

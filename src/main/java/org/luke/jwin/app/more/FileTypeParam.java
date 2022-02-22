@@ -4,10 +4,9 @@ import java.io.File;
 
 import org.luke.jwin.app.Jwin.TextVal;
 import org.luke.jwin.app.file.FileTypeAssociation;
+import org.luke.jwin.ui.Button;
+import org.luke.jwin.ui.CheckBox;
 
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -35,6 +34,7 @@ public class FileTypeParam extends VBox {
 
 		iconPath = new TextVal("Type icon");
 		Button selectIcon = new Button("select");
+		selectIcon.setMinWidth(100);
 		selectIcon.setOnAction(e -> {
 			((Stage) getScene().getWindow()).setAlwaysOnTop(false);
 			select(ps);
@@ -42,15 +42,15 @@ public class FileTypeParam extends VBox {
 		});
 
 		HBox line1 = new HBox(10, typeName, typeExtension);
-		HBox line2 = new HBox(10, iconPath, selectIcon);
-		line2.setAlignment(Pos.BOTTOM_CENTER);
 
 		enable = new CheckBox("enable");
 
 		line1.disableProperty().bind(enable.selectedProperty().not());
-		line2.disableProperty().bind(enable.selectedProperty().not());
+		iconPath.disableProperty().bind(enable.selectedProperty().not());
 
-		getChildren().addAll(line1, line2, enable);
+		iconPath.addToBottom(selectIcon);
+		
+		getChildren().addAll(line1, iconPath, enable);
 	}
 	
 	public boolean isEnabled() {

@@ -4,6 +4,7 @@ module jwin {
 	requires java.desktop;
 	requires javafx.swing;
 	requires javafx.controls;
+	requires javafx.base;
 	
 	opens org.luke.jwin.app to javafx.graphics;
 	
