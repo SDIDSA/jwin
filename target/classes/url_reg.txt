@@ -1,0 +1,4 @@
+Root: HKCR; Subkey: "$protocol$"; ValueType: "string"; ValueData: "$protocol$"; Flags: uninsdeletekey
+Root: HKCR; Subkey: "$protocol$"; ValueType: "string"; ValueName: "URL Protocol"; ValueData: ""
+Root: HKCR; Subkey: "$protocol$\DefaultIcon"; ValueType: "string"; ValueData: "{app}\{#MyAppExeName},0"
+Root: HKCR; Subkey: "$protocol$\shell\open\command"; ValueType: "string"; ValueData: """{app}\{#MyAppExeName}"" ""%1"""

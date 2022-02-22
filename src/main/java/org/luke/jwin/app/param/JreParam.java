@@ -122,7 +122,6 @@ public class JreParam extends JavaParam {
 			
 			File jdkBin = new File(jdk.getValue().getAbsolutePath().concat("/bin"));
 			try {
-
 				Platform.runLater(() -> startLoading("Analyzing dependencies ..."));
 				Predicate<String> isValid = dep -> dep.indexOf("java.") == 0 || dep.indexOf("jdk.") == 0;
 				// analyze code for module dependencies

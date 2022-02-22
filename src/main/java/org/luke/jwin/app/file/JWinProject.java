@@ -23,6 +23,7 @@ public class JWinProject {
 	private static final String CONSOLE = "console";
 	private static final String GUID = "guid";
 	private static final String FILE_TYPE_ASSO = "fileTypeAsso";
+	private static final String URL_PROTOCOL_ASSO = "urlProtocolAsso";
 
 	private static final String CLASS_NAME = "className";
 	private static final String FILE_PATH = "filePath";
@@ -44,12 +45,13 @@ public class JWinProject {
 	private boolean console;
 
 	private String guid;
-	
+
 	private FileTypeAssociation fileTypeAsso;
+	private UrlProtocolAssociation urlProtocolAsso;
 
 	public JWinProject(List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
-			List<File> manualJars, String appName, String appVersion, String appPublisher, boolean console,
-			String guid, FileTypeAssociation fileTypeAsso) {
+			List<File> manualJars, String appName, String appVersion, String appPublisher, boolean console, String guid,
+			FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
 		this.classpath = new ArrayList<>(classpath);
 		this.mainClass = mainClass;
 		this.jdk = jdk;
@@ -62,12 +64,21 @@ public class JWinProject {
 		this.console = console;
 		this.guid = guid;
 		this.fileTypeAsso = fileTypeAsso;
+		this.urlProtocolAsso = urlProtocolAsso;
 	}
-	
+
+	public void setUrlProtocolAsso(UrlProtocolAssociation urlProtocolAsso) {
+		this.urlProtocolAsso = urlProtocolAsso;
+	}
+
+	public UrlProtocolAssociation getUrlProtocolAsso() {
+		return urlProtocolAsso;
+	}
+
 	public void setFileTypeAsso(FileTypeAssociation fileTypeAsso) {
 		this.fileTypeAsso = fileTypeAsso;
 	}
-	
+
 	public FileTypeAssociation getFileTypeAsso() {
 		return fileTypeAsso;
 	}
@@ -145,13 +156,13 @@ public class JWinProject {
 	public String serialize() {
 		JSONObject data = new JSONObject();
 		JSONObject mc = new JSONObject();
-		mc.put(CLASS_NAME, mainClass.getKey());
-		mc.put(FILE_PATH, mainClass.getValue());
+		mc.put(CLASS_NAME, mainClass == null ? "" : mainClass.getKey());
+		mc.put(FILE_PATH, mainClass == null ? "" : mainClass.getValue());
 		data.put(CLASSPATH, serializeFileList(classpath));
 		data.put(MAIN_CLASS, mc);
-		data.put(JDK, jdk.getAbsolutePath());
-		data.put(JRE, jre.getAbsolutePath());
-		data.put(ICON, icon.getAbsolutePath());
+		data.put(JDK, jdk == null ? "" : jdk.getAbsolutePath());
+		data.put(JRE, jre == null ? "" : jre.getAbsolutePath());
+		data.put(ICON, icon == null ? "" : icon.getAbsolutePath());
 		data.put(MANUAL_JARS, serializeFileList(manualJars));
 		data.put(APP_NAME, appName);
 		data.put(APP_VERSION, appVersion);
@@ -159,10 +170,14 @@ public class JWinProject {
 		data.put(CONSOLE, console);
 		data.put(GUID, guid);
 
-		if(fileTypeAsso != null) {
+		if (fileTypeAsso != null) {
 			data.put(FILE_TYPE_ASSO, fileTypeAsso.serialize());
 		}
-		
+
+		if (urlProtocolAsso != null) {
+			data.put(URL_PROTOCOL_ASSO, urlProtocolAsso.serialize());
+		}
+
 		return data.toString(4);
 	}
 
@@ -174,7 +189,9 @@ public class JWinProject {
 				new File(obj.getString(JRE)), new File(obj.getString(ICON)),
 				deserializeFileList(obj.getJSONArray(MANUAL_JARS)), obj.getString(APP_NAME), obj.getString(APP_VERSION),
 				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.getString(GUID),
-				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null);
+				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null,
+				obj.has(URL_PROTOCOL_ASSO) ? UrlProtocolAssociation.deserialize(obj.getJSONObject(URL_PROTOCOL_ASSO))
+						: null);
 	}
 
 	private static JSONArray serializeFileList(List<File> list) {

@@ -20,6 +20,7 @@ import java.util.UUID;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.JWinProject;
+import org.luke.jwin.app.file.UrlProtocolAssociation;
 import org.luke.jwin.app.more.MoreSettings;
 import org.luke.jwin.app.param.ClasspathParam;
 import org.luke.jwin.app.param.DependenciesParam;
@@ -144,7 +145,7 @@ public class Jwin extends Application {
 
 		Supplier<JWinProject> export = () -> new JWinProject(classpath.getFiles(), mainClass.getValue(), jdk.getValue(),
 				jre.getValue(), icon.getValue(), dependencies.getManualJars(), appName.getValue(), version.getValue(),
-				publisher.getValue(), console.isSelected(), guid.getText(), moreSettings.getFileTypeAssociation());
+				publisher.getValue(), console.isSelected(), guid.getText(), moreSettings.getFileTypeAssociation(), moreSettings.getUrlProtocolAssociation());
 
 		HBox preConsole = new HBox(10);
 		preConsole.setAlignment(Pos.CENTER);
@@ -305,6 +306,7 @@ public class Jwin extends Application {
 							AlertType.CONFIRMATION, res -> {
 								if (res.equals(ButtonType.OK)) {
 									FileDealer.write(exported.serialize(), fileInUse);
+									projectFile = exported;
 								}
 							});
 				}
@@ -396,34 +398,52 @@ public class Jwin extends Application {
 							.replace(key("GUID"), guid.getText());
 
 					FileTypeAssociation fta = moreSettings.getFileTypeAssociation();
+					UrlProtocolAssociation upa = moreSettings.getUrlProtocolAssociation();
 
-					if (fta == null) {
-						template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "")
-								.replace(key("add_to_file"), "");
+					if (fta == null && upa == null) {
+						template = template.replace(key("add_to_file"), "");
 					} else {
-						if (fta.getIcon() != null) {
-							try {
-								Files.copy(fta.getIcon().toPath(),
-										new File(preBuild.getAbsolutePath().concat("/").concat(fta.getIcon().getName()))
-												.toPath());
-							} catch (IOException e1) {
-								e1.printStackTrace();
+						StringBuilder reg = new StringBuilder("[Registry]\n");
+						if (fta != null) {
+							if (fta.getIcon() != null) {
+								try {
+									Files.copy(fta.getIcon().toPath(), new File(
+											preBuild.getAbsolutePath().concat("/").concat(fta.getIcon().getName()))
+													.toPath());
+								} catch (IOException e1) {
+									e1.printStackTrace();
+								}
 							}
+
+							String typeDef = FileDealer.read("/type_def.txt")
+									.replace(key("type_name"), fta.getTypeName())
+									.replace(key("type_extension"), fta.getTypeExtension());
+
+							template = template.replace(key("add_define"), typeDef).replace(key("add_to_setup"),
+									"ChangesAssociations=yes");
+
+							String typeReg = FileDealer.read("/type_reg.txt")
+									.replace(key("type_extension"), fta.getTypeExtension())
+									.replace(key("type_icon"), fta.getIcon() == null ? appName.getValue().concat(".exe")
+											: fta.getIcon().getName());
+
+							reg.append(typeReg).append("\n");
+						} else {
+							template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "");
+						}
+						
+						if(upa != null) {
+							String urlReg = FileDealer.read("/url_reg.txt")
+									.replace(key("protocol"), upa.getProtocol());
+							
+							reg.append("\n").append(urlReg);
 						}
 
-						String typeDef = FileDealer.read("/type_def.txt").replace(key("type_name"), fta.getTypeName())
-								.replace(key("type_extension"), fta.getTypeExtension());
-
-						String typeReg = FileDealer.read("/type_reg.txt")
-								.replace(key("type_extension"), fta.getTypeExtension())
-								.replace(key("type_icon"), fta.getIcon() == null ? appName.getValue().concat(".exe")
-										: fta.getIcon().getName());
-
-						template = template.replace(key("add_define"), typeDef)
-								.replace(key("add_to_setup"), "ChangesAssociations=yes")
-								.replace(key("add_to_file"), typeReg);
+						template = template.replace(key("add_to_file"), reg);
 					}
-
+					
+					System.out.println(template);
+					
 					File buildScript = new File(
 							System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 					FileDealer.write(template, buildScript);
@@ -495,6 +515,7 @@ public class Jwin extends Application {
 				project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
 				runOnUiThread(() -> moreSettings.setFileTypeAssociation(project.getFileTypeAsso()));
+				runOnUiThread(() -> moreSettings.setUrlProtocolAssociation(project.getUrlProtocolAsso()));
 
 				projectFile = project;
 				fileInUse = loadFrom;

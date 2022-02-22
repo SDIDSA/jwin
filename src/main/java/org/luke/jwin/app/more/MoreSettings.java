@@ -1,6 +1,7 @@
 package org.luke.jwin.app.more;
 
 import org.luke.jwin.app.file.FileTypeAssociation;
+import org.luke.jwin.app.file.UrlProtocolAssociation;
 
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
@@ -18,6 +19,7 @@ import javafx.stage.StageStyle;
 
 public class MoreSettings extends Stage {
 	private FileTypeParam fileTypeParam;
+	private UrlProtocolParam urlProtocolParam;
 
 	public MoreSettings(Stage ps) {
 		super(StageStyle.UTILITY);
@@ -44,7 +46,9 @@ public class MoreSettings extends Stage {
 
 		fileTypeParam = new FileTypeParam(ps);
 
-		VBox root = new VBox(10, makeParam("Associate file type", fileTypeParam));
+		urlProtocolParam = new UrlProtocolParam();
+		
+		VBox root = new VBox(10, makeParam("Associate file type", fileTypeParam), makeParam("Associate URL protocol", urlProtocolParam));
 		root.setPadding(new Insets(10));
 
 		setScene(new Scene(root, 400, 400));
@@ -54,8 +58,16 @@ public class MoreSettings extends Stage {
 		return fileTypeParam.getValue();
 	}
 	
+	public UrlProtocolAssociation getUrlProtocolAssociation() {
+		return urlProtocolParam.getValue();
+	}
+	
 	public void setFileTypeAssociation(FileTypeAssociation fileTypeAsso) {
 		fileTypeParam.set(fileTypeAsso);
+	}
+	
+	public void setUrlProtocolAssociation(UrlProtocolAssociation urlProtocolAsso) {
+		urlProtocolParam.set(urlProtocolAsso);
 	}
 
 	private VBox makeParam(String name, Node node) {
