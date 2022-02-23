@@ -84,9 +84,10 @@ public class Jwin extends Application {
 
 		MainClassParam mainClass = new MainClassParam(ps, classpath::listClasses);
 
-		DependenciesParam dependencies = new DependenciesParam(ps, classpath::getPom);
-
 		JdkParam jdk = new JdkParam(ps);
+
+		DependenciesParam dependencies = new DependenciesParam(ps, classpath::getPom, jdk);
+
 		JreParam jre = new JreParam(ps, classpath, jdk, dependencies, mainClass);
 
 		IconParam icon = new IconParam(ps);
@@ -145,7 +146,8 @@ public class Jwin extends Application {
 
 		Supplier<JWinProject> export = () -> new JWinProject(classpath.getFiles(), mainClass.getValue(), jdk.getValue(),
 				jre.getValue(), icon.getValue(), dependencies.getManualJars(), appName.getValue(), version.getValue(),
-				publisher.getValue(), console.isSelected(), guid.getText(), moreSettings.getFileTypeAssociation(), moreSettings.getUrlProtocolAssociation());
+				publisher.getValue(), console.isSelected(), guid.getText(), moreSettings.getFileTypeAssociation(),
+				moreSettings.getUrlProtocolAssociation());
 
 		HBox preConsole = new HBox(10);
 		preConsole.setAlignment(Pos.CENTER);
@@ -428,22 +430,23 @@ public class Jwin extends Application {
 											: fta.getIcon().getName());
 
 							reg.append(typeReg).append("\n");
-						} else {
-							template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "");
 						}
-						
-						if(upa != null) {
-							String urlReg = FileDealer.read("/url_reg.txt")
-									.replace(key("protocol"), upa.getProtocol());
-							
+
+						if (upa != null) {
+							String urlReg = FileDealer.read("/url_reg.txt").replace(key("protocol"), upa.getProtocol());
+
 							reg.append("\n").append(urlReg);
 						}
 
 						template = template.replace(key("add_to_file"), reg);
 					}
 					
+					if(fta == null) {
+						template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "");
+					}
+
 					System.out.println(template);
-					
+
 					File buildScript = new File(
 							System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 					FileDealer.write(template, buildScript);
@@ -510,8 +513,6 @@ public class Jwin extends Application {
 				runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
 				runOnUiThread(() -> console.setSelected(project.isConsole()));
 				runOnUiThread(() -> guid.setText(project.getGuid()));
-
-				runOnUiThread(() -> dependencies.resolve(classpath::getPom, false));
 				project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
 				runOnUiThread(() -> moreSettings.setFileTypeAssociation(project.getFileTypeAsso()));
@@ -519,6 +520,8 @@ public class Jwin extends Application {
 
 				projectFile = project;
 				fileInUse = loadFrom;
+
+				runOnUiThread(() -> dependencies.resolve(classpath::getPom, jdk, false));
 
 				Platform.runLater(() -> {
 					preRoot.setDisable(false);

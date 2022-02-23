@@ -115,6 +115,7 @@ public class JreParam extends JavaParam {
 			try {
 				preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue().getValue(), null);
 			}catch(Exception x) {
+				x.printStackTrace();
 				cancel.run();
 				Jwin.error("Failed to compile", "please check your code and classpath settings for potential errors, also don't forget to resolve dependencies");
 				return;

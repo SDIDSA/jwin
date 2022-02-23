@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.Jwin;
+import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.utils.Backgrounds;
 import org.luke.jwin.app.utils.Borders;
 
@@ -48,7 +49,7 @@ public class DependenciesParam extends Param {
 
 	private boolean resolving = false;
 
-	public DependenciesParam(Stage ps, Supplier<List<File>> pomSupplier) {
+	public DependenciesParam(Stage ps, Supplier<List<File>> pomSupplier, JdkParam jdk) {
 		super("Dependencies");
 
 		list.setPadding(Insets.EMPTY);
@@ -85,10 +86,10 @@ public class DependenciesParam extends Param {
 			}
 		});
 
-		addButton("resolve", e -> resolve(pomSupplier, true));
+		addButton("resolve", e -> resolve(pomSupplier, jdk, true));
 	}
 
-	public void resolve(Supplier<List<File>> pomSupplier, boolean alert) {
+	public void resolve(Supplier<List<File>> pomSupplier, JdkParam jdk, boolean alert) {
 		resolvedList.getChildren().clear();
 		resolvedJars.clear();
 		List<File> poms = pomSupplier.get();
@@ -109,15 +110,30 @@ public class DependenciesParam extends Param {
 
 					Jwin.deleteDirOnShutdown(temp);
 
-					File mvn = new File(URLDecoder.decode(getClass().getResource("/mvn/bin/mvn").getFile(),
+					File mvn = new File(URLDecoder.decode(getClass().getResource("/mvn/bin/mvn.cmd").getFile(),
 							Charset.defaultCharset()));
 
+					File mvnRoot = new File(
+							System.getProperty("java.io.tmpdir") + "/mvn_root_" + new Random().nextInt(9999));
+					mvnRoot.mkdir();
+					Jwin.deleteDirOnShutdown(mvnRoot);
+					
+					Jwin.copyDirCont(mvn.getParentFile().getParentFile(), mvnRoot, null);
+					
+					File tempMvn = new File(mvnRoot.getAbsolutePath().concat("/bin/mvn.cmd"));
+					
+					String toReplace = "@REM ==== START VALIDATION ====";
+					FileDealer.write(
+							FileDealer.read(tempMvn).replace(toReplace,
+									toReplace + "\nset JAVA_HOME=" + jdk.getValue().getAbsolutePath()),
+							new File(tempMvn.getAbsolutePath().replace("mvn.cmd", "cmvn.cmd")));
 					Command command = new Command("cmd.exe", "/C",
-							"mvn -f \"" + pom.getAbsolutePath() + "\" dependency:copy-dependencies -DoutputDirectory=\""
-									+ temp.getAbsolutePath() + "\" -Dhttps.protocols=TLSv1.2");
+							"cmvn -f \"" + pom.getAbsolutePath()
+									+ "\" dependency:copy-dependencies -DoutputDirectory=\"" + temp.getAbsolutePath()
+									+ "\" -Dhttps.protocols=TLSv1.2");
 
 					try {
-						command.execute(mvn.getParentFile()).waitFor();
+						command.execute(tempMvn.getParentFile()).waitFor();
 					} catch (InterruptedException e1) {
 						e1.printStackTrace();
 						Thread.currentThread().interrupt();
@@ -224,12 +240,12 @@ public class DependenciesParam extends Param {
 		manualList.getChildren().clear();
 		resolvedList.getChildren().clear();
 	}
-	
+
 	private void style(TitledPane tp) {
 		Platform.runLater(() -> {
 			Region content = (Region) tp.getChildrenUnmodifiable().get(0);
 			Region title = (Region) tp.getChildrenUnmodifiable().get(1);
-			
+
 			title.setBackground(Backgrounds.make(Color.WHITE));
 			content.setBorder(Borders.make(Color.LIGHTGRAY, new BorderWidths(1, 0, 0, 0)));
 		});

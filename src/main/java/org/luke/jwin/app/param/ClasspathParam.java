@@ -183,7 +183,8 @@ public class ClasspathParam extends Param {
 				if (progress != null)
 					progress.setProgress(Math.min(.4, progress.getProgress() + .005));
 			}).waitFor();
-			progress.setProgress(.4);
+			if (progress != null)
+				progress.setProgress(.4);
 
 			if (!x.isEmpty()) {
 				IllegalStateException ex = new IllegalStateException("Failed to Compile");
