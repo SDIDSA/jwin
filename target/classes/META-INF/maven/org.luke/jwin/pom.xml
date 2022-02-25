@@ -8,7 +8,6 @@
 	<description>a java tool to deploy java projects as windows apps</description>
 
 	<dependencies>
-
 		<dependency>
 			<groupId>org.openjfx</groupId>
 			<artifactId>javafx-controls</artifactId>
@@ -24,6 +23,16 @@
 			<artifactId>json</artifactId>
 			<version>20210307</version>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna</artifactId>
+			<version>5.10.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.java.dev.jna</groupId>
+			<artifactId>jna-platform</artifactId>
+			<version>5.10.0</version>
+		</dependency>
 	</dependencies>
 </project>

@@ -24,6 +24,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.HBox;
@@ -37,15 +38,10 @@ import javafx.stage.Stage;
 
 public class DependenciesParam extends Param {
 
-	private ArrayList<File> manualJars;
-	private ArrayList<File> resolvedJars;
-
 	private Accordion disp;
-	private TitledPane resolvedDisp;
-	private TitledPane manualDisp;
-
-	private VBox resolvedList;
-	private VBox manualList;
+	
+	private Deps resolvedDeps;
+	private Deps manualDeps;
 
 	private boolean resolving = false;
 
@@ -57,23 +53,16 @@ public class DependenciesParam extends Param {
 		list.setBackground(null);
 		VBox.setVgrow(this, Priority.ALWAYS);
 
-		manualJars = new ArrayList<>();
-		resolvedJars = new ArrayList<>();
+		disp = new Accordion();
+		
+		resolvedDeps = new Deps(disp, "Resolved Dependencies");
+		manualDeps = new Deps(disp, "Manual Dependencies");
 
-		resolvedList = new VBox(5);
-		resolvedList.setBackground(Backgrounds.make(Color.WHITE));
-		resolvedDisp = new TitledPane("Resolved Dependencies", resolvedList);
-		style(resolvedDisp);
-
-		manualList = new VBox(5);
-		manualList.setBackground(Backgrounds.make(Color.WHITE));
-		manualDisp = new TitledPane("Manual Dependencies", manualList);
-		style(manualDisp);
-
-		disp = new Accordion(resolvedDisp, manualDisp);
 		disp.setBorder(Borders.make(Color.LIGHTGRAY));
 		disp.setBackground(Backgrounds.make(Color.WHITE));
-
+		
+		sp.setFitToHeight(true);
+	
 		list.getChildren().add(disp);
 
 		FileChooser fc = new FileChooser();
@@ -82,7 +71,7 @@ public class DependenciesParam extends Param {
 			List<File> files = fc.showOpenMultipleDialog(ps);
 			if (files != null && !files.isEmpty()) {
 				files.forEach(this::addManualJar);
-				disp.setExpandedPane(manualDisp);
+				disp.setExpandedPane(manualDeps);
 			}
 		});
 
@@ -90,8 +79,7 @@ public class DependenciesParam extends Param {
 	}
 
 	public void resolve(Supplier<List<File>> pomSupplier, JdkParam jdk, boolean alert) {
-		resolvedList.getChildren().clear();
-		resolvedJars.clear();
+		resolvedDeps.clear();
 		List<File> poms = pomSupplier.get();
 		if (poms.isEmpty()) {
 			if (alert) {
@@ -105,7 +93,7 @@ public class DependenciesParam extends Param {
 				resolving = true;
 				poms.forEach(pom -> {
 					File temp = new File(
-							System.getProperty("java.io.tmpdir") + "/lib_dep_" + new Random().nextInt(999999));
+							System.getProperty("java.io.tmpdir") + "/jwin_lib_dep_" + new Random().nextInt(999999));
 					temp.mkdir();
 
 					Jwin.deleteDirOnShutdown(temp);
@@ -114,7 +102,7 @@ public class DependenciesParam extends Param {
 							Charset.defaultCharset()));
 
 					File mvnRoot = new File(
-							System.getProperty("java.io.tmpdir") + "/mvn_root_" + new Random().nextInt(9999));
+							System.getProperty("java.io.tmpdir") + "/jwin_mvn_root_" + new Random().nextInt(9999));
 					mvnRoot.mkdir();
 					Jwin.deleteDirOnShutdown(mvnRoot);
 					
@@ -146,7 +134,7 @@ public class DependenciesParam extends Param {
 
 				Platform.runLater(() -> {
 					stopLoading();
-					disp.setExpandedPane(resolvedDisp);
+					disp.setExpandedPane(resolvedDeps);
 				});
 				resolving = false;
 			}).start();
@@ -158,56 +146,26 @@ public class DependenciesParam extends Param {
 	}
 
 	public void addResolvedJar(File jar) {
-		resolvedJars.add(jar);
-
-		Hyperlink remove = new Hyperlink("remove");
-
-		HBox line = generateLine(jar, jar.getName(), remove);
-
-		resolvedList.getChildren().add(line);
-
-		remove.setOnAction(ev -> {
-			resolvedList.getChildren().remove(line);
-			resolvedJars.remove(jar);
-		});
-
-		if (disp.getExpandedPane() != resolvedDisp) {
-			disp.setExpandedPane(resolvedDisp);
-		}
+		resolvedDeps.addJar(jar);
 	}
 
 	public void addManualJar(File jar) {
-		if (!jar.exists()) {
-			return;
-		}
-		manualJars.add(jar);
-		Hyperlink remove = new Hyperlink("remove");
-		HBox line = generateLine(jar, jar.getName(), remove);
-		manualList.getChildren().add(line);
-		remove.setOnAction(ev -> {
-			manualList.getChildren().remove(line);
-			manualJars.remove(jar);
-		});
-
-		if (disp.getExpandedPane() != manualDisp) {
-			disp.setExpandedPane(manualDisp);
-		}
+		manualDeps.addJar(jar);
 	}
 
 	public List<File> getJars() {
-		ArrayList<File> allJars = new ArrayList<>();
-		allJars.addAll(manualJars);
-		allJars.addAll(resolvedJars);
+		ArrayList<File> allJars = new ArrayList<>(getResolvedJars());
+		allJars.addAll(getManualJars());
 
 		return allJars;
 	}
 
 	public List<File> getResolvedJars() {
-		return resolvedJars;
+		return resolvedDeps.getFiles();
 	}
 
 	public List<File> getManualJars() {
-		return manualJars;
+		return manualDeps.getFiles();
 	}
 
 	public File copy(File preBuild, ProgressBar progress) {
@@ -225,7 +183,7 @@ public class DependenciesParam extends Param {
 			}
 			final int fi = i;
 			if (progress != null) {
-				Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .1));
+				Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));
 			}
 		}
 
@@ -234,21 +192,74 @@ public class DependenciesParam extends Param {
 
 	@Override
 	public void clear() {
-		manualJars.clear();
-		resolvedJars.clear();
-
-		manualList.getChildren().clear();
-		resolvedList.getChildren().clear();
+		resolvedDeps.clear();
+		manualDeps.clear();
 	}
+	
+	private static class Deps extends TitledPane {
+		private ArrayList<File> files;
+		private VBox root;
+		
+		private Accordion owner;
+		public Deps(Accordion owner, String title) {
+			super();
+			this.owner = owner;
+			owner.getPanes().add(this);
+			root = new VBox(5);
+			root.setPadding(new Insets(10));
+			root.setBackground(Backgrounds.make(Color.WHITE));
+			style(this);
+			
+			setText(title);
+			
+			ScrollPane sp = new ScrollPane(root);
+			
+			sp.setFitToWidth(true);
+			sp.setBorder(null);
+			
+			setContent(sp);
+			
+			files = new ArrayList<>();
+		}
+		
+		public void clear() {
+			files.clear();
+			root.getChildren().clear();
+		}
+		
+		public List<File> getFiles() {
+			return files;
+		}
+		
+		public void addJar(File jar) {
+			if (!jar.exists()) {
+				return;
+			}
+			files.add(jar);
+			Hyperlink remove = new Hyperlink("remove");
+			HBox line = generateLine(jar, jar.getName(), remove);
+			root.getChildren().add(line);
+			remove.setOnAction(ev -> {
+				root.getChildren().remove(line);
+				files.remove(jar);
+			});
 
-	private void style(TitledPane tp) {
-		Platform.runLater(() -> {
-			Region content = (Region) tp.getChildrenUnmodifiable().get(0);
-			Region title = (Region) tp.getChildrenUnmodifiable().get(1);
+			if (owner.getExpandedPane() != this) {
+				owner.setExpandedPane(this);
+			}
+		}
 
-			title.setBackground(Backgrounds.make(Color.WHITE));
-			content.setBorder(Borders.make(Color.LIGHTGRAY, new BorderWidths(1, 0, 0, 0)));
-		});
+		private static void style(TitledPane tp) {
+			Platform.runLater(() -> {
+				Region content = (Region) tp.getChildrenUnmodifiable().get(0);
+				Region title = (Region) tp.getChildrenUnmodifiable().get(1);
+
+				title.setBackground(Backgrounds.make(Color.WHITE));
+				content.setBorder(Borders.make(Color.LIGHTGRAY, new BorderWidths(1, 0, 0, 0)));
+				content.setBackground(Backgrounds.make(Color.WHITE));
+			});
+		}
+		
 	}
 
 }

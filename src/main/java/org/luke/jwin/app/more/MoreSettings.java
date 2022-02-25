@@ -1,8 +1,12 @@
 package org.luke.jwin.app.more;
 
+import org.luke.jwin.app.Jwin;
+import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.UrlProtocolAssociation;
+import org.luke.jwin.ui.Button;
 
+import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -24,6 +28,7 @@ public class MoreSettings extends Stage {
 	public MoreSettings(Stage ps) {
 		super(StageStyle.UTILITY);
 		setTitle("More Settings");
+		setResizable(false);
 		setAlwaysOnTop(true);
 
 		Runnable adapt = () -> {
@@ -48,7 +53,19 @@ public class MoreSettings extends Stage {
 
 		urlProtocolParam = new UrlProtocolParam();
 		
-		VBox root = new VBox(10, makeParam("Associate file type", fileTypeParam), makeParam("Associate URL protocol", urlProtocolParam));
+		Button clearTemp = new Button("Clear jwin temp files");
+		clearTemp.setMinHeight(30);
+		
+		clearTemp.setOnAction(e-> {
+			clearTemp.setDisable(true);
+			
+			new Thread(()-> {
+				FileDealer.clearTemp();
+				Platform.runLater(() -> clearTemp.setDisable(false));
+			}).start();
+		});
+		
+		VBox root = new VBox(10, makeParam("Associate file type", fileTypeParam), makeParam("Associate URL protocol", urlProtocolParam), Jwin.vSpace(), clearTemp);
 		root.setPadding(new Insets(10));
 
 		setScene(new Scene(root, 400, 400));

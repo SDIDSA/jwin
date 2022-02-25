@@ -48,7 +48,7 @@ public class JreParam extends JavaParam {
 			}
 		});
 
-		Hyperlink generateFromJdk = new Hyperlink("Generate jre using jlink");
+		Hyperlink generateFromJdk = new Hyperlink("Generate JRE using jlink");
 		root.setAlignment(Pos.CENTER_RIGHT);
 		root.getChildren().add(0, generateFromJdk);
 
@@ -254,7 +254,7 @@ public class JreParam extends JavaParam {
 							}
 						}
 
-						Platform.runLater(() -> progress.setProgress(.1 + (copyCount[0] / (double) ec) * .1));
+						Platform.runLater(() -> progress.setProgress(.2 + (copyCount[0] / (double) ec) * .2));
 					});
 				}
 
@@ -267,7 +267,7 @@ public class JreParam extends JavaParam {
 			int[] copyCount = new int[] { 0 };
 			Jwin.copyDirCont(value, preBuildRt, () -> {
 				copyCount[0]++;
-				Platform.runLater(() -> progress.setProgress(.1 + (copyCount[0] / (double) count) * .1));
+				Platform.runLater(() -> progress.setProgress(.2 + (copyCount[0] / (double) count) * .2));
 			});
 		}
 	}

@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+
+import org.luke.jwin.app.Jwin;
 
 public class FileDealer {
 	private FileDealer() {
@@ -47,6 +50,25 @@ public class FileDealer {
 			bw.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public static void clearTemp() {
+		File temp = new File(
+				System.getProperty("java.io.tmpdir"));
+		
+		for(File file : temp.listFiles()) {
+			if(file.getName().indexOf("jwin_") == 0) {
+				if(file.isFile()) {
+					try {
+						Files.delete(file.toPath());
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}else {
+					Jwin.deleteDir(file);
+				}
+			}
 		}
 	}
 }

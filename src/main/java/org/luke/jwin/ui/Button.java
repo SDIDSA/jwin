@@ -125,4 +125,9 @@ public class Button extends StackPane {
 		label.setTextAlignment(ta);
 		darkLabel.setTextAlignment(ta);
 	}
+
+	public void setText(String string) {
+		label.setText(string);
+		darkLabel.setText(string);
+	}
 }

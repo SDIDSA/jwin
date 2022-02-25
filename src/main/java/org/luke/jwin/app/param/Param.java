@@ -39,6 +39,10 @@ public abstract class Param extends StackPane {
 	public static void clearAll() {
 		all.forEach(Param::clear);
 	}
+	
+	public static void disable(boolean val) {
+		all.forEach(p -> p.setDisable(val));
+	}
 
 	protected VBox list;
 
@@ -78,7 +82,6 @@ public abstract class Param extends StackPane {
 
 		sp.setBackground(Backgrounds.make(Color.WHITE));
 		sp.setBorder(Borders.make(Color.LIGHTGRAY));
-		sp.setMaxHeight(150);
 		sp.setMinHeight(47);
 
 		StackPane listCont = new StackPane(sp);
@@ -135,7 +138,7 @@ public abstract class Param extends StackPane {
 		return line;
 	}
 
-	protected HBox generateLine(File file, String name, Node... post) {
+	protected static HBox generateLine(File file, String name, Node... post) {
 		HBox line = new HBox(10, new ImageView(typeIcon(file)), new Label(name), hSpace());
 		line.setAlignment(Pos.CENTER);
 
@@ -146,7 +149,7 @@ public abstract class Param extends StackPane {
 		return line;
 	}
 
-	private Image typeIcon(File file) {
+	private static Image typeIcon(File file) {
 		Icon icon = FileSystemView.getFileSystemView().getSystemIcon(file);
 		BufferedImage bImg = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
 
@@ -156,7 +159,7 @@ public abstract class Param extends StackPane {
 		return SwingFXUtils.toFXImage(bImg, null);
 	}
 
-	private Pane hSpace() {
+	private static Pane hSpace() {
 		Pane space = new Pane();
 		HBox.setHgrow(space, Priority.ALWAYS);
 		return space;

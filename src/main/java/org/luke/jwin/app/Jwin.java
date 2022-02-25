@@ -66,6 +66,10 @@ public class Jwin extends Application {
 	private JWinProject projectFile;
 	private File fileInUse;
 
+	private File preBuild;
+
+	private Runnable onRun;
+
 	@Override
 	public void start(Stage ps) throws Exception {
 		StackPane loader = new StackPane();
@@ -92,11 +96,15 @@ public class Jwin extends Application {
 
 		IconParam icon = new IconParam(ps);
 
+		Button run = new Button("Run");
+		run.setMinWidth(60);
+
 		Button compile = new Button("Build");
 		compile.setMinWidth(60);
+		compile.setDisable(true);
 
 		Button advanced = new Button("more\nsettings");
-		advanced.setMinWidth(60);
+		advanced.setMinWidth(80);
 		advanced.setTextAlignment(TextAlignment.CENTER);
 
 		Button save = new Button("Save");
@@ -106,8 +114,8 @@ public class Jwin extends Application {
 		load.setMinWidth(60);
 
 		VBox saveLoad = new VBox(5, save, load);
+		VBox buildRun = new VBox(5, run, compile);
 
-		compile.minHeightProperty().bind(saveLoad.heightProperty());
 		advanced.minHeightProperty().bind(saveLoad.heightProperty());
 
 		DirectoryChooser fc = new DirectoryChooser();
@@ -115,7 +123,7 @@ public class Jwin extends Application {
 		HBox bottom = new HBox(10);
 		bottom.setAlignment(Pos.BOTTOM_CENTER);
 
-		ProgressBar progress = new ProgressBar();
+		ProgressBar progress = new ProgressBar(ps);
 		Label state = new Label("doing nothing");
 
 		StackPane progressCont = new StackPane(progress, state);
@@ -124,7 +132,7 @@ public class Jwin extends Application {
 
 		HBox.setHgrow(progressCont, Priority.ALWAYS);
 
-		progress.minHeightProperty().bind(compile.heightProperty());
+		progress.minHeightProperty().bind(saveLoad.heightProperty());
 		progress.setStyle("-fx-accent: lightblue");
 
 		TextVal appName = new TextVal("App name");
@@ -157,7 +165,7 @@ public class Jwin extends Application {
 
 		HBox preBottom = new HBox(15, appName, version, publisher);
 
-		bottom.getChildren().addAll(progressCont, compile, advanced, saveLoad);
+		bottom.getChildren().addAll(progressCont, buildRun, saveLoad, advanced);
 
 		root1.getChildren().addAll(classpath, new Separator(), mainClass, vSpace(), jdk, jre);
 
@@ -185,7 +193,16 @@ public class Jwin extends Application {
 
 		ps.show();
 
-		compile.setOnAction(e -> {
+		Consumer<Boolean> setDisable = (b) -> {
+			Param.disable(b);
+			preBottom.setDisable(b);
+			preConsole.setDisable(b);
+			saveLoad.setDisable(b);
+			buildRun.setDisable(b);
+			advanced.setDisable(b);
+		};
+
+		onRun = () -> {
 			// Check for errors
 			List<File> cp = classpath.getFiles();
 
@@ -234,6 +251,69 @@ public class Jwin extends Application {
 				return;
 			}
 
+			if (dependencies.isResolving()) {
+				Jwin.warn("Resolving dependencies", "try again after dependencies are successfully resolved");
+				return;
+			}
+
+			setDisable.accept(true);
+			compile.setDisable(true);
+			new Thread(() -> {
+				preBuild = new File(System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
+				preBuild.mkdir();
+
+				deleteDirOnShutdown(preBuild);
+
+				Platform.runLater(() -> state.setText("Copying dependencies"));
+				File preBuildLibs = dependencies.copy(preBuild, progress);
+
+				Platform.runLater(() -> state.setText("Copying runtime"));
+				jre.copy(preBuild, progress);
+
+				Platform.runLater(() -> state.setText("Compiling source code"));
+				classpath.compile(preBuild, preBuildLibs, jdk.getValue(), mainClass.getValue().getValue(), progress);
+
+				Platform.runLater(() -> state.setText("Copying resources"));
+				classpath.copyRes(preBuild, progress);
+
+				Platform.runLater(() -> {
+					progress.setProgress(-1);
+					state.setText("Running...");
+				});
+
+				Command command = new Command("cmd", "/c",
+						"\"rt/bin/java\" -cp \"bin;res;lib/*\" " + mainClass.getValue().getKey());
+				try {
+					Process p = command.execute(preBuild);
+					Platform.runLater(() -> {
+						buildRun.setDisable(false);
+						run.setText("Stop");
+						run.setDisable(false);
+						run.setOnAction(e -> {
+							p.descendants().forEach(ProcessHandle::destroyForcibly);
+							run.setText("Run");
+							run.setOnAction(ev -> onRun.run());
+						});
+					});
+					p.waitFor();
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
+
+				Platform.runLater(() -> {
+					run.setText("Run");
+					progress.setProgress(-1);
+					state.setText("doing nothing");
+					setDisable.accept(false);
+					compile.setDisable(false);
+				});
+			}).start();
+		};
+
+		run.setOnAction(e -> onRun.run());
+
+		compile.setOnAction(e -> {
 			boolean[] contin = new boolean[] { true };
 
 			ButtonType useDefault = new ButtonType("use default");
@@ -266,7 +346,7 @@ public class Jwin extends Application {
 				return;
 			}
 
-			if (appName.getValue().isBlank()) {
+			if (version.getValue().isBlank()) {
 				error("Missing app version", "The application version field is required");
 				return;
 			}
@@ -274,11 +354,6 @@ public class Jwin extends Application {
 			if (guid.getText().isBlank()) {
 				error("Missing app GUID",
 						"click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
-				return;
-			}
-
-			if (dependencies.isResolving()) {
-				Jwin.warn("Resolving dependencies", "try again after dependencies are successfully resolved");
 				return;
 			}
 
@@ -330,26 +405,10 @@ public class Jwin extends Application {
 			}
 
 			final File saveTo = preSaveTo;
+
 			if (saveTo != null) {
-				compile.setDisable(true);
+				setDisable.accept(true);
 				new Thread(() -> {
-					File preBuild = new File(
-							System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
-					preBuild.mkdir();
-
-					deleteDirOnShutdown(preBuild);
-
-					Platform.runLater(() -> state.setText("Copying dependencies"));
-					File preBuildLibs = dependencies.copy(preBuild, progress);
-
-					Platform.runLater(() -> state.setText("Copying runtime"));
-					jre.copy(preBuild, progress);
-
-					Platform.runLater(() -> state.setText("Compiling source code"));
-					classpath.compile(preBuild, preBuildLibs, dk, launcher.getValue(), progress);
-
-					Platform.runLater(() -> state.setText("Copying resources"));
-					classpath.copyRes(preBuild, progress);
 
 					Platform.runLater(() -> state.setText("Generating launcher"));
 
@@ -357,7 +416,8 @@ public class Jwin extends Application {
 							preBuild.getAbsolutePath().concat("/").concat(appName.getValue()).concat(".bat"));
 
 					FileDealer.write("set batdir=%~dp0 \n" + "pushd \"%batdir%\" \n"
-							+ "\"rt/bin/java\" -cp \"res;bin;lib/*\" " + launcher.getKey() + " %*", preBuildBat);
+							+ "\"rt/bin/java\" -cp \"res;bin;lib/*\" " + mainClass.getValue().getKey() + " %*",
+							preBuildBat);
 
 					File b2e = new File(
 							URLDecoder.decode(getClass().getResource("/b2e.exe").getFile(), Charset.defaultCharset()));
@@ -440,8 +500,8 @@ public class Jwin extends Application {
 
 						template = template.replace(key("add_to_file"), reg);
 					}
-					
-					if(fta == null) {
+
+					if (fta == null) {
 						template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "");
 					}
 
@@ -459,8 +519,7 @@ public class Jwin extends Application {
 					Consumer<String> buildLine = line -> {
 						if (line.trim().indexOf("Compressing") == 0) {
 							compressCount[0]++;
-							Platform.runLater(
-									() -> progress.setProgress(.6 + (compressCount[0] / (double) fileCount) * .4));
+							Platform.runLater(() -> progress.setProgress((compressCount[0] / (double) fileCount) * .9));
 						}
 					};
 					Command build = new Command(buildLine, buildLine, "cmd.exe", "/C",
@@ -476,10 +535,9 @@ public class Jwin extends Application {
 					Platform.runLater(() -> {
 						state.setText("done");
 						progress.setProgress(-1);
-						compile.setDisable(false);
+						setDisable.accept(false);
 					});
 				}).start();
-
 			}
 		});
 
@@ -526,6 +584,7 @@ public class Jwin extends Application {
 				Platform.runLater(() -> {
 					preRoot.setDisable(false);
 					loading.setVisible(false);
+					compile.setDisable(true);
 				});
 			}).start();
 		};
@@ -647,7 +706,7 @@ public class Jwin extends Application {
 		}
 	}
 
-	private Pane vSpace() {
+	public static Pane vSpace() {
 		Pane space = new Pane();
 		VBox.setVgrow(space, Priority.ALWAYS);
 		return space;
@@ -682,7 +741,5 @@ public class Jwin extends Application {
 		public void setValue(String value) {
 			field.setText(value);
 		}
-
 	}
-
 }

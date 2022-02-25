@@ -181,10 +181,10 @@ public class ClasspathParam extends Param {
 		try {
 			compileCommand.execute(binDir, () -> {
 				if (progress != null)
-					progress.setProgress(Math.min(.4, progress.getProgress() + .005));
+					progress.setProgress(Math.min(.6, progress.getProgress() + .005));
 			}).waitFor();
 			if (progress != null)
-				progress.setProgress(.4);
+				progress.setProgress(.6);
 
 			if (!x.isEmpty()) {
 				IllegalStateException ex = new IllegalStateException("Failed to Compile");
@@ -232,7 +232,7 @@ public class ClasspathParam extends Param {
 			resources.forEach(resource -> {
 				resCopyCount[0]++;
 				copyResource(resource, key, preBuildRes);
-				Platform.runLater(() -> progress.setProgress(.4 + (resCopyCount[0] / (double) resCount[0]) * .2));
+				Platform.runLater(() -> progress.setProgress(.6 + (resCopyCount[0] / (double) resCount[0]) * .4));
 			});
 		});
 	}

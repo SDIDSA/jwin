@@ -1,10 +1,12 @@
 module jwin {
-	requires javafx.graphics;
 	requires org.json;
+	requires javafx.base;
 	requires java.desktop;
 	requires javafx.swing;
+	requires javafx.graphics;
 	requires javafx.controls;
-	requires javafx.base;
+	requires com.sun.jna.platform;
+	requires com.sun.jna;
 	
 	opens org.luke.jwin.app to javafx.graphics;
 	
