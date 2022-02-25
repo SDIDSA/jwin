@@ -259,19 +259,41 @@ public class Jwin extends Application {
 			setDisable.accept(true);
 			compile.setDisable(true);
 			new Thread(() -> {
+				Runnable onErr = () -> {
+					setDisable.accept(false);
+					Platform.runLater(() -> {
+						state.setText("Failed to run :(");
+						progress.setProgress(-1);
+					});
+				};
+
 				preBuild = new File(System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
 				preBuild.mkdir();
 
 				deleteDirOnShutdown(preBuild);
 
 				Platform.runLater(() -> state.setText("Copying dependencies"));
-				File preBuildLibs = dependencies.copy(preBuild, progress);
+				File preBuildLibs = null;
+				try {
+					preBuildLibs = dependencies.copy(preBuild, progress);
+				} catch (IOException e2) {
+					copyDependenciesFailure();
+					onErr.run();
+					return;
+				}
 
 				Platform.runLater(() -> state.setText("Copying runtime"));
 				jre.copy(preBuild, progress);
 
 				Platform.runLater(() -> state.setText("Compiling source code"));
-				classpath.compile(preBuild, preBuildLibs, jdk.getValue(), mainClass.getValue().getValue(), progress);
+				try {
+					classpath.compile(preBuild, preBuildLibs, jdk.getValue(), mainClass.getValue().getValue(),
+							progress);
+				} catch (IllegalStateException x) {
+					compileFailure();
+					onErr.run();
+					return;
+				}
 
 				Platform.runLater(() -> state.setText("Copying resources"));
 				classpath.copyRes(preBuild, progress);
@@ -354,6 +376,12 @@ public class Jwin extends Application {
 			if (guid.getText().isBlank()) {
 				error("Missing app GUID",
 						"click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
+				return;
+			}
+
+			if (!preBuild.exists()) {
+				error("Temp files can't be found",
+						"Pre Build files were deleted or not correctly generated, try running again");
 				return;
 			}
 
@@ -741,5 +769,15 @@ public class Jwin extends Application {
 		public void setValue(String value) {
 			field.setText(value);
 		}
+	}
+
+	public static void compileFailure() {
+		Jwin.error("Failed to compile",
+				"please check your code and classpath settings for potential errors, also don't forget to resolve dependencies");
+	}
+
+	public static void copyDependenciesFailure() {
+		Jwin.error("Failed to copy dependencies",
+				"the referenced jar files might have been deleted, try resolving again");
 	}
 }

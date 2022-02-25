@@ -168,7 +168,7 @@ public class DependenciesParam extends Param {
 		return manualDeps.getFiles();
 	}
 
-	public File copy(File preBuild, ProgressBar progress) {
+	public File copy(File preBuild, ProgressBar progress) throws IOException {
 		List<File> deps = getJars();
 
 		File preBuildLibs = new File(preBuild.getAbsolutePath().concat("/lib"));
@@ -176,11 +176,9 @@ public class DependenciesParam extends Param {
 
 		for (int i = 0; i < deps.size(); i++) {
 			File dep = deps.get(i);
-			try {
-				Files.copy(dep.toPath(), Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
+			
+			Files.copy(dep.toPath(), Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
+			
 			final int fi = i;
 			if (progress != null) {
 				Platform.runLater(() -> progress.setProgress((fi / (double) deps.size()) * .2));

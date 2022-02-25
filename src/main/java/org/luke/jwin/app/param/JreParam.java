@@ -97,7 +97,15 @@ public class JreParam extends JavaParam {
 
 			Jwin.deleteDirOnShutdown(preGen);
 
-			File preGenLibs = dependencies.copy(preGen, null);
+			File preGenLibs = null;
+			try {
+				preGenLibs = dependencies.copy(preGen, null);
+			} catch (IOException e1) {
+				cancel.run();
+				Jwin.copyDependenciesFailure();
+				return;
+				
+			}
 
 			if(mc.getValue() == null) {
 				cancel.run();
@@ -115,9 +123,8 @@ public class JreParam extends JavaParam {
 			try {
 				preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue().getValue(), null);
 			}catch(Exception x) {
-				x.printStackTrace();
 				cancel.run();
-				Jwin.error("Failed to compile", "please check your code and classpath settings for potential errors, also don't forget to resolve dependencies");
+				Jwin.compileFailure();
 				return;
 			}
 			
