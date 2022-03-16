@@ -23,6 +23,8 @@ import javafx.stage.StageStyle;
 public class MainClassParam extends Param {
 	private Entry<String, File> value;
 
+	private String altMain = null;
+	
 	private Map<String, File> classNames;
 
 	private Thread searcher;
@@ -116,6 +118,14 @@ public class MainClassParam extends Param {
 
 	public Entry<String, File> getValue() {
 		return value;
+	}
+	
+	public void setAltMain(String altMain) {
+		this.altMain = altMain;
+	}
+	
+	public String getAltMain() {
+		return altMain;
 	}
 
 	@Override

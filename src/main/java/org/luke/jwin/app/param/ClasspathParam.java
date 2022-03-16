@@ -2,16 +2,21 @@ package org.luke.jwin.app.param;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 
 import org.luke.jwin.app.Command;
+import org.luke.jwin.app.Jwin;
+import org.luke.jwin.app.file.FileDealer;
+import org.luke.jwin.app.utils.MyClassLoader;
 
 import javafx.application.Platform;
 import javafx.scene.control.Hyperlink;
@@ -162,8 +167,9 @@ public class ClasspathParam extends Param {
 		return files;
 	}
 
-	public File compile(File preBuild, File preBuildLibs, File jdk, File launcher, ProgressBar progress)
-			throws IllegalStateException {
+	public File compile(File preBuild, File preBuildLibs, File jdk, Entry<String, File> launcher, ProgressBar progress,
+			Consumer<String> setAltMain) throws IllegalStateException {
+
 		File preBuildBin = new File(preBuild.getAbsolutePath().concat("/bin"));
 		preBuildBin.mkdir();
 		File binDir = new File(jdk.getAbsolutePath().concat("/bin"));
@@ -177,7 +183,7 @@ public class ClasspathParam extends Param {
 				x.add(line);
 			}
 		}, "cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\" \""
-				+ launcher.getAbsolutePath() + "\"");
+				+ launcher.getValue().getAbsolutePath() + "\"");
 		try {
 			compileCommand.execute(binDir, () -> {
 				if (progress != null)
@@ -192,12 +198,46 @@ public class ClasspathParam extends Param {
 
 				throw ex;
 			}
+
+			Class<?> mainClass = MyClassLoader.loadClass(launcher.getKey(), preBuildBin);
+			if (mainClass.getSuperclass().equals(javafx.application.Application.class)) {
+				Jwin.deleteDir(preBuildBin);
+				preBuildBin.mkdir();
+
+				File newLauncherFile = new File(preBuildBin.getAbsolutePath().concat("/").concat("Launcher.java"));
+
+				String newLauncherContent = generateLauncher(mainClass, launcher);
+
+				FileDealer.write(newLauncherContent, newLauncherFile);
+				
+				Command compileNewLauncher = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \""
+						+ preBuildBin.getAbsolutePath() + "\" \"" + newLauncherFile.getAbsolutePath() + "\"");
+				compileNewLauncher.execute(binDir).waitFor();
+
+				if (setAltMain != null) {
+					setAltMain.accept(mainClass.getPackageName()
+							.concat((mainClass.getPackageName().isBlank() ? "" : ".") + "Launcher"));
+				}
+			}
+
 			return preBuildBin;
-		} catch (InterruptedException e1) {
+		} catch (InterruptedException | MalformedURLException e1) {
 			e1.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 		return null;
+	}
+
+	private String generateLauncher(Class<?> mainClass, Entry<String, File> launcher) {
+		StringBuilder launcherContent = new StringBuilder();
+		boolean blankPackage = mainClass.getPackageName().isBlank();
+		if (!blankPackage) {
+			launcherContent.append("package ").append(mainClass.getPackageName()).append(";\n\n");
+		}
+		launcherContent.append(
+				"import javafx.application.Application;\n\npublic class Launcher {\n\tpublic static void main(String[] args) {\n\t\tApplication.launch(")
+				.append(launcher.getKey()).append(".class, args);\n\t}\n}").toString();
+		return launcherContent.toString();
 	}
 
 	public boolean isValidMainClass(File mainClass) {

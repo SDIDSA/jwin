@@ -121,7 +121,7 @@ public class JreParam extends JavaParam {
 			
 			File preGenBin = null;
 			try {
-				preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue().getValue(), null);
+				preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue(), null, null);
 			}catch(Exception x) {
 				cancel.run();
 				Jwin.compileFailure();

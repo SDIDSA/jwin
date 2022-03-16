@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.luke.jwin.app.Command;
@@ -91,7 +92,8 @@ public class DependenciesParam extends Param {
 			startLoading();
 			new Thread(() -> {
 				resolving = true;
-				poms.forEach(pom -> {
+				
+				Consumer<File> pomResolver = pom -> {
 					File temp = new File(
 							System.getProperty("java.io.tmpdir") + "/jwin_lib_dep_" + new Random().nextInt(999999));
 					temp.mkdir();
@@ -130,7 +132,14 @@ public class DependenciesParam extends Param {
 					for (File f : temp.listFiles()) {
 						Platform.runLater(() -> addResolvedJar(f));
 					}
-				});
+				};
+				
+				try {
+					poms.forEach(pomResolver);
+				}catch(Exception x) {
+					x.printStackTrace();
+					Jwin.error("Operation Failed", "Failed to resolve dependencies, make sure the jdk you selected is valid");
+				}
 
 				Platform.runLater(() -> {
 					stopLoading();

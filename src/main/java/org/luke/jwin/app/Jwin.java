@@ -1,5 +1,7 @@
 package org.luke.jwin.app;
 
+import java.awt.Desktop;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.module.ModuleDescriptor.Version;
@@ -17,6 +19,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.Random;
 import java.util.UUID;
+
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.JWinProject;
@@ -287,8 +290,8 @@ public class Jwin extends Application {
 
 				Platform.runLater(() -> state.setText("Compiling source code"));
 				try {
-					classpath.compile(preBuild, preBuildLibs, jdk.getValue(), mainClass.getValue().getValue(),
-							progress);
+					classpath.compile(preBuild, preBuildLibs, jdk.getValue(), mainClass.getValue(),
+							progress, mainClass::setAltMain);
 				} catch (IllegalStateException x) {
 					compileFailure();
 					onErr.run();
@@ -304,7 +307,7 @@ public class Jwin extends Application {
 				});
 
 				Command command = new Command("cmd", "/c",
-						"\"rt/bin/java\" -cp \"bin;res;lib/*\" " + mainClass.getValue().getKey());
+						"\"rt/bin/java\" -cp \"bin;res;lib/*\" " + (mainClass.getAltMain() == null ? mainClass.getValue().getKey() : mainClass.getAltMain()));
 				try {
 					Process p = command.execute(preBuild);
 					Platform.runLater(() -> {
@@ -444,7 +447,7 @@ public class Jwin extends Application {
 							preBuild.getAbsolutePath().concat("/").concat(appName.getValue()).concat(".bat"));
 
 					FileDealer.write("set batdir=%~dp0 \n" + "pushd \"%batdir%\" \n"
-							+ "\"rt/bin/java\" -cp \"res;bin;lib/*\" " + mainClass.getValue().getKey() + " %*",
+							+ "\"rt/bin/java\" -cp \"res;bin;lib/*\" " + (mainClass.getAltMain() == null ? mainClass.getValue().getKey() : mainClass.getAltMain()) + " %*",
 							preBuildBat);
 
 					File b2e = new File(
@@ -533,8 +536,6 @@ public class Jwin extends Application {
 						template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "");
 					}
 
-					System.out.println(template);
-
 					File buildScript = new File(
 							System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 					FileDealer.write(template, buildScript);
@@ -560,6 +561,12 @@ public class Jwin extends Application {
 						Thread.currentThread().interrupt();
 					}
 
+					try {
+						Desktop.getDesktop().open(saveTo);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					
 					Platform.runLater(() -> {
 						state.setText("done");
 						progress.setProgress(-1);
@@ -573,6 +580,7 @@ public class Jwin extends Application {
 		saver.getExtensionFilters().add(new ExtensionFilter("jWin Project", "*.jwp"));
 		save.setOnAction(e -> {
 			JWinProject project = export.get();
+			saver.setInitialFileName(appName.getValue() + "_jWin_Project");
 			File saveTo = saver.showSaveDialog(ps);
 			if (saveTo != null) {
 				FileDealer.write(project.serialize(), saveTo);
