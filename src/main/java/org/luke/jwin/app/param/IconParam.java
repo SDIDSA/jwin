@@ -2,27 +2,28 @@ package org.luke.jwin.app.param;
 
 import java.io.File;
 
+import org.luke.gui.window.Window;
+
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
 
 public class IconParam extends Param {
 
 	private File value;
 	
 	private FileChooser fc;
-	public IconParam(Stage ps) {
-		super("Executable Icon");
+	public IconParam(Window ps) {
+		super(ps, "Executable Icon");
 
 		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("icon", "*.ico"));
 		
-		addButton("select", e-> {
+		addButton(ps, "select", () -> {
 			select(ps);
 		});
 	}
 	
-	public void select(Stage ps) {
+	public void select(Window ps) {
 		File ico = fc.showOpenDialog(ps);
 		if(ico != null) {
 			set(ico);
@@ -35,7 +36,7 @@ public class IconParam extends Param {
 		}
 		list.getChildren().clear();
 		value = ico;
-		addFile(ico, ico.getName());
+		addFile(getWindow(), ico, ico.getName());
 	}
 	
 	public File getValue() {
@@ -44,8 +45,8 @@ public class IconParam extends Param {
 
 	@Override
 	public void clear() {
-		// TODO Auto-generated method stub
-		
+		value = null;
+		list.getChildren().clear();
 	}
 
 }

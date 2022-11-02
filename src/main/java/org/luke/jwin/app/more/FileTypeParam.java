@@ -2,18 +2,22 @@ package org.luke.jwin.app.more;
 
 import java.io.File;
 
-import org.luke.jwin.app.Jwin.TextVal;
+import org.luke.gui.controls.check.KeyedCheck;
+import org.luke.gui.style.Style;
+import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Window;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.ui.Button;
-import org.luke.jwin.ui.CheckBox;
+import org.luke.jwin.ui.TextVal;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
 
-public class FileTypeParam extends VBox {
+public class FileTypeParam extends VBox implements Styleable {
 	private FileChooser fc;
 
 	private TextVal typeName;
@@ -21,21 +25,24 @@ public class FileTypeParam extends VBox {
 	private TextVal iconPath;
 	private File icon;
 
-	private CheckBox enable;
+	private KeyedCheck enable;
 
-	public FileTypeParam(Stage ps) {
+	public FileTypeParam(Window ps) {
 		super(10);
 
 		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("icon", "*.ico"));
 
-		typeName = new TextVal("Type name");
-		typeExtension = new TextVal("Type extension");
+		typeName = new TextVal(ps, "Type name");
+		typeName.setPrompt("My Special Extension");
+		typeExtension = new TextVal(ps, "Type extension");
+		typeExtension.setPrompt(".ext");
 
-		iconPath = new TextVal("Type icon");
-		Button selectIcon = new Button("select");
+		iconPath = new TextVal(ps, "Type icon");
+		typeName.setPrompt("type_icon.ico");
+		Button selectIcon = new Button(ps, "select", 20, 40);
 		selectIcon.setMinWidth(100);
-		selectIcon.setOnAction(e -> {
+		selectIcon.setAction(() -> {
 			((Stage) getScene().getWindow()).setAlwaysOnTop(false);
 			select(ps);
 			((Stage) getScene().getWindow()).setAlwaysOnTop(true);
@@ -43,18 +50,20 @@ public class FileTypeParam extends VBox {
 
 		HBox line1 = new HBox(10, typeName, typeExtension);
 
-		enable = new CheckBox("enable");
+		enable = new KeyedCheck(ps, "enable", 16);
 
-		line1.disableProperty().bind(enable.selectedProperty().not());
-		iconPath.disableProperty().bind(enable.selectedProperty().not());
-
+		line1.disableProperty().bind(enable.checkedProperty().not());
+		iconPath.disableProperty().bind(enable.checkedProperty().not());
+		iconPath.setEditable(false);
 		iconPath.addToBottom(selectIcon);
 		
 		getChildren().addAll(line1, iconPath, enable);
+		
+		applyStyle(ps.getStyl());
 	}
 	
 	public boolean isEnabled() {
-		return enable.isSelected();
+		return enable.checkedProperty().get();
 	}
 	
 	public FileTypeAssociation getValue() {
@@ -82,7 +91,23 @@ public class FileTypeParam extends VBox {
 			typeName.setValue(fileTypeAsso.getTypeName());
 			typeExtension.setValue(fileTypeAsso.getTypeExtension());
 			set(fileTypeAsso.getIcon());
-			enable.setSelected(true);
+			enable.checkedProperty().set(true);
+		}else {
+			typeName.setValue("");
+			typeExtension.setValue("");
+			icon = null;
+			iconPath.setValue("");
+			enable.checkedProperty().set(false);
 		}
+	}
+
+	@Override
+	public void applyStyle(Style style) {
+		enable.setTextFill(style.getTextNormal());
+	}
+
+	@Override
+	public void applyStyle(ObjectProperty<Style> style) {
+		Styleable.bindStyle(this, style);
 	}
 }

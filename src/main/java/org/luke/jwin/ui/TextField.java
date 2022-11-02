@@ -1,7 +1,13 @@
 package org.luke.jwin.ui;
 
-public class TextField extends javafx.scene.control.TextField {
-	public TextField() {
-		Style.styleRegion(this);
+import org.luke.gui.controls.Font;
+import org.luke.gui.controls.input.DeprecatedTextInput;
+import org.luke.gui.window.Window;
+
+public class TextField extends DeprecatedTextInput {
+	public TextField(Window window) {
+		super(window, Font.DEFAULT, "");
+		setFont(new Font(12));
+		applyStyle(window.getStyl());
 	}
 }

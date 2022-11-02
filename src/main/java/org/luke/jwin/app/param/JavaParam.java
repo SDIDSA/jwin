@@ -13,16 +13,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.zip.ZipFile;
 
+import org.luke.gui.controls.Font;
+import org.luke.gui.controls.label.keyed.Label;
+import org.luke.gui.window.Window;
+
 import javafx.application.Platform;
-import javafx.scene.control.Label;
 
 public class JavaParam extends Param {
 
 	protected File value;
 	protected String version;
 
-	public JavaParam(String name) {
-		super(name);
+	public JavaParam(Window window, String name) {
+		super(window, name);
 	}
 
 	public File getValue() {
@@ -113,7 +116,7 @@ public class JavaParam extends Param {
 				this.value = version.getValue();
 				Platform.runLater(() -> {
 					list.getChildren().clear();
-					addFile(value, value.getName() + additional, new Label(this.version));
+					addFile(getWindow(), value, value.getName() + additional, new Label(getWindow(), this.version));
 				});
 			}
 			Platform.runLater(this::stopLoading);
@@ -129,7 +132,7 @@ public class JavaParam extends Param {
 				this.value = file;
 				Platform.runLater(() -> {
 					list.getChildren().clear();
-					addFile(file, file.getName() + additional, new Label(this.version));
+					addFile(getWindow(), file, file.getName() + additional, new Label(getWindow(), this.version, new Font(12)));
 				});
 			}
 			Platform.runLater(this::stopLoading);

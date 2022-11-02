@@ -1,19 +1,20 @@
 package org.luke.jwin.app.param;
 
 import java.io.File;
+
+import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 
 import javafx.application.Platform;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 
 public class JdkParam extends JavaParam {
-	public JdkParam(Stage ps) {
-		super("Jdk (will be use to compile your app)");
+	public JdkParam(Window ps) {
+		super(ps, "Jdk (will be used to compile your app)");
 
 		DirectoryChooser dc = new DirectoryChooser();
-		addButton("detect", e -> detect());
-		addButton("select", e -> {
+		addButton(ps, "detect", () -> detect());
+		addButton(ps, "select", () -> {
 			File dir = dc.showDialog(ps);
 			if (dir != null) {
 				set(dir);

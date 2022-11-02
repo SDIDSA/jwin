@@ -12,18 +12,19 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 
+import org.luke.gui.controls.Font;
+import org.luke.gui.controls.label.unkeyed.Link;
+import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
-import org.luke.jwin.app.Jwin;
+import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.utils.MyClassLoader;
 
 import javafx.application.Platform;
-import javafx.scene.control.Hyperlink;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 
 public class ClasspathParam extends Param {
 
@@ -31,12 +32,12 @@ public class ClasspathParam extends Param {
 
 	private DirectoryChooser dc;
 
-	public ClasspathParam(Stage ps) {
-		super("Classpath");
+	public ClasspathParam(Window ps) {
+		super(ps, "Classpath");
 		files = new ArrayList<>();
 
 		dc = new DirectoryChooser();
-		addButton("add", e -> {
+		addButton(ps, "add", () -> {
 			File dir = dc.showDialog(ps);
 			if (dir != null) {
 				add(dir);
@@ -55,8 +56,9 @@ public class ClasspathParam extends Param {
 			File projectRoot = findProjectRoot(dir);
 			dc.setInitialDirectory(projectRoot);
 
-			Hyperlink remove = new Hyperlink("remove");
-			HBox line = generateLine(dir,
+			Link remove = new Link(getWindow(), "remove");
+			remove.setFont(new Font(12));
+			HBox line = generateLine(getWindow(), dir,
 					projectRoot == null ? dir.getParentFile().getParentFile().toURI().relativize(dir.toURI()).toString()
 							: projectRoot.toURI().relativize(dir.toURI()).toString(),
 					remove);
@@ -64,7 +66,7 @@ public class ClasspathParam extends Param {
 			files.add(dir);
 			mutex.release();
 
-			remove.setOnAction(ev -> {
+			remove.setAction(() -> {
 				list.getChildren().remove(line);
 				files.remove(dir);
 			});
@@ -167,7 +169,7 @@ public class ClasspathParam extends Param {
 		return files;
 	}
 
-	public File compile(File preBuild, File preBuildLibs, File jdk, Entry<String, File> launcher, ProgressBar progress,
+	public File compile(File preBuild, File preBuildLibs, File jdk, Entry<String, File> launcher, DoubleConsumer increment,
 			Consumer<String> setAltMain) throws IllegalStateException {
 
 		File preBuildBin = new File(preBuild.getAbsolutePath().concat("/bin"));
@@ -186,22 +188,20 @@ public class ClasspathParam extends Param {
 				+ launcher.getValue().getAbsolutePath() + "\"");
 		try {
 			compileCommand.execute(binDir, () -> {
-				if (progress != null)
-					progress.setProgress(Math.min(.6, progress.getProgress() + .005));
+				if (increment != null)
+					increment.accept(.6);
 			}).waitFor();
-			if (progress != null)
-				progress.setProgress(.6);
 
 			if (!x.isEmpty()) {
 				IllegalStateException ex = new IllegalStateException("Failed to Compile");
 				ex.initCause(new IllegalStateException(String.join("\n", x)));
-
 				throw ex;
 			}
 
 			Class<?> mainClass = MyClassLoader.loadClass(launcher.getKey(), preBuildBin);
+			
 			if (mainClass.getSuperclass().equals(javafx.application.Application.class)) {
-				Jwin.deleteDir(preBuildBin);
+				JwinActions.deleteDir(preBuildBin);
 				preBuildBin.mkdir();
 
 				File newLauncherFile = new File(preBuildBin.getAbsolutePath().concat("/").concat("Launcher.java"));
@@ -221,8 +221,8 @@ public class ClasspathParam extends Param {
 			}
 
 			return preBuildBin;
-		} catch (InterruptedException | MalformedURLException e1) {
-			e1.printStackTrace();
+		} catch (InterruptedException | MalformedURLException | SecurityException e1) {
+			JwinActions.error("Failed to compile your code", e1.getMessage());
 			Thread.currentThread().interrupt();
 		}
 		return null;
@@ -250,7 +250,7 @@ public class ClasspathParam extends Param {
 		return false;
 	}
 
-	public void copyRes(File preBuild, ProgressBar progress) {
+	public void copyRes(File preBuild, DoubleConsumer onProgress) {
 		File preBuildRes = new File(preBuild.getAbsolutePath().concat("/res"));
 		preBuildRes.mkdir();
 
@@ -272,15 +272,13 @@ public class ClasspathParam extends Param {
 			resources.forEach(resource -> {
 				resCopyCount[0]++;
 				copyResource(resource, key, preBuildRes);
-				Platform.runLater(() -> progress.setProgress(.6 + (resCopyCount[0] / (double) resCount[0]) * .4));
+				onProgress.accept(.6 + (resCopyCount[0] / (double) resCount[0]) * .4);
 			});
 		});
 	}
 
 	private void copyResource(File src, File srcRoot, File destRoot) {
 		File dest = new File(src.getAbsolutePath().replace(srcRoot.getAbsolutePath(), destRoot.getAbsolutePath()));
-
-		System.out.println(src.getAbsolutePath() + " => " + dest.getAbsolutePath());
 
 		List<File> parents = getParentsUntil(dest, destRoot);
 		Collections.sort(parents);

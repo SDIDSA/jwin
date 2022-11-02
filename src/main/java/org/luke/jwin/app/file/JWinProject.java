@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.luke.jwin.app.JwinUi;
 
 public class JWinProject {
 	private static final String CLASSPATH = "classpath";
@@ -49,7 +50,7 @@ public class JWinProject {
 	private FileTypeAssociation fileTypeAsso;
 	private UrlProtocolAssociation urlProtocolAsso;
 
-	public JWinProject(List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
+	private JWinProject(List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
 			List<File> manualJars, String appName, String appVersion, String appPublisher, boolean console, String guid,
 			FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
 		this.classpath = new ArrayList<>(classpath);
@@ -65,6 +66,22 @@ public class JWinProject {
 		this.guid = guid;
 		this.fileTypeAsso = fileTypeAsso;
 		this.urlProtocolAsso = urlProtocolAsso;
+	}
+	
+	public JWinProject(JwinUi config) {
+		this.classpath = new ArrayList<>(config.getClasspath().getFiles());
+		this.mainClass = config.getMainClass().getValue();
+		this.jdk = config.getJdk().getValue();
+		this.jre = config.getJre().getValue();
+		this.icon = config.getIcon().getValue();
+		this.manualJars = new ArrayList<>(config.getDependencies().getManualJars());
+		this.appName = config.getAppName().getValue();
+		this.appVersion = config.getVersion().getValue();
+		this.appPublisher = config.getPublisher().getValue();
+		this.console = config.getConsole().checkedProperty().get();
+		this.guid = config.getGuid().getValue();
+		this.fileTypeAsso = config.getMoreSettings().getFileTypeAssociation();
+		this.urlProtocolAsso = config.getMoreSettings().getUrlProtocolAssociation();
 	}
 
 	public void setUrlProtocolAsso(UrlProtocolAssociation urlProtocolAsso) {

@@ -12,7 +12,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 
-import org.luke.jwin.app.Jwin;
+import org.luke.jwin.app.JwinActions;
 
 public class FileDealer {
 	private FileDealer() {
@@ -66,7 +66,7 @@ public class FileDealer {
 						e.printStackTrace();
 					}
 				}else {
-					Jwin.deleteDir(file);
+					JwinActions.deleteDir(file);
 				}
 			}
 		}

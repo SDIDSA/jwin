@@ -12,6 +12,8 @@ import java.util.function.Consumer;
 
 public class Command {
 	private String[] command;
+	
+	private Runnable onFinished;
 
 	private Consumer<String> inputHandler;
 	private Consumer<String> errorHandler;
@@ -33,6 +35,10 @@ public class Command {
 	public Command(String... command) {
 		this(null, null, command);
 	}
+	
+	public void setOnFinished(Runnable onFinished) {
+		this.onFinished = onFinished;
+	}
 
 	public Process execute(File root, Runnable...periodicals) {
 		System.out.println(Arrays.toString(command));
@@ -46,9 +52,9 @@ public class Command {
 				String line;
 				try {
 					while ((line = br.readLine()) != null) {
-						System.out.println(line);
 						if (inputHandler != null)
 							inputHandler.accept(line);
+						System.out.println("Std : " + line);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -62,9 +68,9 @@ public class Command {
 				String line;
 				try {
 					while ((line = br.readLine()) != null) {
-						System.out.println(line);
 						if (errorHandler != null)
 							errorHandler.accept(line);
+						System.out.println("Err : " + line);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -83,6 +89,10 @@ public class Command {
 						e.printStackTrace();
 						Thread.currentThread().interrupt();
 					}
+				}
+				
+				if(onFinished != null) {
+					onFinished.run();
 				}
 				
 			}).start();

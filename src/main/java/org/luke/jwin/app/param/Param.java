@@ -7,22 +7,24 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.filechooser.FileSystemView;
 
+import org.luke.gui.controls.Font;
+import org.luke.gui.controls.Loading;
+import org.luke.gui.controls.label.keyed.Label;
+import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.style.Style;
+import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Window;
 import org.luke.jwin.app.utils.Backgrounds;
-import org.luke.jwin.app.utils.Borders;
 import org.luke.jwin.ui.Button;
 
 import java.awt.Graphics2D;
 import java.awt.image.*;
 
+import javafx.beans.property.ObjectProperty;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -30,11 +32,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-public abstract class Param extends StackPane {
+public abstract class Param extends StackPane implements Styleable {
 	private static ArrayList<Param> all = new ArrayList<>();
 	public static void clearAll() {
 		all.forEach(Param::clear);
@@ -49,57 +49,59 @@ public abstract class Param extends StackPane {
 	protected HBox top;
 
 	protected VBox root;
-	private ProgressIndicator pi;
+	private Loading pi;
 	private Label loadingLabel;
-	private HBox loadingRoot;
+	private Label head;
+	private VBox loadingRoot;
 
-	protected ScrollPane sp;
-
-	protected Param(String name) {
+	protected Scrollable sp;
+	protected StackPane listCont;
+	
+	private Window window;
+	
+	protected Param(Window window, String name) {
+		this.window = window;
+		
 		all.add(this);
-
-		setMinWidth(424);
 		
 		root = new VBox(10);
 
 		top = new HBox(10);
 		top.setAlignment(Pos.CENTER);
 
-		Label head = new Label(name);
-		head.setFont(Font.font("Segoe UI", 12));
+		head = new Label(window, name);
 
 		top.getChildren().addAll(head, hSpace());
 
 		list = new VBox(10);
-		list.setBackground(Backgrounds.make(Color.WHITE));
-		list.setPadding(new Insets(10));
 		list.setAlignment(Pos.CENTER);
+		list.setPadding(new Insets(10,15,10,10));
 
-		sp = new ScrollPane(list);
-		sp.setFitToWidth(true);
+		sp = new Scrollable();
+		sp.setContent(list);
 
-		list.minHeightProperty().bind(sp.heightProperty().subtract(4));
-
-		sp.setBackground(Backgrounds.make(Color.WHITE));
-		sp.setBorder(Borders.make(Color.LIGHTGRAY));
 		sp.setMinHeight(47);
 
-		StackPane listCont = new StackPane(sp);
+		listCont = new StackPane(sp);
 
 		root.getChildren().addAll(top, listCont);
 		
-		pi = new ProgressIndicator();
-		pi.setMinSize(0, 0);
-		pi.setMaxSize(40, 40);
+		pi = new Loading(10);
 		
-		loadingLabel = new Label("");
-		loadingLabel.setFont(Font.font("", FontWeight.BOLD, 16));
+		loadingLabel = new Label(window, "");
+		loadingLabel.setFont(new Font("", 16, FontWeight.BOLD));
 
-		loadingRoot = new HBox(15, pi, loadingLabel);
+		loadingRoot = new VBox(15, pi, loadingLabel);
 		loadingRoot.setAlignment(Pos.CENTER);
 		loadingRoot.setVisible(false);
 		
 		getChildren().addAll(root, loadingRoot);
+		
+		applyStyle(window.getStyl());
+	}
+	
+	public Window getWindow() {
+		return window;
 	}
 
 	protected void startLoading() {
@@ -107,43 +109,62 @@ public abstract class Param extends StackPane {
 	}
 	
 	protected void startLoading(String loadingText) {
+		pi.play();
 		loadingLabel.setText(loadingText);
 		loadingRoot.setVisible(true);
 		root.setDisable(true);
+		root.setOpacity(.3);
 	}
 
 	protected void stopLoading() {
+		pi.stop();
 		loadingRoot.setVisible(false);
 		root.setDisable(false);
+		root.setOpacity(1);
 	}
 
-	protected void addButton(String text, EventHandler<ActionEvent> onAction) {
-		Button button = new Button(text);
-		button.setMinSize(100, 26);
-		button.setOnAction(onAction);
+	protected void addButton(Window window, String text, Runnable onAction) {
+		Button button = new Button(window, text, 100);
+		button.setAction(onAction);
 
 		top.getChildren().add(button);
 	}
 
-	protected HBox addFile(File file, String name, Node... post) {
-		HBox line = new HBox(10, new ImageView(typeIcon(file)), new Label(name), hSpace());
+	private ArrayList<Label> files = new ArrayList<>();
+	public HBox addFile(Window window, File file, String name, Node... post) {
+		Label lab = new Label(window, name, new Font(12));
+		files.add(lab);
+		lab.setFill(window.getStyl().get().getTextNormal());
+		
+		HBox line = new HBox(10, new ImageView(typeIcon(file)), lab, hSpace());
 		line.setAlignment(Pos.CENTER);
-
 		for (Node inf : post) {
 			line.getChildren().add(inf);
+			
+			if(inf instanceof Label alab) {
+				alab.setFill(window.getStyl().get().getTextNormal());
+				files.add(alab);
+			}
 		}
-
 		list.getChildren().addAll(line);
-
 		return line;
 	}
 
-	protected static HBox generateLine(File file, String name, Node... post) {
-		HBox line = new HBox(10, new ImageView(typeIcon(file)), new Label(name), hSpace());
+	public HBox generateLine(Window window, File file, String name, Node... post) {
+		Label lab = new Label(window, name, new Font(12));
+		files.add(lab);
+		lab.setFill(window.getStyl().get().getTextNormal());
+		
+		HBox line = new HBox(10, new ImageView(typeIcon(file)), lab, hSpace());
 		line.setAlignment(Pos.CENTER);
 
 		for (Node inf : post) {
 			line.getChildren().add(inf);
+			
+			if(inf instanceof Label alab) {
+				alab.setFill(window.getStyl().get().getTextNormal());
+				files.add(alab);
+			}
 		}
 
 		return line;
@@ -164,6 +185,28 @@ public abstract class Param extends StackPane {
 		HBox.setHgrow(space, Priority.ALWAYS);
 		return space;
 	}
+	
+	@Override
+	public void applyStyle(Style style) {
+		head.setFill(style.getTextNormal());
+		loadingLabel.setFill(style.getTextNormal());
+		pi.setFill(style.getTextNormal());
+		
+		sp.setBackground(Backgrounds.make(style.getBackgroundFloating(), 5.0));
+		sp.getScrollBar().setThumbFill(style.getChannelsDefault());
+		
+		files.removeIf(lab -> lab.getScene() == null);
+		files.forEach(file -> file.setFill(style.getTextNormal()));
+	}
 
+	@Override
+	public void applyStyle(ObjectProperty<Style> style) {
+		Styleable.bindStyle(this, style);
+	}
+	
 	public abstract void clear();
+
+	public void clearList() {
+		list.getChildren().clear();
+	}
 }

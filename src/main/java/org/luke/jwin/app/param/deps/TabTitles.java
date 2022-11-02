@@ -1,0 +1,28 @@
+package org.luke.jwin.app.param.deps;
+
+import org.luke.gui.style.Style;
+import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Window;
+import org.luke.jwin.app.utils.Backgrounds;
+
+import javafx.beans.property.ObjectProperty;
+import javafx.geometry.Insets;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
+
+public class TabTitles extends HBox implements Styleable {
+	public TabTitles(Window window) {
+		setPadding(new Insets(10));
+		applyStyle(window.getStyl());
+	}
+
+	@Override
+	public void applyStyle(Style style) {
+		setBackground(Backgrounds.make(style.getBackgroundFloating(), new CornerRadii(5, 5, 0, 0, false)));
+	}
+
+	@Override
+	public void applyStyle(ObjectProperty<Style> style) {
+		Styleable.bindStyle(this, style);
+	}
+}
