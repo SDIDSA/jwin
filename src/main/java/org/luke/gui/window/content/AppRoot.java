@@ -62,6 +62,14 @@ public class AppRoot extends BorderPane implements Styleable {
 		
 		applyStyle(window.getStyl());
 	}
+	
+	public void addBarButton(AppBarButton button) {
+		addBarButton(0, button);
+	}
+	
+	public void addBarButton(int index, AppBarButton button) {
+		bar.addButton(index, button);
+	}
 
 	public void setOnInfo(Runnable runnable) {
 		bar.setOnInfo(runnable);

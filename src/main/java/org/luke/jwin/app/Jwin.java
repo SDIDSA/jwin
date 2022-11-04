@@ -7,6 +7,7 @@ import org.luke.gui.controls.popup.context.items.RadioMenuItem;
 import org.luke.gui.locale.Locale;
 import org.luke.gui.style.Style;
 import org.luke.gui.window.Window;
+import org.luke.gui.window.content.app_bar.AppBarButton;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -20,6 +21,8 @@ public class Jwin extends Application {
 
 		Window window = new Window(this, Style.DARK, Locale.EN_US);
 
+		JwinHome home = new JwinHome(window);
+		
 		ContextMenu settings = new ContextMenu(window);
 		
 		RadioMenuItem light = new RadioMenuItem(settings, "Light Theme", null);
@@ -38,19 +41,21 @@ public class Jwin extends Application {
 		settings.addMenuItem(light);
 		settings.addMenuItem(dark);
 		settings.separate();
-		settings.addMenuItem("Exit", () -> {
-			Platform.exit();
-		});
+		settings.addMenuItem("Exit", Platform::exit);
 		
-		window.setOnInfo(() -> {
-			settings.showPop(window.getInfo(), Direction.LEFT_DOWN);
-		});
+		AppBarButton openSettings = new AppBarButton(window, "settings");
+		openSettings.setAction(() -> settings.showPop(openSettings, Direction.DOWN_LEFT, 15));
+		
+		window.addBarButton(1, openSettings);
+		
+		Credits about = new Credits(home);
+		window.setOnInfo(about::show);
 		
 		window.setWindowIcon("jwin-icon");
 		window.setTaskIcon("jwin-task-icon");
 		
 		window.setTitle("jWin");
-		window.setOnShown(e -> window.loadPage(new JwinHome(window)));
+		window.setOnShown(e -> window.loadPage(home));
 		window.show();
 	}
 }

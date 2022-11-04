@@ -16,6 +16,8 @@ public class AppBar extends HBox implements Styleable {
 	private AppBarButton info;
 	private ColorIcon icon;
 
+	private HBox buttons;
+	
 	public AppBar(Window window, MoveResizeHelper helper) {
 		setPadding(new Insets(0, 15, 0, 15));
 		setMinHeight(40);
@@ -24,7 +26,7 @@ public class AppBar extends HBox implements Styleable {
 		icon = new ColorIcon(null, 20);
 		icon.setMouseTransparent(true);
 
-		HBox buttons = new HBox(4);
+		buttons = new HBox(4);
 		buttons.setAlignment(Pos.CENTER);
 
 		AppBarButton minimize = new AppBarButton(window, "minimize");
@@ -52,6 +54,15 @@ public class AppBar extends HBox implements Styleable {
 
 	public void setOnInfo(Runnable action) {
 		info.setAction(action);
+	}
+	
+	public void addButton(int index, AppBarButton button) {
+		HBox.setMargin(button, new Insets(0, 8, 0, 0));
+		buttons.getChildren().add(index, button);
+	}
+	
+	public void addButton(AppBarButton button) {
+		addButton(0, button);
 	}
 	
 	public AppBarButton getInfo() {

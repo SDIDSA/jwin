@@ -13,7 +13,7 @@ public class AlertButton extends Button implements Styleable {
 	private ButtonType type;
 	
 	public AlertButton(Alert alert, ButtonType type) {
-		super(alert.getWindow(), type.getKey(), 7.0, 16, 38);
+		super(alert.getWindow(), type.getKey(), 5.0, 16, 38);
 		this.type = type;
 		
 		setFont(type.isFilled() ? new Font(14, FontWeight.BOLD) : new Font(Font.DEFAULT_FAMILY_MEDIUM, 14));

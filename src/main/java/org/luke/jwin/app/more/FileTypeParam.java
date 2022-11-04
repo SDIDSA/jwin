@@ -39,7 +39,7 @@ public class FileTypeParam extends VBox implements Styleable {
 		typeExtension.setPrompt(".ext");
 
 		iconPath = new TextVal(ps, "Type icon");
-		typeName.setPrompt("type_icon.ico");
+		iconPath.setPrompt("type_icon.ico");
 		Button selectIcon = new Button(ps, "select", 20, 40);
 		selectIcon.setMinWidth(100);
 		selectIcon.setAction(() -> {

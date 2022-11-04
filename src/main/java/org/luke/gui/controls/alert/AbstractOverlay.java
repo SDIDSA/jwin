@@ -56,6 +56,7 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		closeIcon.setAction(this::hide);
 		closeIcon.setCursor(Cursor.HAND);
 		closeIcon.applyStyle(session.getWindow().getStyl());
+		closeIcon.setOpacity(.8);
 
 		StackPane.setMargin(closeIcon, new Insets(10));
 
@@ -78,14 +79,15 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		bottom = new HBox(8);
 		bottom.setMaxWidth(width);
 		bottom.setPadding(new Insets(16));
+		bottom.setAlignment(Pos.CENTER);
 
-		cancel = new Button(session.getWindow(), "cancel", 7.0, 16, 38);
+		cancel = new Button(session.getWindow(), "cancel", 5.0, 16, 38);
 		cancel.setFont(new Font(Font.DEFAULT_FAMILY_MEDIUM, 14));
 		cancel.setFill(Color.TRANSPARENT);
 		cancel.setUlOnHover(true);
 		cancel.setAction(this::hide);
 
-		done = new Button(session.getWindow(), "done", 7.0, 16 , 38);
+		done = new Button(session.getWindow(), "done", 5.0, 16 , 38);
 		done.setFont(new Font(14, FontWeight.BOLD));
 
 		bottom.getChildren().addAll(new ExpandingHSpace(), cancel, done);
@@ -102,6 +104,10 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 	
 	public void removeTop() {
 		root.getChildren().remove(top);
+	}
+	
+	public void removeCancel() {
+		bottom.getChildren().remove(cancel);
 	}
 
 	public void setTop(String text) {

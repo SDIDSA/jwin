@@ -73,6 +73,14 @@ public class Window extends Stage {
 	public Application getApp() {
 		return app;
 	}
+	
+	public void addBarButton(AppBarButton button) {
+		addBarButton(0, button);
+	}
+	
+	public void addBarButton(int index, AppBarButton button) {
+		root.addBarButton(index, button);
+	}
 
 	public void setOnInfo(Runnable runnable) {
 		root.setOnInfo(runnable);

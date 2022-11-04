@@ -360,10 +360,10 @@ public class ContextMenu extends PopupControl implements Styleable {
 				}
 			}
 
-			scale.setPivotY(direction.isVertical() ? direction.isArrowFirst() ? 0 : root.getHeight()
+			scale.setPivotY(direction.isVertical() ? direction.isArrowFirst() ? 0 : root.getHeight() - 15
 					: direction.isSecondFirst() ? 0
 							: direction.isSecondLast() ? root.getHeight() : root.getHeight() / 2);
-			scale.setPivotX(direction.isHorizontal() ? direction.isArrowFirst() ? 0 : root.getWidth()
+			scale.setPivotX(direction.isHorizontal() ? direction.isArrowFirst() ? 0 : root.getWidth() - 15
 					: direction.isSecondFirst() ? 0 : direction.isSecondLast() ? root.getWidth() : root.getWidth() / 2);
 
 			root.setCache(true);
