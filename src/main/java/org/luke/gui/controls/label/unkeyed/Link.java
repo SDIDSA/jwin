@@ -68,6 +68,7 @@ public class Link extends StackPane implements Styleable, TextNode {
 	protected void fire(KeyEvent e) {
 		if (e.getCode().equals(KeyCode.SPACE)) {
 			fire();
+			e.consume();
 		}
 	}
 

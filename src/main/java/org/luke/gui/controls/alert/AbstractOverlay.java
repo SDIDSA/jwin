@@ -24,6 +24,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.FontWeight;
 
 public abstract class AbstractOverlay extends Overlay implements Styleable {
@@ -68,6 +69,11 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		center.setMinWidth(width);
 		center.setMaxWidth(width);
 		center.setPadding(new Insets(0, 16, 16, 16));
+		
+		Rectangle clip = new Rectangle();
+		clip.widthProperty().bind(center.widthProperty());
+		clip.heightProperty().bind(center.heightProperty());
+		center.setClip(clip);
 
 		root.getChildren().addAll(top, center);
 

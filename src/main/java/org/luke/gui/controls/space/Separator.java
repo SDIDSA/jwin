@@ -8,7 +8,10 @@ import org.luke.gui.window.Window;
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Orientation;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
@@ -20,10 +23,12 @@ public class Separator extends Region implements Styleable {
 		case HORIZONTAL:
 			setMaxHeight(1);
 			setMinHeight(1);
+			HBox.setHgrow(this, Priority.ALWAYS);
 			break;
 		case VERTICAL:
 			setMinWidth(1);
 			setMaxWidth(1);
+			VBox.setVgrow(this, Priority.ALWAYS);
 			break;
 		default:
 			break;

@@ -18,7 +18,6 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class MoreSettings extends BasicOverlay {
@@ -91,7 +90,6 @@ public class MoreSettings extends BasicOverlay {
 			lab = new Label(page.getWindow(), name, new Font(14));
 
 			Separator sep = new Separator(page.getWindow(), Orientation.HORIZONTAL);
-			HBox.setHgrow(sep, Priority.ALWAYS);
 			HBox top = new HBox(10, lab, sep);
 			top.setAlignment(Pos.CENTER);
 

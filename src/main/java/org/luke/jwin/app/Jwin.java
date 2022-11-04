@@ -8,6 +8,7 @@ import org.luke.gui.locale.Locale;
 import org.luke.gui.style.Style;
 import org.luke.gui.window.Window;
 import org.luke.gui.window.content.app_bar.AppBarButton;
+import org.luke.jwin.app.about.Credits;
 
 import javafx.application.Application;
 import javafx.application.Platform;
