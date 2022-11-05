@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.Supplier;
 
+import org.luke.gui.controls.tab.TabPane;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.JwinActions;

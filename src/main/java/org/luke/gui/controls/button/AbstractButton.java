@@ -87,7 +87,7 @@ public class AbstractButton extends StackPane implements Styleable {
 		setOnMouseExited(this::onExit);
 
 		setOnMouseClicked(this::fire);
-		setOnKeyReleased(this::fire);
+		setOnKeyPressed(this::fire);
 
 		ColorAdjust bw = new ColorAdjust();
 		bw.setSaturation(-.5);

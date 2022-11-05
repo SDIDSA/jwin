@@ -7,6 +7,7 @@ import java.util.List;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.controls.tab.Tab;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.jwin.app.param.Param;

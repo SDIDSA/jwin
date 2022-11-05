@@ -2,8 +2,12 @@ package org.luke.gui.controls.image;
 
 import java.awt.Dimension;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.function.Consumer;
+
+import javax.imageio.ImageIO;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
@@ -47,7 +51,11 @@ public class ImageProxy {
 			public void run() {
 				Image found = cache.get(size + "_" + path);
 				if(found == null) {
-					found = new Image(path);
+					try {
+						found = SwingFXUtils.toFXImage(ImageIO.read(new URL(path)), null);
+					} catch (IOException e) {
+						found = new Image(path);
+					}
 					if (found.getHeight() != size) {
 						found = resize(found, size);
 					}

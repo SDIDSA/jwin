@@ -38,6 +38,14 @@ public class AppPreRoot extends StackPane {
 		root = new AppRoot(window, this);
 		getChildren().setAll(root);
 	}
+	
+	public void addBarButton(AppBarButton button) {
+		addBarButton(0, button);
+	}
+	
+	public void addBarButton(int index, AppBarButton button) {
+		root.addBarButton(index, button);
+	}
 
 	public void setOnInfo(Runnable runnable) {
 		root.setOnInfo(runnable);

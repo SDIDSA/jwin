@@ -57,6 +57,7 @@ public class ColorIcon extends StackPane implements Styleable {
 	private void fire(KeyEvent e) {
 		if (e.getCode().equals(KeyCode.SPACE)) {
 			fire();
+			e.consume();
 		}
 	}
 
