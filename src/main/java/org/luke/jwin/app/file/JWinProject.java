@@ -22,6 +22,7 @@ public class JWinProject {
 	private static final String APP_VERSION = "appVersion";
 	private static final String APP_PUBLISHER = "appPublisher";
 	private static final String CONSOLE = "console";
+	private static final String ADMIN = "admin";
 	private static final String GUID = "guid";
 	private static final String FILE_TYPE_ASSO = "fileTypeAsso";
 	private static final String URL_PROTOCOL_ASSO = "urlProtocolAsso";
@@ -44,6 +45,7 @@ public class JWinProject {
 	private String appPublisher;
 
 	private boolean console;
+	private boolean admin;
 
 	private String guid;
 
@@ -51,7 +53,7 @@ public class JWinProject {
 	private UrlProtocolAssociation urlProtocolAsso;
 
 	private JWinProject(List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
-			List<File> manualJars, String appName, String appVersion, String appPublisher, boolean console, String guid,
+			List<File> manualJars, String appName, String appVersion, String appPublisher, boolean console, boolean admin, String guid,
 			FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
 		this.classpath = new ArrayList<>(classpath);
 		this.mainClass = mainClass;
@@ -63,6 +65,7 @@ public class JWinProject {
 		this.appVersion = appVersion;
 		this.appPublisher = appPublisher;
 		this.console = console;
+		this.admin = admin;
 		this.guid = guid;
 		this.fileTypeAsso = fileTypeAsso;
 		this.urlProtocolAsso = urlProtocolAsso;
@@ -79,6 +82,7 @@ public class JWinProject {
 		this.appVersion = config.getVersion().getValue();
 		this.appPublisher = config.getPublisher().getValue();
 		this.console = config.getConsole().checkedProperty().get();
+		this.admin = config.getAdmin().checkedProperty().get();
 		this.guid = config.getGuid().getValue();
 		this.fileTypeAsso = config.getMoreSettings().getFileTypeAssociation();
 		this.urlProtocolAsso = config.getMoreSettings().getUrlProtocolAssociation();
@@ -139,6 +143,10 @@ public class JWinProject {
 	public boolean isConsole() {
 		return console;
 	}
+	
+	public boolean isAdmin() {
+		return admin;
+	}
 
 	public String getGuid() {
 		return guid;
@@ -185,6 +193,7 @@ public class JWinProject {
 		data.put(APP_VERSION, appVersion);
 		data.put(APP_PUBLISHER, appPublisher);
 		data.put(CONSOLE, console);
+		data.put(ADMIN, admin);
 		data.put(GUID, guid);
 
 		if (fileTypeAsso != null) {
@@ -205,7 +214,7 @@ public class JWinProject {
 				Map.entry(mc.getString(CLASS_NAME), new File(mc.getString(FILE_PATH))), new File(obj.getString(JDK)),
 				new File(obj.getString(JRE)), new File(obj.getString(ICON)),
 				deserializeFileList(obj.getJSONArray(MANUAL_JARS)), obj.getString(APP_NAME), obj.getString(APP_VERSION),
-				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.getString(GUID),
+				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.getBoolean(ADMIN), obj.getString(GUID),
 				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null,
 				obj.has(URL_PROTOCOL_ASSO) ? UrlProtocolAssociation.deserialize(obj.getJSONObject(URL_PROTOCOL_ASSO))
 						: null);

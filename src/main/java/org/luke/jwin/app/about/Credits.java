@@ -61,7 +61,7 @@ public class Credits extends BasicOverlay {
 
 		version = new Text("1.0.3", new Font("monospace", 16));
 
-		copyRighted = new Text("Copyright © 2022\nThis product is copyrighted by Zinelabidine Teyar", new Font(12));
+		copyRighted = new Text("Copyright " + (char) 169 + " 2022\nThis product is copyrighted by Zinelabidine Teyar", new Font(12));
 		copyRighted.setLineSpacing(5);
 		copyRighted.setTextAlignment(TextAlignment.CENTER);
 
@@ -304,7 +304,7 @@ public class Credits extends BasicOverlay {
 			info = new VBox(5, name, username);
 			info.setAlignment(Pos.CENTER_LEFT);
 
-			picture = new ImageView();
+			picture = new ImageView(ImageProxy.loadResize("pfp", 460, 48));
 			picture.setFitWidth(48);
 			picture.setFitHeight(48);
 
@@ -315,8 +315,6 @@ public class Credits extends BasicOverlay {
 			picture.setClip(clip);
 
 			external = new ColorIcon("external", 24);
-
-			ImageProxy.asyncLoad("https://avatars.githubusercontent.com/u/34898903", 48, picture::setImage);
 
 			getChildren().addAll(picture, info, new ExpandingHSpace(), external);
 

@@ -64,6 +64,7 @@ public class JwinUi extends StackPane implements Styleable {
 	private TextVal publisher;
 	private TextField guid;
 
+	private KeyedCheck admin;
 	private KeyedCheck console;
 	private MoreSettings moreSettings;
 
@@ -175,6 +176,7 @@ public class JwinUi extends StackPane implements Styleable {
 		publisher = new TextVal(ps.getWindow(), "Publisher");
 
 		console = new KeyedCheck(ps.getWindow(), "Console", 16);
+		admin = new KeyedCheck(ps.getWindow(), "Admin", 16);
 
 		guid = new TextField(ps.getWindow());
 		guid.setEditable(false);
@@ -191,7 +193,7 @@ public class JwinUi extends StackPane implements Styleable {
 		preConsole.setAlignment(Pos.CENTER);
 
 		guidLab = new Label(ps.getWindow(), "GUID");
-		preConsole.getChildren().addAll(console, new Separator(ps.getWindow(), Orientation.VERTICAL), guidLab, guid,
+		preConsole.getChildren().addAll(console, admin, new Separator(ps.getWindow(), Orientation.VERTICAL), guidLab, guid,
 				generate);
 
 		preBottom = new HBox(15, appName, version, publisher);
@@ -266,6 +268,7 @@ public class JwinUi extends StackPane implements Styleable {
 			runOnUiThread(() -> version.setValue(project.getAppVersion()));
 			runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
 			runOnUiThread(() -> console.checkedProperty().set(project.isConsole()));
+			runOnUiThread(() -> admin.checkedProperty().set(project.isAdmin()));
 			runOnUiThread(() -> guid.setValue(project.getGuid()));
 			project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
@@ -437,6 +440,10 @@ public class JwinUi extends StackPane implements Styleable {
 		return console;
 	}
 
+	public KeyedCheck getAdmin() {
+		return admin;
+	}
+
 	public MoreSettings getMoreSettings() {
 		return moreSettings;
 	}
@@ -450,6 +457,7 @@ public class JwinUi extends StackPane implements Styleable {
 	@Override
 	public void applyStyle(Style style) {
 		console.setTextFill(style.getTextNormal());
+		admin.setTextFill(style.getTextNormal());
 		state.setFill(style.getTextNormal());
 		guidLab.setFill(style.getTextNormal());
 		loading.setFill(style.getTextNormal());

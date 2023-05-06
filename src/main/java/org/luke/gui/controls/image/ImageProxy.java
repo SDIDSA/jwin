@@ -56,6 +56,10 @@ public class ImageProxy {
 					} catch (IOException e) {
 						found = new Image(path);
 					}
+					if(found.getHeight() == 0) {
+						asyncLoad(path, size, onLoad);
+						return;
+					}
 					if (found.getHeight() != size) {
 						found = resize(found, size);
 					}

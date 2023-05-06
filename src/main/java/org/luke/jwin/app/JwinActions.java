@@ -293,6 +293,9 @@ public class JwinActions {
 				if (!config.getConsole().checkedProperty().get()) {
 					convertCommand += " /invisible";
 				}
+				if (config.getAdmin().checkedProperty().get()) {
+					convertCommand += " /uac-admin";
+				}
 				if (config.getIcon().getValue() != null) {
 					convertCommand += " /icon \"" + config.getIcon().getValue().getAbsolutePath() + "\"";
 				}

@@ -44,7 +44,6 @@ public class Command {
 		System.out.println(Arrays.toString(command));
 		try {
 			Process process = Runtime.getRuntime().exec(command, null, root);
-
 			new Thread(() -> {
 				InputStream is = process.getInputStream();
 
