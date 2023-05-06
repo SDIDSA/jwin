@@ -38,7 +38,7 @@ public class Style {
 			}
 		}
 
-		accent = Color.web("#A3700F");
+		accent = Color.web("#6C7356");
 	}
 
 	private static Color parseHSL(String hslString) {
