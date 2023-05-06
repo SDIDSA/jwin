@@ -214,7 +214,7 @@ public class JWinProject {
 				Map.entry(mc.getString(CLASS_NAME), new File(mc.getString(FILE_PATH))), new File(obj.getString(JDK)),
 				new File(obj.getString(JRE)), new File(obj.getString(ICON)),
 				deserializeFileList(obj.getJSONArray(MANUAL_JARS)), obj.getString(APP_NAME), obj.getString(APP_VERSION),
-				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.getBoolean(ADMIN), obj.getString(GUID),
+				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.has(ADMIN) ? obj.getBoolean(ADMIN) : false, obj.getString(GUID),
 				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null,
 				obj.has(URL_PROTOCOL_ASSO) ? UrlProtocolAssociation.deserialize(obj.getJSONObject(URL_PROTOCOL_ASSO))
 						: null);
