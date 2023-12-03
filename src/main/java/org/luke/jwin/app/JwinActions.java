@@ -149,15 +149,17 @@ public class JwinActions {
 					e.printStackTrace();
 				}
 			};
-			
+
+			String c = "\"rt/bin/java\" -cp \"bin;res;lib/*\" "
+					+ (config.getMainClass().getAltMain() == null ? config.getMainClass().getValue().getKey()
+							: config.getMainClass().getAltMain());
+
+			System.out.println(c);
 			Command command = new Command(std -> {
-			}, err -> errBuilder.append(err).append('\n'), "cmd", "/c",
-					"\"rt/bin/java\" -cp \"bin;res;lib/*\" "
-							+ (config.getMainClass().getAltMain() == null ? config.getMainClass().getValue().getKey()
-									: config.getMainClass().getAltMain()));
-	
+			}, err -> errBuilder.append(err).append('\n'), "cmd", "/c", c);
+
 			Process p = command.execute(preBuild);
-			config.run(p, showLog);
+			config.run(p, showLog, errBuilder);
 		}).start();
 	}
 
@@ -240,7 +242,7 @@ public class JwinActions {
 							if (res.equals(ButtonType.YES)) {
 								FileDealer.write(exported.serialize(), config.getFileInUse());
 								config.setProjectInUse(exported);
-							}else if(res.equals(ButtonType.CANCEL)) {
+							} else if (res.equals(ButtonType.CANCEL)) {
 								contin[0] = false;
 							}
 						});
@@ -450,7 +452,7 @@ public class JwinActions {
 	}
 
 	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes,
-			ButtonType... types) {
+			Runnable onHide, ButtonType... types) {
 		Runnable exe = () -> {
 			Alert al = new Alert(window.getLoadedPage(), type);
 			al.setHead(head);
@@ -468,6 +470,10 @@ public class JwinActions {
 					});
 				}
 			}
+			
+			if(onHide != null) {
+				al.addOnHidden(onHide);
+			}
 
 			al.showAndWait();
 		};
@@ -477,6 +483,11 @@ public class JwinActions {
 		} else {
 			Platform.runLater(exe);
 		}
+	}
+	
+	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes,
+			ButtonType... types) {
+		alert(head, content, type, onRes, null, types);
 	}
 
 	public static void deleteDirOnShutdown(File dir) {

@@ -133,6 +133,12 @@ public class JreParam extends JavaParam {
 				return;
 			}
 			
+			if(preGenBin == null) {
+				cancel.run();
+				JwinActions.compileFailure();
+				return;
+			}
+			
 			File jdkBin = new File(jdk.getValue().getAbsolutePath().concat("/bin"));
 			try {
 				Platform.runLater(() -> startLoading("Analyzing dependencies ..."));

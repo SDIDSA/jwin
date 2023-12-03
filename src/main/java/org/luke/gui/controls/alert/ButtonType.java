@@ -11,7 +11,8 @@ public enum ButtonType {
 	SELECT_NOW("Select now"),
 	YES("Yes"),
 	NO("No"), 
-	OK("Ok"), VIEW_LOG("View full error log");
+	OK("Ok"), VIEW_LOG("View full error log"),
+	IGNORE("Ignore", false);
 	
 	private String key;
 	private boolean filled;

@@ -4,7 +4,6 @@
 	<artifactId>jwin</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<description>a java tool to deploy java projects as windows apps</description>
-
 	<dependencies>
 		<dependency>
 			<groupId>org.openjfx</groupId>
@@ -46,4 +45,16 @@
 			<version>1.9</version>
 		</dependency>
 	</dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+					<target>21</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

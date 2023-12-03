@@ -2,7 +2,6 @@ package org.luke.jwin.app.param;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -221,8 +220,8 @@ public class ClasspathParam extends Param {
 			}
 
 			return preBuildBin;
-		} catch (InterruptedException | MalformedURLException | SecurityException e1) {
-			JwinActions.error("Failed to compile your code", e1.getMessage());
+		} catch (InterruptedException | IOException | SecurityException | UnsupportedClassVersionError | ClassNotFoundException e1) {
+			JwinActions.error("Failed to compile/load your code", e1.getMessage());
 			Thread.currentThread().interrupt();
 		}
 		return null;

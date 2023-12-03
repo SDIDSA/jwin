@@ -2,6 +2,7 @@ package org.luke.jwin.app;
 
 import java.io.File;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.luke.gui.app.pages.Page;
@@ -193,8 +194,8 @@ public class JwinUi extends StackPane implements Styleable {
 		preConsole.setAlignment(Pos.CENTER);
 
 		guidLab = new Label(ps.getWindow(), "GUID");
-		preConsole.getChildren().addAll(console, admin, new Separator(ps.getWindow(), Orientation.VERTICAL), guidLab, guid,
-				generate);
+		preConsole.getChildren().addAll(console, admin, new Separator(ps.getWindow(), Orientation.VERTICAL), guidLab,
+				guid, generate);
 
 		preBottom = new HBox(15, appName, version, publisher);
 
@@ -313,7 +314,7 @@ public class JwinUi extends StackPane implements Styleable {
 
 	private AtomicBoolean ran = new AtomicBoolean(false);
 
-	public void run(Process p, Runnable showLog) {
+	public void run(Process p, Runnable showLog, StringBuilder errBuilder) {
 		Platform.runLater(() -> {
 			buildRun.setDisable(false);
 			run.setKey("Stop");
@@ -323,15 +324,22 @@ public class JwinUi extends StackPane implements Styleable {
 
 		try {
 			int exit = p.waitFor();
-			if (exit != 0 && !stopped) {
+			if ((exit != 0 && !stopped) || !errBuilder.isEmpty()) {
 				ran.set(false);
-				JwinActions.alert("Non 0 exit code",
-						"your project might not have executed correctly, it exited with code " + exit, AlertType.INFO,
-						res -> {
+				Semaphore s = new Semaphore(0);
+				JwinActions.alert((exit != 0 ? "Non 0 exit code" : "Error Logs"),
+						"your project might not have executed correctly, "
+								+ (exit != 0 ? ("it exited with code " + exit) : "the error logs were not empty"),
+						AlertType.INFO, res -> {
 							if (res == ButtonType.VIEW_LOG) {
 								showLog.run();
 							}
-						}, ButtonType.VIEW_LOG, ButtonType.CLOSE);
+							if (res == ButtonType.IGNORE) {
+								ran.set(true);
+							}
+						}, () -> s.release(), ButtonType.VIEW_LOG, ButtonType.IGNORE);
+
+				s.acquireUninterruptibly();
 			} else {
 				ran.set(true);
 			}
@@ -339,6 +347,9 @@ public class JwinUi extends StackPane implements Styleable {
 			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
+		
+		
+		System.out.println(ran);
 
 		stopped = false;
 		Platform.runLater(() -> {
@@ -351,6 +362,7 @@ public class JwinUi extends StackPane implements Styleable {
 	}
 
 	private boolean stopped = false;
+
 	public void stop(Process p) {
 		stopped = true;
 		p.descendants().forEach(ProcessHandle::destroyForcibly);
