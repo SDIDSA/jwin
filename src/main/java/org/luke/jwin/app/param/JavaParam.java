@@ -94,7 +94,7 @@ public class JavaParam extends Param {
 	}
 	
 	public void set(File file, String additional) {
-		if(!file.exists()) {
+		if(file == null || !file.exists()) {
 			return;
 		}
 		if (file.isDirectory()) {

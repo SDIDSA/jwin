@@ -8,10 +8,10 @@ import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.controls.scroll.Scrollable;
 import org.luke.gui.controls.tab.Tab;
+import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.jwin.app.param.Param;
-import org.luke.jwin.app.utils.Backgrounds;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
@@ -71,7 +71,7 @@ public class DepTab extends Tab implements Styleable {
 	public void applyStyle(Style style) {
 		scrollable.getScrollBar().setThumbFill(style.getChannelsDefault());
 		scrollable
-				.setBackground(Backgrounds.make(style.getDeprecatedTextInputBg(), new CornerRadii(0, 0, 5, 5, false)));
+				.setBackground(Backgrounds.make(style.getBackgroundTertiary(), new CornerRadii(0, 0, 5, 5, false)));
 	}
 
 	@Override

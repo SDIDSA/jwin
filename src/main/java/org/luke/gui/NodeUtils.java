@@ -4,6 +4,7 @@ import javafx.scene.Parent;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Border;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 
@@ -110,10 +111,10 @@ public class NodeUtils {
 	}
 
 	public static boolean isParentOf(Node child, Parent parent) {
-		if(child == null || child.getParent() == null)  {
+		if (child == null || child.getParent() == null) {
 			return false;
 		}
-		
+
 		if (child.getParent() == parent) {
 			return true;
 		} else {
@@ -124,15 +125,31 @@ public class NodeUtils {
 	public static void nestedFocus(Region parent) {
 		nestedFocus(parent, null);
 	}
-	
+
 	public static void focusBorder(Region node, Color in, Color out, double radius) {
-		node.borderProperty().bind(Bindings.when(node.focusedProperty()).then(Borders.make(in, radius)).otherwise(out == null ? Border.EMPTY : Borders.make(out, radius)));
+		focusBorder(node, in, out, new CornerRadii(radius));
+	}
+
+	public static void focusBorder(Region node, Color in, Color out, CornerRadii radius) {
+		CornerRadii toUse = new CornerRadii(
+				radius.getTopLeftHorizontalRadius() + 2, radius.getTopLeftVerticalRadius() + 2,
+				radius.getTopRightVerticalRadius() + 2, radius.getTopRightHorizontalRadius() + 2,
+				radius.getBottomRightHorizontalRadius() + 2, radius.getBottomRightVerticalRadius() + 2,
+				radius.getBottomLeftVerticalRadius() + 2, radius.getBottomLeftHorizontalRadius() + 2, 
+				false, false, false, false, 
+				false, false, false, false);
+		node.borderProperty().bind(Bindings.when(node.focusedProperty()).then(Borders.make(in, toUse))
+				.otherwise(out == null ? Border.EMPTY : Borders.make(out, toUse)));
 	}
 
 	public static void focusBorder(Region node, Color color, double radius) {
+		focusBorder(node, color, new CornerRadii(radius));
+	}
+
+	public static void focusBorder(Region node, Color color, CornerRadii radius) {
 		focusBorder(node, color, Color.TRANSPARENT, radius);
 	}
-	
+
 	public static void focusBorder(Region node, Color color) {
 		focusBorder(node, color, Color.TRANSPARENT, 4.0);
 	}

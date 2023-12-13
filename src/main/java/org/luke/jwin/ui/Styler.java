@@ -1,8 +1,8 @@
 package org.luke.jwin.ui;
 
+import org.luke.gui.factory.Backgrounds;
+import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
-import org.luke.jwin.app.utils.Backgrounds;
-import org.luke.jwin.app.utils.Borders;
 
 import javafx.scene.layout.Region;
 

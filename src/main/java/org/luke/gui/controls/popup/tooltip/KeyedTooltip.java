@@ -11,15 +11,15 @@ public class KeyedTooltip extends Tooltip implements Localized {
 
 	private String key;
 
-	public KeyedTooltip(Window window, String key, Direction direction, double offset) {
-		super(window, "", direction, offset);
+	public KeyedTooltip(Window window, String key, Direction direction, double offsetX, double offsetY) {
+		super(window, "", direction, offsetX, offsetY);
 
 		this.key = key;
 		applyLocale(window.getLocale());
 	}
 
 	public KeyedTooltip(Window window, String key, Direction direction) {
-		this(window, key, direction, 0);
+		this(window, key, direction, 0, 0);
 	}
 
 	@Override

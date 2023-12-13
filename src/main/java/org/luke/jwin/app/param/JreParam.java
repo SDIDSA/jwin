@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Map.Entry;
 import java.util.function.DoubleConsumer;
 import java.util.function.Predicate;
 import java.util.zip.ZipEntry;
@@ -22,8 +23,7 @@ import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.JwinActions;
-import org.luke.jwin.app.param.deps.DependenciesParam;
-import org.luke.jwin.app.param.main.MainClassParam;
+import org.luke.jwin.app.display.JwinUi;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;
@@ -32,70 +32,80 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 public class JreParam extends JavaParam {
-
-	public JreParam(Window ps, ClasspathParam cp, JdkParam jdk, DependenciesParam dependencies, MainClassParam mc) {
+	private DirectoryChooser dc;
+	private FileChooser fc;
+	public JreParam(Window ps, JwinUi config) {
 		super(ps, "Jre (will be packed with your app)");
+		
+		dc = new DirectoryChooser();
+		addButton(ps, "directory", () -> browseDir());
 
-		DirectoryChooser dc = new DirectoryChooser();
-		addButton(ps, "directory", () -> {
-			File dir = dc.showDialog(ps);
-			if (dir != null) {
-				set(dir);
-			}
-		});
-
-		FileChooser fc = new FileChooser();
+		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("archive", "*.zip"));
-		addButton(ps, "archive", () -> {
-			File file = fc.showOpenDialog(ps);
-			if (file != null) {
-				set(file);
-			}
-		});
+		addButton(ps, "archive", () -> browseArchive());
 
 		Link generateFromJdk = new Link(ps, "Generate JRE using jlink", new Font(12));
 		root.setAlignment(Pos.CENTER_RIGHT);
 		root.getChildren().add(0, generateFromJdk);
 
-		generateFromJdk.setAction(() -> generateFromJdk(ps, cp, jdk, dependencies, mc));
+		generateFromJdk.setAction(() -> generateFromJdk(ps, config));
+	}
+	
+	public void browseDir() {
+		File dir = dc.showDialog(getWindow());
+		if (dir != null) {
+			set(dir);
+		}
+	}
+	
+	public void browseArchive() {
+		File file = fc.showOpenDialog(getWindow());
+		if (file != null) {
+			set(file);
+		}
 	}
 
-	public void generateFromJdk(Window ps, ClasspathParam cp, JdkParam jdk, DependenciesParam dependencies,
-			MainClassParam mc) {
+	public void generateFromJdk(Window ps, JwinUi config) {
 		startLoading();
 
+		config.logStd("Generating JRE using JLink...");
 		new Thread(() -> {
-			Runnable cancel = this::stopLoading;
+			Runnable cancel = () -> {
+				stopLoading();
+				config.logStd("JRE generation failed...");
+			};
 			Runnable invalidJdk = () -> {
 				cancel.run();
 				JwinActions.error("Invalid jdk", "The jdk you have specified can not be used to generate a jre");
 			};
 
-			if (dependencies.isResolving()) {
+			if (config.getDependencies().isResolving()) {
 				cancel.run();
 				JwinActions.warn("Resolving dependencies", "try again after dependencies are successfully resolved");
 				return;
 			}
 
-			if (jdk.getValue() == null) {
+			if (config.getJdk().getValue() == null) {
 				cancel.run();
 				JwinActions.error("Missing Jdk", "You didn't specify a jdk");
 				return;
 			}
 
-			if (!jdk.isJdk()) {
+			if (!config.getJdk().isJdk()) {
 				invalidJdk.run();
 				return;
 			}
 
-			File jlink = new File(jdk.getValue().getAbsolutePath().concat("/bin/jlink.exe"));
-			File jdeps = new File(jdk.getValue().getAbsolutePath().concat("/bin/jdeps.exe"));
+			File jlink = new File(config.getJdk().getValue().getAbsolutePath().concat("/bin/jlink.exe"));
+			File jdeps = new File(config.getJdk().getValue().getAbsolutePath().concat("/bin/jdeps.exe"));
 			if (!jlink.exists() || !jdeps.exists()) {
 				invalidJdk.run();
 				return;
 			}
 
 			ArrayList<String> deps = new ArrayList<>();
+			deps.add("jdk.crypto.ec");
+			deps.add("jdk.unsupported");
 
 			File preGen = new File(System.getProperty("java.io.tmpdir") + "/jwin_preGen_" + new Random().nextInt(9999));
 			preGen.mkdir();
@@ -104,45 +114,48 @@ public class JreParam extends JavaParam {
 
 			File preGenLibs = null;
 			try {
-				preGenLibs = dependencies.copy(preGen, null);
+				preGenLibs = config.getDependencies().copy(preGen, null);
 			} catch (IOException e1) {
 				cancel.run();
 				JwinActions.copyDependenciesFailure();
 				return;
-				
+
 			}
 
-			if(mc.getValue() == null) {
+			if (config.getMainClass().getValue() == null) {
 				cancel.run();
 				JwinActions.error("Main class required", "You didn't specify the main class for your application");
 				return;
 			}
-			
-			if(!cp.isValidMainClass(mc.getValue().getValue())) {
+
+			if (!config.getClasspath().isValidMainClass(config.getMainClass().getValue().getValue())) {
 				cancel.run();
-				JwinActions.error("invalid mainClass", "The main class you selected doesn't belong in any of your classpath entries, are you sure you didn't remove it?");
+				JwinActions.error("invalid mainClass",
+						"The main class you selected doesn't belong in any of your classpath entries, are you sure you didn't remove it?");
 				return;
 			}
-			
+
 			File preGenBin = null;
 			try {
-				preGenBin = cp.compile(preGen, preGenLibs, jdk.getValue(), mc.getValue(), null, null);
-			}catch(Exception x) {
+				preGenBin = config.getClasspath().compile(preGen, preGenLibs, config.getJdk().getValue(), config.getMainClass().getValue(), null, null);
+			} catch (Exception x) {
 				cancel.run();
 				JwinActions.compileFailure();
 				return;
 			}
-			
-			if(preGenBin == null) {
+
+			if (preGenBin == null) {
 				cancel.run();
 				JwinActions.compileFailure();
 				return;
 			}
-			
-			File jdkBin = new File(jdk.getValue().getAbsolutePath().concat("/bin"));
+
+			File jdkBin = new File(config.getJdk().getValue().getAbsolutePath().concat("/bin"));
 			try {
 				Platform.runLater(() -> startLoading("Analyzing dependencies ..."));
 				Predicate<String> isValid = dep -> dep.indexOf("java.") == 0 || dep.indexOf("jdk.") == 0;
+
+				String mr = "base";
 				// analyze code for module dependencies
 				Command analCode = new Command(line -> {
 					String[] parts = line.split("\\s+");
@@ -154,8 +167,9 @@ public class JreParam extends JavaParam {
 							deps.add(dep);
 						}
 					}
-				}, "cmd", "/C", "jdeps -cp \"" + preGenBin.getAbsolutePath() + "\" --module-path \""
-						+ preGenLibs.getAbsolutePath() + "\" \"" + preGenBin.getAbsolutePath() + "\"");
+				}, "cmd", "/C",
+						"jdeps -cp \"" + preGenBin.getAbsolutePath() + "\" --multi-release " + mr + " --module-path \""
+								+ preGenLibs.getAbsolutePath() + "\" \"" + preGenBin.getAbsolutePath() + "\"");
 
 				analCode.execute(jdkBin).waitFor();
 				deps.remove("bin");
@@ -164,7 +178,8 @@ public class JreParam extends JavaParam {
 				if (preGenLibs.listFiles().length != 0) {
 					StringBuilder sb = new StringBuilder();
 					for (File lib : preGenLibs.listFiles()) {
-						sb.append(" \"").append(URLEncoder.encode(lib.getAbsolutePath(), StandardCharsets.UTF_8)).append("\"");
+						sb.append(" \"").append(URLEncoder.encode(lib.getAbsolutePath(), StandardCharsets.UTF_8))
+								.append("\"");
 					}
 
 					Command analLibs = new Command(line -> {
@@ -175,16 +190,15 @@ public class JreParam extends JavaParam {
 								deps.add(dep);
 							}
 						}
-					}, "cmd", "/c", "jdeps" + sb);
+					}, "cmd", "/c", "jdeps --multi-release " + mr + sb);
 					analLibs.execute(jdkBin).waitFor();
 				}
 
-				System.out.println(deps);
 				Platform.runLater(() -> startLoading("Generating JRE ..."));
 				Command gen = new Command("cmd", "/c",
 						"jlink --no-header-files --no-man-pages --strip-debug --module-path \""
-								+ preGenLibs.getAbsolutePath() + "\" --add-modules " + String.join(",", deps)
-								+ " --output \"" + preGen.getAbsolutePath().concat("/rt") + "\"");
+								+ preGenLibs.getAbsolutePath() + "\" --add-modules " + String.join(",", deps) + " --output \"" + preGen.getAbsolutePath().concat("/rt")
+								+ "\"");
 
 				gen.execute(jdkBin).waitFor();
 
@@ -206,13 +220,21 @@ public class JreParam extends JavaParam {
 										Platform.runLater(() -> {
 											stopLoading();
 											set(saveToRt, " (generated with jlink)");
+											config.logStd("the generated jre was saved to\n\t" + saveTo.getAbsolutePath());
 										});
 									}).start();
 								}
 							}
 						}, ButtonType.YES, ButtonType.NO);
 
-				Platform.runLater(() -> set(preGenRt, " (generated with jlink)"));
+				Platform.runLater(() -> {
+					set(preGenRt, " (generated with jlink)");
+					Entry<String, File> version = JavaParam.getVersionFromDir(preGenRt);
+					if (version != null && version.getKey() != null) {
+						String disp = "jre " + version.getKey().replace("\"", "");
+						config.logStd("The project JRE was set to " + disp + " (generated with jlink)");
+					}
+				});
 
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -271,8 +293,8 @@ public class JreParam extends JavaParam {
 								}
 							}
 						}
-						
-						if(onProgress != null) {
+
+						if (onProgress != null) {
 							onProgress.accept(.2 + (copyCount[0] / (double) ec) * .2);
 						}
 					});
@@ -287,7 +309,7 @@ public class JreParam extends JavaParam {
 			int[] copyCount = new int[] { 0 };
 			JwinActions.copyDirCont(value, preBuildRt, () -> {
 				copyCount[0]++;
-				if(onProgress != null) {
+				if (onProgress != null) {
 					onProgress.accept(.2 + (copyCount[0] / (double) count) * .2);
 				}
 			});

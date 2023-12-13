@@ -60,7 +60,7 @@ public class TabPane extends BorderPane implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		setBorder(Borders.make(style.getBackgroundFloating(), 5.0, 2.0));
+		setBorder(Borders.make(style.getBackgroundTertiary(), 7.0, 2.0));
 	}
 
 	@Override

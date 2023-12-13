@@ -154,11 +154,11 @@ public enum Direction {
 		}
 	}
 
-	public double[] calcPos(PopupControl popup, Node node, double offset) {
+	public double[] calcPos(PopupControl popup, Node node, double offsetX, double offsetY) {
 		Bounds bounds = node.getBoundsInLocal();
 		Bounds screenBounds = node.localToScreen(bounds);
 		
-		return new double[] {calcX(popup, screenBounds, offset), calcY(popup, screenBounds, offset)};
+		return new double[] {calcX(popup, screenBounds, offsetX), calcY(popup, screenBounds, offsetY)};
 	}
 
 	public double calcX(PopupControl popup, Bounds node, double offset) {

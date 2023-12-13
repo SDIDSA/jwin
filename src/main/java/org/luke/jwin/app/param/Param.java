@@ -11,10 +11,10 @@ import org.luke.gui.controls.Font;
 import org.luke.gui.controls.Loading;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
-import org.luke.jwin.app.utils.Backgrounds;
 import org.luke.jwin.ui.Button;
 
 import java.awt.Graphics2D;
@@ -192,7 +192,7 @@ public abstract class Param extends StackPane implements Styleable {
 		loadingLabel.setFill(style.getTextNormal());
 		pi.setFill(style.getTextNormal());
 		
-		sp.setBackground(Backgrounds.make(style.getBackgroundFloating(), 5.0));
+		sp.setBackground(Backgrounds.make(style.getBackgroundTertiary(), 5.0));
 		sp.getScrollBar().setThumbFill(style.getChannelsDefault());
 		
 		files.removeIf(lab -> lab.getScene() == null);

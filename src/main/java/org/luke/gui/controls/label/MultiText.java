@@ -21,39 +21,45 @@ public class MultiText extends TextFlow {
 	private ArrayList<TextNode> nodes;
 
 	private Color fill;
-	
+
+	private Font font;
+
 	public MultiText(Window window) {
 		this.window = window;
 		nodes = new ArrayList<>();
+
+		font = Font.DEFAULT;
 	}
 
 	public MultiText(Window window, String key, Font font) {
 		this(window);
-		
+
+		this.font = font;
+
 		addKeyedLabel(key, font);
 	}
-	
+
 	public void setFill(Color fill) {
 		this.fill = fill;
 		nodes.forEach(node -> {
-			if(node instanceof Text label) {
+			if (node instanceof Text label) {
 				label.setFill(fill);
 			}
 		});
 	}
 
 	public void setKey(int index, String key) {
-		if(nodes.get(index) instanceof KeyedTextNode node) {
+		if (nodes.get(index) instanceof KeyedTextNode node) {
 			node.setKey(key);
-		}else {
+		} else {
 			throw new IllegalArgumentException("the TextNode at " + index + " is not a KeyedTextNode");
 		}
 	}
 
 	public void setAction(int index, Runnable action) {
-		if(nodes.get(index) instanceof Link link) {
+		if (nodes.get(index) instanceof Link link) {
 			link.setAction(action);
-		}else {
+		} else {
 			throw new IllegalArgumentException("the TextNode at " + index + " is not a Link");
 		}
 	}
@@ -64,26 +70,26 @@ public class MultiText extends TextFlow {
 
 	public void addKeyedLabel(String key, Font font) {
 		Label lab = new Label(window, key, font);
-		if(fill != null) {
+		if (fill != null) {
 			lab.setFill(fill);
 		}
 		addNode(lab);
 	}
 
 	public void addKeyedLabel(String key) {
-		addKeyedLabel(key, Font.DEFAULT);
+		addKeyedLabel(key, font);
 	}
 
 	public void addLabel(String txt, Font font) {
 		Text lab = new Text(txt, font);
-		if(fill != null) {
+		if (fill != null) {
 			lab.setFill(fill);
 		}
 		addNode(lab);
 	}
 
 	public void addLabel(String txt) {
-		addLabel(txt, Font.DEFAULT);
+		addLabel(txt, font);
 	}
 
 	public void addLink(String key, Font font) {
@@ -95,20 +101,25 @@ public class MultiText extends TextFlow {
 	}
 
 	public void addLink(String key) {
-		addLink(key, Font.DEFAULT);
+		addLink(key, font);
 	}
 
 	private void addNode(TextNode node) {
 		nodes.add(node);
 		getChildren().add(node.getNode());
 	}
-	
+
 	public void clear() {
 		nodes.clear();
 		getChildren().clear();
 	}
-	
+
 	public void center() {
 		setTextAlignment(TextAlignment.CENTER);
+	}
+	
+	public void setFont(Font font) {
+		this.font = font;
+		nodes.forEach(n -> n.setFont(font));
 	}
 }

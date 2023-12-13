@@ -5,45 +5,93 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.Arrays;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
 public class Command {
 	private String[] command;
-	
-	private Runnable onFinished;
 
-	private Consumer<String> inputHandler;
-	private Consumer<String> errorHandler;
+	private Runnable onFinished;
+	
+	private OutputStreamWriter input;
+
+	private ArrayList<Consumer<String>> inputHandlers;
+	private ArrayList<Consumer<String>> errorHandlers;
+	
+	private ArrayList<Runnable> onExit;
 
 	public Command(Consumer<String> inputHandler, Consumer<String> errorHandler, String... command) {
 		this.command = command;
-		this.inputHandler = inputHandler;
-		this.errorHandler = errorHandler;
-		
-		for(int i = 0; i<command.length;i++) {
+		this.inputHandlers = new ArrayList<>();
+		this.errorHandlers = new ArrayList<>();
+		this.onExit = new ArrayList<>();
+
+		if (inputHandler != null)
+			inputHandlers.add(inputHandler);
+		if (errorHandler != null)
+			errorHandlers.add(errorHandler);
+
+		for (int i = 0; i < command.length; i++) {
 			command[i] = URLDecoder.decode(command[i], Charset.defaultCharset());
 		}
 	}
 
 	public Command(Consumer<String> inputHandler, String... command) {
-		this(inputHandler, inputHandler, command);
+		this(inputHandler, null, command);
 	}
 
 	public Command(String... command) {
 		this(null, null, command);
 	}
-	
+
 	public void setOnFinished(Runnable onFinished) {
 		this.onFinished = onFinished;
 	}
-
-	public Process execute(File root, Runnable...periodicals) {
-		System.out.println(Arrays.toString(command));
+	
+	public void addInputHandler(Consumer<String> inputHandler) {
+		inputHandlers.add(inputHandler);
+	}
+	
+	public void addErrorHandler(Consumer<String> errorHandler) {
+		errorHandlers.add(errorHandler);
+	}
+	
+	public void write(String b) {
 		try {
-			Process process = Runtime.getRuntime().exec(command, null, root);
+			input.append(b);
+			input.append(System.lineSeparator());
+			input.flush();
+		} catch (IOException e) {
+			System.out.println("failed to write to process input due to " + e.getMessage());
+		}
+	}
+	
+	public void addOnExit(Runnable r) {
+		onExit.add(r);
+	}
+
+	public Process execute(File root, Runnable... periodicals) {
+		try {
+			Process process = new ProcessBuilder(command).directory(root).start();
+			
+			new Thread(() -> {
+				while(process.isAlive()) {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				onExit.forEach(Runnable::run);
+			}).start();
+			
+			input = new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8);
+			
 			new Thread(() -> {
 				InputStream is = process.getInputStream();
 
@@ -51,8 +99,11 @@ public class Command {
 				String line;
 				try {
 					while ((line = br.readLine()) != null) {
-						if (inputHandler != null)
-							inputHandler.accept(line);
+						String fline = line;
+						inputHandlers.forEach(inputHandler -> {
+							if (inputHandler != null)
+								inputHandler.accept(fline);
+						});
 						System.out.println("Std : " + line);
 					}
 				} catch (IOException e) {
@@ -67,21 +118,24 @@ public class Command {
 				String line;
 				try {
 					while ((line = br.readLine()) != null) {
-						if (errorHandler != null)
-							errorHandler.accept(line);
+						String fline = line;
+						errorHandlers.forEach(errorHandler -> {
+							if (errorHandler != null)
+								errorHandler.accept(fline);
+						});
 						System.out.println("Err : " + line);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}).start();
-			
-			new Thread(()-> {
-				while(process.isAlive()) {
-					for(Runnable periodical : periodicals) {
+
+			new Thread(() -> {
+				while (process.isAlive()) {
+					for (Runnable periodical : periodicals) {
 						periodical.run();
 					}
-					
+
 					try {
 						Thread.sleep(100);
 					} catch (InterruptedException e) {
@@ -89,11 +143,11 @@ public class Command {
 						Thread.currentThread().interrupt();
 					}
 				}
-				
-				if(onFinished != null) {
+
+				if (onFinished != null) {
 					onFinished.run();
 				}
-				
+
 			}).start();
 			return process;
 		} catch (IOException e) {

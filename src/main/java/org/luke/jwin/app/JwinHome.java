@@ -2,20 +2,31 @@ package org.luke.jwin.app;
 
 import java.awt.Dimension;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 
 import org.luke.gui.app.pages.Page;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
+import org.luke.jwin.app.display.JwinUi;
+import org.luke.jwin.app.display.JwinUi1;
 
 import javafx.beans.property.ObjectProperty;
 
 public class JwinHome extends Page {
 
-	protected JwinHome(Window window) {
+	private JwinUi config;
+
+	protected JwinHome(Window window, Class<? extends JwinUi> uiType) {
 		super(window, new Dimension(500 * 2 + 15 * 4 + 30, 600));
 
-		JwinUi config = new JwinUi(this);
+		try {
+			config = uiType.getConstructor(Page.class).newInstance(this);
+		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+				| NoSuchMethodException | SecurityException e) {
+			e.printStackTrace();
+			config = new JwinUi1(this);
+		}
 		JwinActions actions = new JwinActions(window, config);
 
 		config.setOnRun(actions::run);
@@ -31,10 +42,14 @@ public class JwinHome extends Page {
 			}
 		}
 	}
+	
+	public JwinUi getConfig() {
+		return config;
+	}
 
 	@Override
 	public void applyStyle(Style style) {
-		
+
 	}
 
 	@Override

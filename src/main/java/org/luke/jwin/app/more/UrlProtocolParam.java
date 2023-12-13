@@ -1,16 +1,13 @@
 package org.luke.jwin.app.more;
 
 import org.luke.gui.controls.check.KeyedCheck;
-import org.luke.gui.style.Style;
-import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.file.UrlProtocolAssociation;
 import org.luke.jwin.ui.TextVal;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.scene.layout.VBox;
 
-public class UrlProtocolParam extends VBox implements Styleable {
+public class UrlProtocolParam extends VBox {
 	private TextVal protocol;
 
 	private KeyedCheck enable;
@@ -24,8 +21,6 @@ public class UrlProtocolParam extends VBox implements Styleable {
 		protocol.disableProperty().bind(enable.checkedProperty().not());
 
 		getChildren().addAll(protocol, enable);
-
-		applyStyle(window.getStyl());
 	}
 
 	public boolean isEnabled() {
@@ -44,15 +39,5 @@ public class UrlProtocolParam extends VBox implements Styleable {
 			protocol.setValue("");
 			enable.checkedProperty().set(false);
 		}
-	}
-
-	@Override
-	public void applyStyle(Style style) {
-		enable.setTextFill(style.getTextNormal());
-	}
-
-	@Override
-	public void applyStyle(ObjectProperty<Style> style) {
-		Styleable.bindStyle(this, style);
 	}
 }

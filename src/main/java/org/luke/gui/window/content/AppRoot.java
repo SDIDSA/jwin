@@ -127,7 +127,7 @@ public class AppRoot extends BorderPane implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		setFill(style.getBackgroundTertiary());
+		setFill(style.getBackgroundPrimary());
 	}
 
 	@Override

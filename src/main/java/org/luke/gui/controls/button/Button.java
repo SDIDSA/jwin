@@ -6,6 +6,10 @@ import org.luke.gui.window.Window;
 
 import javafx.beans.binding.Bindings;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.FontWeight;
@@ -17,6 +21,10 @@ public class Button extends AbstractButton {
 	private boolean ulOnHover = false;
 
 	public Button(Window window, String key, double radius, double width, double height) {
+		this(window, key, new CornerRadii(radius), width, height);
+	}
+
+	public Button(Window window, String key, CornerRadii radius, double width, double height) {
 		super(window, radius, height);
 		
 		label = new Label(window, key);
@@ -32,8 +40,12 @@ public class Button extends AbstractButton {
 		}
 
 		label.opacityProperty().bind(back.opacityProperty());
+
+		StackPane preLabel= new StackPane(label);
 		
-		add(label);
+		HBox.setHgrow(preLabel, Priority.ALWAYS);
+		
+		add(preLabel);
 		
 		applyStyle(window.getStyl());
 	}
@@ -58,11 +70,15 @@ public class Button extends AbstractButton {
 		this.ulOnHover = ulOnHover;
 	}
 
-	public Button(Window window, String key, int width) {
+	public Button(Window window, String key) {
+		this(window, key, DEFAULT_RADIUS, DEFAULT_WIDTH, DEFAULT_HEIGHT);
+	}
+
+	public Button(Window window, String key, double width) {
 		this(window, key, DEFAULT_RADIUS, width, DEFAULT_HEIGHT);
 	}
 
-	public Button(Window window, String string, double radius, int width) {
+	public Button(Window window, String string, double radius, double width) {
 		this(window, string, radius, width, DEFAULT_HEIGHT);
 	}
 

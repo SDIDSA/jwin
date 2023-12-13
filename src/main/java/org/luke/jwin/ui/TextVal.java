@@ -34,6 +34,14 @@ public class TextVal extends VBox implements Styleable {
 		
 		applyStyle(window.getStyl());
 	}
+
+	public void setAction(Runnable r) {
+		field.setAction(r);
+	}
+
+	public void setInputFont(Font font) {
+		field.setFont(font);
+	}
 	
 	public void setEditable(boolean editable) {
 		field.setEditable(editable);

@@ -47,6 +47,7 @@ public class ImageProxy {
 	
 	public static void asyncLoad(String path, double size, Consumer<Image> onLoad) {
 		new Thread() {
+			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
 				Image found = cache.get(size + "_" + path);

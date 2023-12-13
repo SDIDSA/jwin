@@ -13,10 +13,10 @@ import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.controls.label.unkeyed.Text;
 import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.controls.space.Separator;
+import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
-import org.luke.jwin.app.utils.Backgrounds;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;

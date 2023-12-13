@@ -2,6 +2,7 @@ package org.luke.gui.controls.button;
 
 import org.luke.gui.NodeUtils;
 import org.luke.gui.controls.Loading;
+import org.luke.gui.controls.shape.Back;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
@@ -12,10 +13,9 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -24,23 +24,24 @@ import javafx.scene.effect.ColorAdjust;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 
 public class AbstractButton extends StackPane implements Styleable {
+	protected static final double DEFAULT_WIDTH = 100;
 	protected static final double DEFAULT_HEIGHT = 32;
 	protected static final double DEFAULT_RADIUS = 5;
-	
-	private double radius;
-	private DoubleProperty radiusProperty;
+
+	private CornerRadii radius;
+	private ObjectProperty<CornerRadii> radiusProperty;
 	private Timeline enter;
 	private Timeline exit;
-	
+
 	private Runnable mouseAction;
 	private Runnable keyAction;
 
@@ -48,11 +49,19 @@ public class AbstractButton extends StackPane implements Styleable {
 
 	private HBox content;
 
-	protected Rectangle back;
+	protected Back back;
 
 	private BooleanProperty loading;
 
 	public AbstractButton(Window window, double radius, double height) {
+		this(window, new CornerRadii(radius), height, DEFAULT_WIDTH);
+	}
+
+	public AbstractButton(Window window, CornerRadii radius, double height) {
+		this(window, radius, height, DEFAULT_WIDTH);
+	}
+
+	public AbstractButton(Window window, CornerRadii radius, double height, double width) {
 		this.radius = radius;
 		getStyleClass().addAll("butt");
 
@@ -64,18 +73,18 @@ public class AbstractButton extends StackPane implements Styleable {
 		setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		setPrefHeight(height);
+		setPrefWidth(width);
 
-		radiusProperty = new SimpleDoubleProperty(radius);
+		radiusProperty = new SimpleObjectProperty<CornerRadii>(radius);
 
-		back = new Rectangle();
+		back = new Back();
 		back.setFill(Color.TRANSPARENT);
 		back.setStrokeType(StrokeType.INSIDE);
 
-		back.arcWidthProperty().bind(radiusProperty.multiply(2));
-		back.arcHeightProperty().bind(radiusProperty.multiply(2));
+		back.radiusProperty().bind(radiusProperty);
 
-		back.widthProperty().bind(widthProperty().subtract(Bindings.when(focusedProperty()).then(6).otherwise(0)));
-		back.heightProperty().bind(heightProperty().subtract(Bindings.when(focusedProperty()).then(6).otherwise(0)));
+		back.wProp().bind(widthProperty().subtract(Bindings.when(focusedProperty()).then(6).otherwise(0)));
+		back.hProp().bind(heightProperty().subtract(Bindings.when(focusedProperty()).then(6).otherwise(0)));
 
 		setCursor(Cursor.HAND);
 
@@ -99,8 +108,11 @@ public class AbstractButton extends StackPane implements Styleable {
 		content = new HBox();
 		content.setAlignment(Pos.CENTER);
 
+		content.minWidthProperty().bind(widthProperty());
+		content.maxWidthProperty().bind(widthProperty());
+
 		getChildren().addAll(back, content);
-		
+
 		applyStyle(window.getStyl());
 	}
 
@@ -169,7 +181,7 @@ public class AbstractButton extends StackPane implements Styleable {
 			action.run();
 		}
 	}
-	
+
 	public void fire() {
 		fire(keyAction);
 	}
@@ -178,11 +190,11 @@ public class AbstractButton extends StackPane implements Styleable {
 		this.mouseAction = action;
 		this.keyAction = action;
 	}
-	
+
 	public void setMouseAction(Runnable mouseAction) {
 		this.mouseAction = mouseAction;
 	}
-	
+
 	public void setKeyAction(Runnable keyAction) {
 		this.keyAction = keyAction;
 	}
@@ -191,7 +203,7 @@ public class AbstractButton extends StackPane implements Styleable {
 		load.setFill(fill);
 	}
 
-	public double getRadius() {
+	public CornerRadii getRadius() {
 		return radius;
 	}
 
@@ -208,7 +220,7 @@ public class AbstractButton extends StackPane implements Styleable {
 		back.setStroke(fill);
 	}
 
-	public void setRadius(double radius) {
+	public void setRadius(CornerRadii radius) {
 		this.radius = radius;
 		radiusProperty.set(radius);
 	}
@@ -219,7 +231,7 @@ public class AbstractButton extends StackPane implements Styleable {
 	}
 
 	@Override
-	public void applyStyle(Style style) {		
-		NodeUtils.focusBorder(this, style.getTextLink(), radius + 2);
+	public void applyStyle(Style style) {
+		NodeUtils.focusBorder(this, style.getTextLink(), radius);
 	}
 }

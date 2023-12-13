@@ -25,6 +25,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.Border;
@@ -40,8 +41,10 @@ public class TextInput extends Input implements Styleable {
 
 	private BooleanProperty notSelected;
 	private ObjectProperty<IndexRange> selection;
-	
+
 	private ContextMenu menu;
+
+	private Runnable action;
 
 	public TextInput(Window window, Font font, String key, boolean hidden) {
 		super(key);
@@ -81,16 +84,27 @@ public class TextInput extends Input implements Styleable {
 
 		field.setCache(true);
 		field.setCacheHint(CacheHint.SPEED);
-		
+
+		field.setOnKeyPressed(e -> {
+			if (e.getCode() == KeyCode.ENTER && action != null) {
+				e.consume();
+				action.run();
+			}
+		});
+
 		prepareMenu(window);
 
 		setFont(font);
 	}
-	
+
+	public void setAction(Runnable action) {
+		this.action = action;
+	}
+
 	public void setEditable(boolean editable) {
 		field.setEditable(editable);
 	}
-	
+
 	public void setRadius(double radius) {
 		inputStyle.setRadius(radius);
 	}
@@ -98,15 +112,15 @@ public class TextInput extends Input implements Styleable {
 	public void setFieldPadding(Insets insets) {
 		field.setPadding(insets);
 	}
-	
+
 	public boolean isMenuShowing() {
 		return menu.isShowing();
 	}
-	
+
 	public ReadOnlyBooleanProperty menuShowingProperty() {
 		return menu.showingProperty();
 	}
-	
+
 	private void prepareMenu(Window window) {
 		menu = new ContextMenu(window);
 		KeyedMenuItem copy = new KeyedMenuItem(menu, "copy", null);
@@ -194,7 +208,6 @@ public class TextInput extends Input implements Styleable {
 	public boolean isFocus() {
 		return field.isFocused();
 	}
-	
 
 	public ReadOnlyBooleanProperty focusProperty() {
 		return field.focusedProperty();

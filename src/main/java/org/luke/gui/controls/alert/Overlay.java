@@ -2,7 +2,6 @@ package org.luke.gui.controls.alert;
 
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.SplineInterpolator;
@@ -112,6 +111,10 @@ public class Overlay extends StackPane {
 		this(owner, owner.getWindow());
 	}
 
+	public void setOwner(Pane owner) {
+		this.owner = owner;
+	}
+
 	public void setAutoHide(boolean autoHide) {
 		this.autoHide = autoHide;
 	}
@@ -168,15 +171,18 @@ public class Overlay extends StackPane {
 		onHiding.forEach(Runnable::run);
 	}
 
-	private Long key = new Random().nextLong();
-	private Long result = new Random().nextLong();
-	private AtomicLong rval = new AtomicLong();
-
 	public void showAndWait() {
 		show();
-		onHidden.add(() -> Platform.exitNestedEventLoop(key, result));
-		Long actual = (Long) Platform.enterNestedEventLoop(key);
-		rval.set(actual);
+		Integer key = new Random().nextInt();
+		Runnable exit = new Runnable() {
+			@Override
+			public void run() {
+				Platform.exitNestedEventLoop(key, null);
+				Platform.runLater(() -> onHidden.remove(this));
+			}
+		};
+		onHidden.add(exit);
+		Platform.enterNestedEventLoop(key);
 	}
 
 	private Node last() {

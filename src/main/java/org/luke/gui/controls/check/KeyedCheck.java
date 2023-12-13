@@ -2,15 +2,17 @@ package org.luke.gui.controls.check;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.keyed.Label;
+import org.luke.gui.style.Style;
+import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
 
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.layout.HBox;
-import javafx.scene.paint.Paint;
 
-public class KeyedCheck extends HBox {
+public class KeyedCheck extends HBox implements Styleable {
 	private Check check;
 	private Label label;
 	
@@ -29,14 +31,12 @@ public class KeyedCheck extends HBox {
 		setCursor(Cursor.HAND);
 		
 		getChildren().addAll(check, label);
+		
+		applyStyle(window.getStyl());
 	}
 	
 	public BooleanProperty checkedProperty() {
 		return check.checkedProperty();
-	}
-	
-	public void setTextFill(Paint fill) {
-		label.setFill(fill);
 	}
 	
 	public void setFont(Font font) {
@@ -45,5 +45,15 @@ public class KeyedCheck extends HBox {
 	
 	public void setKey(String key) {
 		label.setKey(key);
+	}
+
+	@Override
+	public void applyStyle(Style style) {
+		label.setFill(style.getTextNormal());
+	}
+
+	@Override
+	public void applyStyle(ObjectProperty<Style> style) {
+		Styleable.bindStyle(this, style);
 	}
 }

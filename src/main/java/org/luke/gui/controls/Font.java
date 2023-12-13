@@ -11,6 +11,8 @@ import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 
 public class Font {
+	
+	public static final String DEFAULT_MONO_FAMILY = "Ubuntu Mono";
 	public static final String DEFAULT_FAMILY = "Ubuntu";// Ubuntu Roboto
 	public static final String DEFAULT_FAMILY_MEDIUM = DEFAULT_FAMILY + " Medium";
 	public static final FontWeight DEFAULT_WEIGHT = FontWeight.NORMAL;
@@ -113,12 +115,13 @@ public class Font {
 
 	private static void init() {
 		loadFont(DEFAULT_FAMILY);
+		loadFont(DEFAULT_MONO_FAMILY);
 	}
 
 	private static void loadFont(String name) {
 		try {
 			File parent = new File(URLDecoder.decode(Font.class
-					.getResource(String.join("/", "/fonts", DEFAULT_FAMILY, DEFAULT_FAMILY + "-Regular.ttf")).getFile(),
+					.getResource(String.join("/", "/fonts", name.replace(" ", ""), name.replace(" ", "") + "-Regular.ttf")).getFile(),
 					"utf-8")).getParentFile();
 			for (File font : parent.listFiles()) {
 				javafx.scene.text.Font.loadFont(new FileInputStream(font), 14);

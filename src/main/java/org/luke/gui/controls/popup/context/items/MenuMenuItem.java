@@ -3,7 +3,6 @@ package org.luke.gui.controls.popup.context.items;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.context.ContextMenu;
-import org.luke.gui.style.Style;
 
 public class MenuMenuItem extends MenuItem {
 	private ColorIcon arrow;
@@ -14,13 +13,14 @@ public class MenuMenuItem extends MenuItem {
 		super(menu, key);
 
 		arrow = new ColorIcon("menu-right", 12, 8);
+		arrow.fillProperty().bind(lab.fillProperty());
 
 		getChildren().add(arrow);
 
 		subMenu = new ContextMenu(menu.getOwner());
 		active.addListener((obs, ov, nv) -> {
 			if (nv.booleanValue()) {
-				subMenu.showPop(this, Direction.RIGHT_DOWN, 0);
+				subMenu.showPop(this, Direction.RIGHT_DOWN, 15);
 			} else {
 				subMenu.hide();
 			}
@@ -47,15 +47,6 @@ public class MenuMenuItem extends MenuItem {
 	
 	public ContextMenu getSubMenu() {
 		return subMenu;
-	}
-
-	@Override
-	public void applyStyle(Style style) {
-		if (arrow == null)
-			return;
-
-		arrow.setFill(style.getTextNormal());
-		super.applyStyle(style);
 	}
 
 }

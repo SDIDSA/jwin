@@ -21,6 +21,8 @@ import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.file.FileUtils;
 import org.luke.gui.window.Window;
+import org.luke.jwin.app.console.Console;
+import org.luke.jwin.app.display.JwinUi;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.JWinProject;
@@ -37,14 +39,14 @@ public class JwinActions {
 	private File preBuild;
 
 	private Window ps;
-	private JwinUi config;
+	static private JwinUi config;
 
 	private DirectoryChooser fc;
 
 	public JwinActions(Window ps, JwinUi config) {
 		this.ps = ps;
 		window = ps;
-		this.config = config;
+		JwinActions.config = config;
 
 		fc = new DirectoryChooser();
 	}
@@ -61,6 +63,12 @@ public class JwinActions {
 
 		if (launcher == null) {
 			error("Main class required", "You didn't specify the main class for your application");
+			return;
+		}
+
+		if (!config.getClasspath().isValidMainClass(config.getMainClass().getValue().getValue())) {
+			error("invalid mainClass",
+					"The main class you selected doesn't belong in any of your classpath entries, are you sure you didn't remove it?");
 			return;
 		}
 
@@ -102,13 +110,15 @@ public class JwinActions {
 			return;
 		}
 
-		config.disable(true);
+		config.disable(true, false);
 		new Thread(() -> {
+			config.logStd("creating temp folder");
 			preBuild = new File(System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
 			preBuild.mkdir();
 
 			deleteDirOnShutdown(preBuild);
 
+			config.logStd("Copying dependencies to the temp folder");
 			config.setState("Copying dependencies");
 			File preBuildLibs = null;
 			try {
@@ -119,9 +129,11 @@ public class JwinActions {
 				return;
 			}
 
+			config.logStd("Copying java runtime...");
 			config.setState("Copying runtime");
 			config.getJre().copy(preBuild, config::setProgress);
 
+			config.logStd("Compiling source code...");
 			config.setState("Compiling source code");
 			try {
 				config.getClasspath().compile(preBuild, preBuildLibs, config.getJdk().getValue(),
@@ -132,11 +144,13 @@ public class JwinActions {
 				return;
 			}
 
+			config.logStd("Copying resources...");
 			config.setState("Copying resources");
 			config.getClasspath().copyRes(preBuild, config::setProgress);
 
 			config.setProgress(-1);
 			config.setState("Running...");
+			config.logStd("Running your project");
 
 			StringBuilder errBuilder = new StringBuilder();
 
@@ -153,18 +167,40 @@ public class JwinActions {
 			String c = "\"rt/bin/java\" -cp \"bin;res;lib/*\" "
 					+ (config.getMainClass().getAltMain() == null ? config.getMainClass().getValue().getKey()
 							: config.getMainClass().getAltMain());
-
-			System.out.println(c);
 			Command command = new Command(std -> {
 			}, err -> errBuilder.append(err).append('\n'), "cmd", "/c", c);
 
 			Process p = command.execute(preBuild);
+
+			if (config.getConsole().checkedProperty().get()) {
+				Platform.runLater(() -> {
+					Console con = new Console(window.getLoadedPage(), command);
+					con.show();
+
+					command.addOnExit(() -> Platform.runLater(con::hide));
+					con.addOnHidden(() -> {
+						config.setStopped(true);
+						if (p.isAlive()) {
+							p.descendants().forEach(ProcessHandle::destroy);
+						}
+					});
+				});
+			}
+
+			config.logStd("your project is running");
+
 			config.run(p, showLog, errBuilder);
 		}).start();
 	}
 
 	public void compile() {
 		boolean[] contin = new boolean[] { true };
+
+		if (preBuild == null) {
+			error("Temp files can't be found",
+					"Pre Build files were deleted or not correctly generated, try running again");
+			return;
+		}
 
 		ButtonType useDefault = ButtonType.USE_DEFAULT;
 		ButtonType select = ButtonType.SELECT_NOW;
@@ -223,7 +259,7 @@ public class JwinActions {
 					"It is recommended to save this project so you can use the same GUID when you build it again, do not use the same GUID with different projects",
 					AlertType.CONFIRM, res -> {
 						if (res.equals(ButtonType.YES)) {
-							config.saveProject();
+							config.saveAs();
 						} else if (res.equals(ButtonType.CANCEL)) {
 							contin[0] = false;
 						}
@@ -271,7 +307,7 @@ public class JwinActions {
 		final File saveTo = preSaveTo;
 
 		if (saveTo != null) {
-			config.disable(true);
+			config.disable(true, true);
 			new Thread(() -> {
 				config.setState("Generating launcher");
 
@@ -279,7 +315,7 @@ public class JwinActions {
 						preBuild.getAbsolutePath().concat("/").concat(config.getAppName().getValue()).concat(".bat"));
 
 				FileDealer.write(
-						"set batdir=%~dp0 \n" + "pushd \"%batdir%\" \n" + "\"rt/bin/java\" -cp \"res;bin;lib/*\" "
+						"set batdir=%~dp0 \n" + "pushd \"%batdir%\" \ncls\n" + "\"rt/bin/java\" -cp \"res;bin;lib/*\" "
 								+ (config.getMainClass().getAltMain() == null
 										? config.getMainClass().getValue().getKey()
 										: config.getMainClass().getAltMain())
@@ -404,10 +440,12 @@ public class JwinActions {
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-
-				config.setState("done");
-				config.setProgress(-1);
-				config.disable(false);
+				
+				Platform.runLater(() -> {
+					config.setState("done");
+					config.setProgress(-1);
+					config.disable(false, true);
+				});
 			}).start();
 		}
 	}
@@ -441,18 +479,22 @@ public class JwinActions {
 
 	public static void warn(String head, String content) {
 		alert(head, content, AlertType.INFO);
+		config.logErr(head);
+		config.logErr("\t" + content);
 	}
 
 	public static void error(String head, String content) {
 		alert(head, content, AlertType.ERROR);
+		config.logErr(head);
+		config.logErr("\t" + content);
 	}
 
 	public static void alert(String head, String content, AlertType type) {
 		alert(head, content, type, null);
 	}
 
-	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes,
-			Runnable onHide, ButtonType... types) {
+	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes, Runnable onHide,
+			ButtonType... types) {
 		Runnable exe = () -> {
 			Alert al = new Alert(window.getLoadedPage(), type);
 			al.setHead(head);
@@ -470,8 +512,8 @@ public class JwinActions {
 					});
 				}
 			}
-			
-			if(onHide != null) {
+
+			if (onHide != null) {
 				al.addOnHidden(onHide);
 			}
 
@@ -484,7 +526,7 @@ public class JwinActions {
 			Platform.runLater(exe);
 		}
 	}
-	
+
 	public static void alert(String head, String content, AlertType type, Consumer<ButtonType> onRes,
 			ButtonType... types) {
 		alert(head, content, type, onRes, null, types);

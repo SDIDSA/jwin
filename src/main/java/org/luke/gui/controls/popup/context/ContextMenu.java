@@ -46,6 +46,8 @@ public class ContextMenu extends PopupControl implements Styleable {
 	private Scale scale;
 
 	protected MenuItem selected;
+	
+	private ArrayList<Runnable> onShowing;
 
 	public ContextMenu(Window window) {
 		this.owner = window;
@@ -110,7 +112,13 @@ public class ContextMenu extends PopupControl implements Styleable {
 			root.setCacheHint(CacheHint.DEFAULT);
 		});
 
+		onShowing = new ArrayList<>();
+		
 		applyStyle(window.getStyl());
+	}
+	
+	public void addOnShowing(Runnable r) {
+		onShowing.add(r);
 	}
 
 	private void handleRelease(KeyEvent e) {
@@ -192,6 +200,12 @@ public class ContextMenu extends PopupControl implements Styleable {
 	public void install(Node node) {
 		node.addEventFilter(MouseEvent.MOUSE_PRESSED, this::showPop);
 	}
+	
+	@Override
+	public void show(javafx.stage.Window owner) {
+		onShowing.forEach(Runnable::run);
+		super.show(owner);
+	}
 
 	public void showPop(MouseEvent ev) {
 		if (ev.getButton() == MouseButton.SECONDARY) {
@@ -206,7 +220,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 			setX(ev.getScreenX() - 15);
 			setY(ev.getScreenY() - 15);
-			show(owner);
+			this.show(owner);
 		}
 	}
 
@@ -312,7 +326,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 		}
 	}
 
-	public void showPop(Node node, Direction preD, int offset) {
+	public void showPop(Node node, Direction preD, int offsetX, int offsetY) {
 		if (node.getScene() == null) {
 			return;
 		}
@@ -327,12 +341,12 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 			Direction direction = preD;
 			if (preD == null) {
-				px = screenBounds.getMaxX() - 15 + offset;
+				px = screenBounds.getMaxX() - 15 + offsetX;
 				py = screenBounds.getMinY() - 15;
 			} else {
 				boolean ouverflow = true;
 				while (ouverflow) {
-					double[] pos = direction.calcPos(this, node, offset);
+					double[] pos = direction.calcPos(this, node, offsetX, offsetY);
 					px = pos[0];
 					py = pos[1];
 
@@ -381,15 +395,19 @@ public class ContextMenu extends PopupControl implements Styleable {
 	}
 
 	public void showPop(Node node, Direction dir) {
-		showPop(node, dir, 0);
+		showPop(node, dir, 0, 0);
+	}
+
+	public void showPop(Node node, Direction dir, int offset) {
+		showPop(node, dir, offset, offset);
 	}
 
 	public void showPop(Node node, int offset) {
-		showPop(node, null, offset);
+		showPop(node, null, offset, offset);
 	}
 
 	public void showPop(Node node) {
-		showPop(node, null, 0);
+		showPop(node, null, 0, 0);
 	}
 
 	public void showPop(Node node, ContextMenuEvent event) {
@@ -421,7 +439,6 @@ public class ContextMenu extends PopupControl implements Styleable {
 		} else {
 			this.show(node, event.getScreenX(), event.getScreenY());
 		}
-
 	}
 
 	public Window getOwner() {

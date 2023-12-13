@@ -36,12 +36,16 @@ public class ClasspathParam extends Param {
 		files = new ArrayList<>();
 
 		dc = new DirectoryChooser();
-		addButton(ps, "add", () -> {
-			File dir = dc.showDialog(ps);
-			if (dir != null) {
-				add(dir);
-			}
-		});
+		addButton(ps, "add", () -> add());
+	}
+	
+	public File add() {
+		File dir = dc.showDialog(getWindow());
+		if (dir != null) {
+			add(dir);
+		}
+		
+		return dir;
 	}
 
 	private Semaphore mutex = new Semaphore(1);
@@ -58,8 +62,7 @@ public class ClasspathParam extends Param {
 			Link remove = new Link(getWindow(), "remove");
 			remove.setFont(new Font(12));
 			HBox line = generateLine(getWindow(), dir,
-					projectRoot == null ? dir.getParentFile().getParentFile().toURI().relativize(dir.toURI()).toString()
-							: projectRoot.toURI().relativize(dir.toURI()).toString(),
+					generateDisplay(dir),
 					remove);
 			mutex.acquireUninterruptibly();
 			files.add(dir);
@@ -75,6 +78,12 @@ public class ClasspathParam extends Param {
 				stopLoading();
 			});
 		}).start();
+	}
+	
+	public String generateDisplay(File dir) {
+		File projectRoot = findProjectRoot(dir);
+		return projectRoot == null ? dir.getParentFile().getParentFile().toURI().relativize(dir.toURI()).toString()
+				: projectRoot.toURI().relativize(dir.toURI()).toString();
 	}
 
 	@Override

@@ -31,7 +31,7 @@ public class IconParam extends Param {
 	}
 	
 	public void set(File ico) {
-		if(!ico.exists()) {
+		if(ico == null || !ico.exists()) {
 			return;
 		}
 		list.getChildren().clear();

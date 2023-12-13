@@ -17,8 +17,8 @@ import org.luke.gui.controls.tab.TabPane;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.JwinActions;
+import org.luke.jwin.app.display.JwinUi;
 import org.luke.jwin.app.file.FileDealer;
-import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.app.param.Param;
 import javafx.application.Platform;
 import javafx.scene.layout.Priority;
@@ -35,7 +35,8 @@ public class DependenciesParam extends Param {
 
 	private boolean resolving = false;
 
-	public DependenciesParam(Window ps, Supplier<List<File>> pomSupplier, JdkParam jdk) {
+	private FileChooser fc;
+	public DependenciesParam(Window ps, Supplier<List<File>> pomSupplier, JwinUi config) {
 		super(ps, "Dependencies");
 		VBox.setVgrow(this, Priority.SOMETIMES);
 
@@ -50,7 +51,7 @@ public class DependenciesParam extends Param {
 	
 		list.getChildren().add(disp);
 
-		FileChooser fc = new FileChooser();
+		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("jar files", "*.jar"));
 		addButton(ps, "add jars", () -> {
 			List<File> files = fc.showOpenMultipleDialog(ps);
@@ -62,18 +63,37 @@ public class DependenciesParam extends Param {
 		
 		disp.select(manual);
 
-		addButton(ps, "resolve", () -> resolve(pomSupplier, jdk, true));
+		addButton(ps, "resolve", () -> resolve(pomSupplier, config, true));
 		
 		listCont.getChildren().remove(sp);
 		listCont.getChildren().add(disp);
 	}
+	
+	public void addJars(JwinUi config) {
+		List<File> files = fc.showOpenMultipleDialog(getWindow());
+		if (files != null && !files.isEmpty()) {
+			files.forEach(f -> {
+				addManualJar(f);
+				config.logStd(f.getName() + " was added to the project's dependencies");
+			});
+			disp.select(manual);
+		}
+	}
 
-	public void resolve(Supplier<List<File>> pomSupplier, JdkParam jdk, boolean alert) {
+	public void resolve(Supplier<List<File>> pomSupplier, JwinUi config, boolean alert) {
+		resolve(pomSupplier, config, alert, null);
+	}
+
+	public void resolve(Supplier<List<File>> pomSupplier, JwinUi config, boolean alert, Runnable onFinish) {
 		resolved.clear();
 		List<File> poms = pomSupplier.get();
 		if (poms.isEmpty()) {
 			if (alert) {
 				JwinActions.warn("Failed to resolve dependencies", "no pom.xml files found for the selected classpath");
+			}
+
+			if(onFinish != null) {
+				Platform.runLater(onFinish);
 			}
 		} else {
 			startLoading();
@@ -102,7 +122,7 @@ public class DependenciesParam extends Param {
 					String toReplace = "@REM ==== START VALIDATION ====";
 					FileDealer.write(
 							FileDealer.read(tempMvn).replace(toReplace,
-									toReplace + "\nset JAVA_HOME=" + jdk.getValue().getAbsolutePath()),
+									toReplace + "\nset JAVA_HOME=" + config.getJdk().getValue().getAbsolutePath()),
 							new File(tempMvn.getAbsolutePath().replace("mvn.cmd", "cmvn.cmd")));
 					Command command = new Command("cmd.exe", "/C",
 							"cmvn -f \"" + pom.getAbsolutePath()
@@ -133,6 +153,10 @@ public class DependenciesParam extends Param {
 					disp.select(resolved);
 				});
 				resolving = false;
+
+				if(onFinish != null) {
+					Platform.runLater(onFinish);
+				}
 			}).start();
 		}
 	}
@@ -184,6 +208,10 @@ public class DependenciesParam extends Param {
 		return preBuildLibs;
 	}
 
+	public void clearManuals() {
+		manual.clear();
+	}
+	
 	@Override
 	public void clear() {
 		resolved.clear();

@@ -60,6 +60,10 @@ public class MenuItem extends HBox implements Styleable {
 		applyStyle(menu.getOwner().getStyl());
 	}
 	
+	public void setText(String text) {
+		lab.set(text);
+	}
+	
 	public void setHideOnAction(boolean hideOnAction) {
 		this.hideOnAction = hideOnAction;
 	}

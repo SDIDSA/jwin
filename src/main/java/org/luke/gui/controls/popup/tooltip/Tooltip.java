@@ -50,12 +50,14 @@ public class Tooltip extends PopupControl implements Styleable {
 	private Timeline fadeIn;
 	private Timeline fadeOut;
 
-	private double offset;
+	private double offsetX;
+	private double offsetY;
 
-	public Tooltip(Window window, String val, Direction direction, double offset) {
+	public Tooltip(Window window, String val, Direction direction, double offsetX, double offsetY) {
 		this.owner = window;
 		this.direction = direction;
-		this.offset = offset;
+		this.offsetX = offsetX;
+		this.offsetY = offsetY;
 
 		StackPane preroot = new StackPane();
 		preroot.setPadding(new Insets(15));
@@ -120,12 +122,16 @@ public class Tooltip extends PopupControl implements Styleable {
 		text.setFont(font.getFont());
 	}
 	
-	public void setOffset(double offset) {
-		this.offset = offset;
+	public void setOffsetX(double offsetX) {
+		this.offsetX = offsetX;
 	}
 
+	public void setOffsetY(double offsetY) {
+		this.offsetY = offsetY;
+	}
+	
 	public Tooltip(Window window, String val, Direction direction) {
-		this(window, val, direction, 0);
+		this(window, val, direction, 0, 0);
 	}
 
 	public void setText(String txt) {
@@ -133,7 +139,7 @@ public class Tooltip extends PopupControl implements Styleable {
 	}
 
 	private void position(Node node) {
-		double[] pos = direction.calcPos(this, node, offset);
+		double[] pos = direction.calcPos(this, node, offsetX, offsetY);
 
 		double px = pos[0];
 		double py = pos[1];
@@ -185,15 +191,15 @@ public class Tooltip extends PopupControl implements Styleable {
 		registered.clear();
 	}
 
-	public static void install(Node node, Direction dir, String value, double offset, boolean key) {
+	public static void install(Node node, Direction dir, String value, double offsetX, double offsetY, boolean key) {
 		if (node.getScene() == null) {
 			node.sceneProperty().addListener(new ChangeListener<Scene>() {
 				@Override
 				public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue) {
 					if (newValue != null) {
 						Window w = (Window) newValue.getWindow();
-						Tooltip tip = key ? new KeyedTooltip(w, value, dir, offset)
-								: new Tooltip(w, value, dir, offset);
+						Tooltip tip = key ? new KeyedTooltip(w, value, dir, offsetX, offsetY)
+								: new Tooltip(w, value, dir, offsetX, offsetY);
 						install(node, tip);
 						node.sceneProperty().removeListener(this);
 					}
@@ -201,21 +207,21 @@ public class Tooltip extends PopupControl implements Styleable {
 			});
 		} else {
 			Window w = (Window) node.getScene().getWindow();
-			Tooltip tip = key ? new KeyedTooltip(w, value, dir, offset) : new Tooltip(w, value, dir, offset);
+			Tooltip tip = key ? new KeyedTooltip(w, value, dir, offsetX, offsetY) : new Tooltip(w, value, dir, offsetX, offsetY);
 			install(node, tip);
 		}
 	}
 
 	public static void install(Node node, Direction dir, String value, boolean key) {
-		install(node, dir, value, 0, key);
+		install(node, dir, value, 0, 0, key);
 	}
 
 	public static void install(Node node, Direction dir, String value, double offset) {
-		install(node, dir, value, offset, false);
+		install(node, dir, value, offset, offset, false);
 	}
 
 	public static void install(Node node, Direction dir, String value) {
-		install(node, dir, value, 0, false);
+		install(node, dir, value, 0, 0, false);
 	}
 
 	static class Installation {

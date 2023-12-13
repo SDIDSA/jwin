@@ -3,21 +3,18 @@ package org.luke.jwin.app.more;
 import java.io.File;
 
 import org.luke.gui.controls.check.KeyedCheck;
-import org.luke.gui.style.Style;
-import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.ui.Button;
 import org.luke.jwin.ui.TextVal;
 
-import javafx.beans.property.ObjectProperty;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
 
-public class FileTypeParam extends VBox implements Styleable {
+public class FileTypeParam extends VBox {
 	private FileChooser fc;
 
 	private TextVal typeName;
@@ -58,8 +55,6 @@ public class FileTypeParam extends VBox implements Styleable {
 		iconPath.addToBottom(selectIcon);
 		
 		getChildren().addAll(line1, iconPath, enable);
-		
-		applyStyle(ps.getStyl());
 	}
 	
 	public boolean isEnabled() {
@@ -99,15 +94,5 @@ public class FileTypeParam extends VBox implements Styleable {
 			iconPath.setValue("");
 			enable.checkedProperty().set(false);
 		}
-	}
-
-	@Override
-	public void applyStyle(Style style) {
-		enable.setTextFill(style.getTextNormal());
-	}
-
-	@Override
-	public void applyStyle(ObjectProperty<Style> style) {
-		Styleable.bindStyle(this, style);
 	}
 }

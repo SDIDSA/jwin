@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.luke.jwin.app.JwinUi;
+import org.luke.jwin.app.display.JwinUi;
 
 public class JWinProject {
 	private static final String CLASSPATH = "classpath";

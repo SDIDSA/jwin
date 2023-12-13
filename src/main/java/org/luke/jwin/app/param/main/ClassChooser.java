@@ -13,11 +13,11 @@ import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.file.FileUtils;
 import org.luke.gui.style.Style;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.param.Param;
-import org.luke.jwin.app.utils.Backgrounds;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -133,7 +133,7 @@ public class ClassChooser extends BasicOverlay {
 				JwinActions.alert("Probably not a main class",
 						"The class you have selected doesn't seem to define a main method, do you want to use it anyway ?",
 						AlertType.INFO, res -> {
-							if(res == ButtonType.YES) {
+							if (res == ButtonType.YES) {
 								Entry<String, File> preVal = Map.entry(name, file);
 								hide();
 								set(preVal);
@@ -146,7 +146,7 @@ public class ClassChooser extends BasicOverlay {
 	}
 
 	public void set(Entry<String, File> value) {
-		if (!value.getValue().exists()) {
+		if (value == null || !value.getValue().exists()) {
 			return;
 		}
 		this.value = value;

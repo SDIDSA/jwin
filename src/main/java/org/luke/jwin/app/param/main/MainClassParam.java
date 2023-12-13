@@ -16,7 +16,18 @@ public class MainClassParam extends Param {
 	public MainClassParam(Page ps, Supplier<Map<String, File>> classLister) {
 		super(ps.getWindow(), "Main class");
 		mclassChooser = new ClassChooser(ps, classLister, this);
-		addButton(ps.getWindow(), "select", () -> mclassChooser.show());
+		addButton(ps.getWindow(), "select", () -> showChooser());
+	}
+	
+	public String showChooser() {
+		Entry<String, File> oldVal = mclassChooser.getValue();
+		mclassChooser.showAndWait();
+		Entry<String, File> newVal = mclassChooser.getValue();
+		
+		if(newVal != null && (oldVal == null || !newVal.getValue().equals(oldVal.getValue()))) {
+			return newVal.getKey();
+		}
+		return null;
 	}
 
 	public Entry<String, File> getValue() {

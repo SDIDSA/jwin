@@ -1,9 +1,9 @@
 package org.luke.gui.controls.tab;
 
+import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
-import org.luke.jwin.app.utils.Backgrounds;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
