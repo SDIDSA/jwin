@@ -14,6 +14,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import jna.ITaskbarList3;
+import jna.TaskbarPeer;
 
 public class Progress extends StackPane implements Styleable {
 	
@@ -56,12 +58,17 @@ public class Progress extends StackPane implements Styleable {
 			if(nvd > 0 && isIndeterminate()) {
 				setIndeterminate(false);
 			}
-			
+
 			if(!isIndeterminate()) {
 				thumb.setTranslateX(0);
 				thumb.setWidth(getWidth() * val.get());
+				
+				TaskbarPeer.setProgressState(win, ITaskbarList3.TBPF_NORMAL);
+				TaskbarPeer.setProgress(win, nv.doubleValue());
 			}else {
 				thumb.setWidth(getWidth() / 2);
+				
+				TaskbarPeer.setProgressState(win, ITaskbarList3.TBPF_NOPROGRESS);
 			}
 		};
 		
