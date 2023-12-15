@@ -109,6 +109,7 @@ public class MenuItem extends HBox implements Styleable {
 			try {
 				action.run();
 			}catch(Exception x) {
+				x.printStackTrace();
 				ErrorHandler.handle(x, "fire action for menu item [" + lab.getText() + "]");
 			}
 		}

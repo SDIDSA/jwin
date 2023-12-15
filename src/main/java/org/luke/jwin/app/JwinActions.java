@@ -11,8 +11,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map.Entry;
+import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -59,11 +60,18 @@ public class JwinActions {
 			return;
 		}
 
-		Entry<String, File> launcher = config.getMainClass().getValue();
+		if (config.getMainClass().getValue() == null) {
+			config.logStd("main class was not set, attempting to set automatically...");
+			Map<String, File> mcs = config.getMainClass().listMainClasses();
 
-		if (launcher == null) {
-			error("Main class required", "You didn't specify the main class for your application");
-			return;
+			if (mcs.size() == 1) {
+				Map.Entry<String, File> mc = mcs.entrySet().iterator().next();
+				config.logStd("setting the main class to " + mc.getValue());
+				config.getMainClass().set(mc);
+			} else {
+				error("Main class required", "You didn't specify the main class for your application");
+				return;
+			}
 		}
 
 		if (!config.getClasspath().isValidMainClass(config.getMainClass().getValue().getValue())) {
@@ -75,8 +83,19 @@ public class JwinActions {
 		File dk = config.getJdk().getValue();
 
 		if (dk == null) {
-			error("Missing Jdk", "You didn't select the jdk to compile your application");
-			return;
+			config.logStd("jdk was not set, attempting to detect from system...");
+			File f = config.getJdk().detectJdk();
+			if (f != null) {
+				final Long key = new Random().nextLong();
+				config.getJdk().set(f, " (found in your system)", () -> {
+					config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");
+					Platform.exitNestedEventLoop(key, null);
+				});
+				Platform.enterNestedEventLoop(key);
+			} else {
+				error("Missing Jdk", "You didn't select the jdk to compile your application");
+				return;
+			}
 		}
 
 		if (!config.getJdk().isJdk()) {
@@ -88,8 +107,24 @@ public class JwinActions {
 		File rt = config.getJre().getValue();
 
 		if (rt == null) {
-			error("Missing Jre", "You didn't select the jre to run your application");
-			return;
+			config.logStd("jre was not set, attempting to generate from jdk using jlink...");
+			final Long key = new Random().nextLong();
+			config.getDependencies().resolve(config.getClasspath()::getPom, config, false, () -> {
+				Platform.exitNestedEventLoop(key, null);
+			});
+			Platform.enterNestedEventLoop(key);
+
+			final Long key2 = new Random().nextLong();
+			config.getJre().generateFromJdk(ps, config, false, () -> {
+				Platform.exitNestedEventLoop(key2, null);
+			});
+			Platform.enterNestedEventLoop(key2);
+
+			rt = config.getJre().getValue();
+			if (rt == null) {
+				error("Missing Jre", "You didn't select the jre to run your application");
+				return;
+			}
 		}
 
 		String jreVersionString = config.getJre().getVersion().split("_")[0];
@@ -108,6 +143,11 @@ public class JwinActions {
 		if (config.getDependencies().isResolving()) {
 			warn("Resolving dependencies", "try again after dependencies are successfully resolved");
 			return;
+		}
+
+		if (config.getProjectInUse().isConsole() == null && config.getClasspath().isConsoleApp()) {
+			config.logStd("it was estimated that your project is a console app, setting that...");
+			config.getConsole().checkedProperty().set(true);
 		}
 
 		config.disable(true, false);
@@ -237,10 +277,13 @@ public class JwinActions {
 			return;
 		}
 
-		if (config.getGuid().getValue().isBlank()) {
-			error("Missing app GUID",
-					"click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
-			return;
+		if (config.getGuid().getValue() == null || config.getGuid().getValue().isBlank()) {
+			String guid = UUID.randomUUID().toString();
+			config.logStd("a guid was generated for your project : " + guid);
+			config.getGuid().setValue(guid);
+//			error("Missing app GUID",
+//					"click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
+//			return;
 		}
 
 		if (!preBuild.exists()) {
@@ -254,12 +297,13 @@ public class JwinActions {
 			warn("Using JDK as a runtime", "not recommended unless required by your app (increases package size)");
 		}
 
-		if (config.getProjectInUse() == null) {
+		if (config.getFileInUse() == null) {
 			alert("Do you want to save the project before building ?",
 					"It is recommended to save this project so you can use the same GUID when you build it again, do not use the same GUID with different projects",
 					AlertType.CONFIRM, res -> {
 						if (res.equals(ButtonType.YES)) {
-							config.saveAs();
+							if (config.saveAs())
+								config.logStd("project saved.");
 						} else if (res.equals(ButtonType.CANCEL)) {
 							contin[0] = false;
 						}
@@ -278,6 +322,7 @@ public class JwinActions {
 							if (res.equals(ButtonType.YES)) {
 								FileDealer.write(exported.serialize(), config.getFileInUse());
 								config.setProjectInUse(exported);
+								config.logStd("changes saved.");
 							} else if (res.equals(ButtonType.CANCEL)) {
 								contin[0] = false;
 							}
@@ -440,7 +485,7 @@ public class JwinActions {
 				} catch (IOException e1) {
 					e1.printStackTrace();
 				}
-				
+
 				Platform.runLater(() -> {
 					config.setState("done");
 					config.setProgress(-1);

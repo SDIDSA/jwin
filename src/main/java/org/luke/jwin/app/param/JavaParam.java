@@ -88,24 +88,31 @@ public class JavaParam extends Param {
 		return javac.exists();
 	}
 
-
 	public void set(File file) {
-		set(file,"");
+		set(file, "", null);
 	}
-	
+
+	public void set(File file, Runnable onFinish) {
+		set(file, "", onFinish);
+	}
+
 	public void set(File file, String additional) {
-		if(file == null || !file.exists()) {
+		set(file, additional, null);
+	}
+
+	public void set(File file, String additional, Runnable onFinish) {
+		if (file == null || !file.exists()) {
 			return;
 		}
 		if (file.isDirectory()) {
-			setDir(file, additional);
+			setDir(file, additional, onFinish);
 		} else {
-			setZip(file, additional);
+			setZip(file, additional, onFinish);
 		}
 	}
 
-	public void setDir(File dir, String additional) {
-		if(!dir.exists()) {
+	public void setDir(File dir, String additional, Runnable onFinish) {
+		if (!dir.exists()) {
 			return;
 		}
 		startLoading();
@@ -120,10 +127,14 @@ public class JavaParam extends Param {
 				});
 			}
 			Platform.runLater(this::stopLoading);
+
+			if (onFinish != null) {
+				Platform.runLater(onFinish);
+			}
 		}).start();
 	}
 
-	public void setZip(File file, String additional) {
+	public void setZip(File file, String additional, Runnable onFinish) {
 		startLoading();
 		new Thread(() -> {
 			String version = getVersionFromZip(file);
@@ -132,10 +143,15 @@ public class JavaParam extends Param {
 				this.value = file;
 				Platform.runLater(() -> {
 					list.getChildren().clear();
-					addFile(getWindow(), file, file.getName() + additional, new Label(getWindow(), this.version, new Font(12)));
+					addFile(getWindow(), file, file.getName() + additional,
+							new Label(getWindow(), this.version, new Font(12)));
 				});
 			}
 			Platform.runLater(this::stopLoading);
+
+			if (onFinish != null) {
+				Platform.runLater(onFinish);
+			}
 		}).start();
 	}
 

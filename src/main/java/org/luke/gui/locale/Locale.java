@@ -28,7 +28,7 @@ public class Locale {
 		String found = values.get(key);
 
 		if (found == null) {
-			//ErrorHandler.handle(new EntryNotFountException(), "get value of [" + key + "] for locale [" + name + "]");
+			ErrorHandler.handle(new EntryNotFountException(), "get value of [" + key + "] for locale [" + name + "]");
 			found = key;
 		}
 

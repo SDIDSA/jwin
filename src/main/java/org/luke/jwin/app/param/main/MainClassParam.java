@@ -29,6 +29,10 @@ public class MainClassParam extends Param {
 		}
 		return null;
 	}
+	
+	public Map<String, File> listMainClasses() {
+		return mclassChooser.listMainClasses();
+	}
 
 	public Entry<String, File> getValue() {
 		return mclassChooser.getValue();

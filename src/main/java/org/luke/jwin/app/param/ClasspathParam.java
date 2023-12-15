@@ -15,11 +15,11 @@ import java.util.function.DoubleConsumer;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.unkeyed.Link;
+import org.luke.gui.file.FileUtils;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
-import org.luke.jwin.app.utils.MyClassLoader;
 
 import javafx.application.Platform;
 import javafx.scene.layout.HBox;
@@ -78,6 +78,21 @@ public class ClasspathParam extends Param {
 				stopLoading();
 			});
 		}).start();
+	}
+	
+	public boolean isConsoleApp() {
+		Map<String, File> fs = listClasses();
+		
+		for(Map.Entry<String, File> ent : fs.entrySet()) {
+			File f = new File(ent.getValue().getAbsolutePath().concat("/").concat(ent.getKey()));
+			String content = FileUtils.readFile(f);
+			String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
+			if(formattedSource.contains("(System.in)")) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 	
 	public String generateDisplay(File dir) {
@@ -205,16 +220,21 @@ public class ClasspathParam extends Param {
 				ex.initCause(new IllegalStateException(String.join("\n", x)));
 				throw ex;
 			}
-
-			Class<?> mainClass = MyClassLoader.loadClass(launcher.getKey(), preBuildBin);
 			
-			if (mainClass.getSuperclass().equals(javafx.application.Application.class)) {
+			String content = FileUtils.readFile(launcher.getValue());
+
+			String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
+			
+			if (formattedSource.contains("extendsApplication{")) {
 				JwinActions.deleteDir(preBuildBin);
 				preBuildBin.mkdir();
 
+				String packageName = content.trim().split(";")[0].trim().toLowerCase();
+				packageName = packageName.startsWith("") ? packageName.replace("package", "").trim() : "";
+				
 				File newLauncherFile = new File(preBuildBin.getAbsolutePath().concat("/").concat("Launcher.java"));
 
-				String newLauncherContent = generateLauncher(mainClass, launcher);
+				String newLauncherContent = generateLauncher(packageName, launcher);
 
 				FileDealer.write(newLauncherContent, newLauncherFile);
 				
@@ -223,24 +243,25 @@ public class ClasspathParam extends Param {
 				compileNewLauncher.execute(binDir).waitFor();
 
 				if (setAltMain != null) {
-					setAltMain.accept(mainClass.getPackageName()
-							.concat((mainClass.getPackageName().isBlank() ? "" : ".") + "Launcher"));
+					setAltMain.accept(packageName
+							.concat((packageName.isBlank() ? "" : ".") + "Launcher"));
 				}
 			}
 
 			return preBuildBin;
-		} catch (InterruptedException | IOException | SecurityException | UnsupportedClassVersionError | ClassNotFoundException e1) {
+		} catch (InterruptedException | SecurityException | UnsupportedClassVersionError e1) {
+			e1.printStackTrace();
 			JwinActions.error("Failed to compile/load your code", e1.getMessage());
 			Thread.currentThread().interrupt();
 		}
 		return null;
 	}
 
-	private String generateLauncher(Class<?> mainClass, Entry<String, File> launcher) {
+	private String generateLauncher(String packageName, Entry<String, File> launcher) {
 		StringBuilder launcherContent = new StringBuilder();
-		boolean blankPackage = mainClass.getPackageName().isBlank();
+		boolean blankPackage = packageName.isBlank();
 		if (!blankPackage) {
-			launcherContent.append("package ").append(mainClass.getPackageName()).append(";\n\n");
+			launcherContent.append("package ").append(packageName).append(";\n\n");
 		}
 		launcherContent.append(
 				"import javafx.application.Application;\n\npublic class Launcher {\n\tpublic static void main(String[] args) {\n\t\tApplication.launch(")

@@ -34,9 +34,10 @@ import javafx.stage.FileChooser.ExtensionFilter;
 public class JreParam extends JavaParam {
 	private DirectoryChooser dc;
 	private FileChooser fc;
+
 	public JreParam(Window ps, JwinUi config) {
 		super(ps, "Jre (will be packed with your app)");
-		
+
 		dc = new DirectoryChooser();
 		addButton(ps, "directory", () -> browseDir());
 
@@ -50,14 +51,14 @@ public class JreParam extends JavaParam {
 
 		generateFromJdk.setAction(() -> generateFromJdk(ps, config));
 	}
-	
+
 	public void browseDir() {
 		File dir = dc.showDialog(getWindow());
 		if (dir != null) {
 			set(dir);
 		}
 	}
-	
+
 	public void browseArchive() {
 		File file = fc.showOpenDialog(getWindow());
 		if (file != null) {
@@ -66,6 +67,10 @@ public class JreParam extends JavaParam {
 	}
 
 	public void generateFromJdk(Window ps, JwinUi config) {
+		generateFromJdk(ps, config, true, null);
+	}
+
+	public void generateFromJdk(Window ps, JwinUi config, boolean alert, Runnable onFinish) {
 		startLoading();
 
 		config.logStd("Generating JRE using JLink...");
@@ -137,7 +142,8 @@ public class JreParam extends JavaParam {
 
 			File preGenBin = null;
 			try {
-				preGenBin = config.getClasspath().compile(preGen, preGenLibs, config.getJdk().getValue(), config.getMainClass().getValue(), null, null);
+				preGenBin = config.getClasspath().compile(preGen, preGenLibs, config.getJdk().getValue(),
+						config.getMainClass().getValue(), null, null);
 			} catch (Exception x) {
 				cancel.run();
 				JwinActions.compileFailure();
@@ -197,38 +203,41 @@ public class JreParam extends JavaParam {
 				Platform.runLater(() -> startLoading("Generating JRE ..."));
 				Command gen = new Command("cmd", "/c",
 						"jlink --no-header-files --no-man-pages --strip-debug --module-path \""
-								+ preGenLibs.getAbsolutePath() + "\" --add-modules " + String.join(",", deps) + " --output \"" + preGen.getAbsolutePath().concat("/rt")
-								+ "\"");
+								+ preGenLibs.getAbsolutePath() + "\" --add-modules " + String.join(",", deps)
+								+ " --output \"" + preGen.getAbsolutePath().concat("/rt") + "\"");
 
 				gen.execute(jdkBin).waitFor();
 
 				File preGenRt = new File(preGen.getAbsolutePath().concat("/rt"));
 
-				JwinActions.alert("Save this runtime",
-						"Your custom runtime was generated successfully, do you want to save it for future use ?",
-						AlertType.CONFIRM, result -> {
-							if (result.equals(ButtonType.YES)) {
-								DirectoryChooser dc = new DirectoryChooser();
-								File saveTo = dc.showDialog(ps);
-								if (saveTo != null) {
-									startLoading();
-									new Thread(() -> {
-										File saveToRt = new File(saveTo.getAbsolutePath()
-												.concat("/custom_jre_" + new Random().nextInt(999)));
-										saveToRt.mkdir();
-										JwinActions.copyDirCont(preGenRt, saveToRt, null);
-										Platform.runLater(() -> {
-											stopLoading();
-											set(saveToRt, " (generated with jlink)");
-											config.logStd("the generated jre was saved to\n\t" + saveTo.getAbsolutePath());
-										});
-									}).start();
+				if (alert) {
+					JwinActions.alert("Save this runtime",
+							"Your custom runtime was generated successfully, do you want to save it for future use ?",
+							AlertType.CONFIRM, result -> {
+								if (result.equals(ButtonType.YES)) {
+									DirectoryChooser dc = new DirectoryChooser();
+									File saveTo = dc.showDialog(ps);
+									if (saveTo != null) {
+										startLoading();
+										new Thread(() -> {
+											File saveToRt = new File(saveTo.getAbsolutePath()
+													.concat("/custom_jre_" + new Random().nextInt(999)));
+											saveToRt.mkdir();
+											JwinActions.copyDirCont(preGenRt, saveToRt, null);
+											Platform.runLater(() -> {
+												stopLoading();
+												set(saveToRt, " (generated with jlink)");
+												config.logStd("the generated jre was saved to\n\t"
+														+ saveTo.getAbsolutePath());
+											});
+										}).start();
+									}
 								}
-							}
-						}, ButtonType.YES, ButtonType.NO);
+							}, ButtonType.YES, ButtonType.NO);
+				}
 
 				Platform.runLater(() -> {
-					set(preGenRt, " (generated with jlink)");
+					set(preGenRt, " (generated with jlink)", onFinish);
 					Entry<String, File> version = JavaParam.getVersionFromDir(preGenRt);
 					if (version != null && version.getKey() != null) {
 						String disp = "jre " + version.getKey().replace("\"", "");

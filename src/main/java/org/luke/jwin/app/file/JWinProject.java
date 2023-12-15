@@ -11,6 +11,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.luke.jwin.app.display.JwinUi;
 
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+
 public class JWinProject {
 	private static final String CLASSPATH = "classpath";
 	private static final String MAIN_CLASS = "mainClass";
@@ -44,8 +47,8 @@ public class JWinProject {
 	private String appVersion;
 	private String appPublisher;
 
-	private boolean console;
-	private boolean admin;
+	private Boolean console;
+	private Boolean admin;
 
 	private String guid;
 
@@ -53,8 +56,8 @@ public class JWinProject {
 	private UrlProtocolAssociation urlProtocolAsso;
 
 	private JWinProject(List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
-			List<File> manualJars, String appName, String appVersion, String appPublisher, boolean console, boolean admin, String guid,
-			FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
+			List<File> manualJars, String appName, String appVersion, String appPublisher, Boolean console,
+			Boolean admin, String guid, FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
 		this.classpath = new ArrayList<>(classpath);
 		this.mainClass = mainClass;
 		this.jdk = jdk;
@@ -70,7 +73,7 @@ public class JWinProject {
 		this.fileTypeAsso = fileTypeAsso;
 		this.urlProtocolAsso = urlProtocolAsso;
 	}
-	
+
 	public JWinProject(JwinUi config) {
 		this.classpath = new ArrayList<>(config.getClasspath().getFiles());
 		this.mainClass = config.getMainClass().getValue();
@@ -140,11 +143,11 @@ public class JWinProject {
 		return appPublisher;
 	}
 
-	public boolean isConsole() {
+	public Boolean isConsole() {
 		return console;
 	}
-	
-	public boolean isAdmin() {
+
+	public Boolean isAdmin() {
 		return admin;
 	}
 
@@ -171,7 +174,7 @@ public class JWinProject {
 		return res;
 	}
 
-	private boolean compare(Object o1, Object o2) {
+	private Boolean compare(Object o1, Object o2) {
 		if (o1 instanceof List<?> list1 && o2 instanceof List<?> list2) {
 			return list1.containsAll(list2) && list2.containsAll(list1);
 		}
@@ -214,10 +217,83 @@ public class JWinProject {
 				Map.entry(mc.getString(CLASS_NAME), new File(mc.getString(FILE_PATH))), new File(obj.getString(JDK)),
 				new File(obj.getString(JRE)), new File(obj.getString(ICON)),
 				deserializeFileList(obj.getJSONArray(MANUAL_JARS)), obj.getString(APP_NAME), obj.getString(APP_VERSION),
-				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.has(ADMIN) ? obj.getBoolean(ADMIN) : false, obj.getString(GUID),
+				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.has(ADMIN) ? obj.getBoolean(ADMIN) : false,
+				obj.getString(GUID),
 				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null,
 				obj.has(URL_PROTOCOL_ASSO) ? UrlProtocolAssociation.deserialize(obj.getJSONObject(URL_PROTOCOL_ASSO))
 						: null);
+	}
+
+	public static JWinProject fromJavaProject(File root) {
+		ArrayList<File> classpath = new ArrayList<>();
+		Entry<String, File> mainClass = null;
+
+		File jdk = null;
+		File jre = null;
+
+		File icon = null;
+
+		ArrayList<File> manualJars = new ArrayList<>();
+
+		String appName = "";
+		String appVersion = "";
+		String appPublisher = "";
+
+		Boolean console = null;
+		Boolean admin = null;
+
+		String guid = null;
+
+		FileTypeAssociation fileTypeAsso = null;
+		UrlProtocolAssociation urlProtocolAsso = null;
+
+		File cpFile = new File(root + "\\.classpath");
+		if (cpFile.exists()) {
+			try {
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+
+				Document doc = builder.parse(cpFile);
+				
+				Element cpDoc = doc.getDocumentElement();
+				
+				NodeList entries = cpDoc.getElementsByTagName("classpathentry");
+				
+				for(int i = 0; i < entries.getLength(); i++) {
+					Element entry = (Element) entries.item(i);
+					
+					if(entry.getAttribute("kind").equals("src") && !entry.getAttribute("output").contains("test")) {
+						String path = entry.getAttribute("path");
+						File pathFile = new File(root + "\\" + path);
+						if(pathFile.exists()) {
+							classpath.add(pathFile);
+						}
+					}
+				}
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+		
+		File dProject = new File(root + "\\.project");
+		if(dProject.exists()) {try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			Document doc = builder.parse(dProject);
+			
+			Element cpDoc = doc.getDocumentElement();
+			
+			Element nameEl = (Element) cpDoc.getElementsByTagName("name").item(0);
+			
+			appName = nameEl.getTextContent();
+		} catch (Exception x) {
+			x.printStackTrace();
+		}
+		}
+
+		return new JWinProject(classpath, mainClass, jdk, jre, icon, manualJars, appName, appVersion, appPublisher,
+				console, admin, guid, fileTypeAsso, urlProtocolAsso);
 	}
 
 	private static JSONArray serializeFileList(List<File> list) {

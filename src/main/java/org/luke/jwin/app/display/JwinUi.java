@@ -29,6 +29,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
@@ -62,6 +63,7 @@ public abstract class JwinUi extends StackPane {
 
 	// Utilities
 	protected FileChooser saver;
+	protected DirectoryChooser dsaver;
 
 	public JwinUi(Page ps) {
 		this.ps = ps.getWindow();
@@ -93,6 +95,8 @@ public abstract class JwinUi extends StackPane {
 
 		saver = new FileChooser();
 		saver.getExtensionFilters().add(new ExtensionFilter("jWin Project", "*.jwp"));
+		
+		dsaver = new DirectoryChooser();
 	}
 
 	public JWinProject export() {
@@ -164,6 +168,20 @@ public abstract class JwinUi extends StackPane {
 		loadProject(JWinProject.deserialize(FileDealer.read(loadFrom)));
 	}
 	
+	public void importJavaProject(Window win) {
+		File loadFrom = dsaver.showDialog(win);
+		if (loadFrom != null) {
+			importJavaProject(loadFrom);
+		}
+	}
+	
+	private void importJavaProject(File loadFrom) {
+		preImport();
+		JWinProject proj = JWinProject.fromJavaProject(loadFrom);
+		System.out.println(proj.serialize());
+		loadProject(proj);
+	}
+
 	public void loadProject(JWinProject project) {
 		logStd("Loading project...");
 		new Thread(() -> {
@@ -177,8 +195,8 @@ public abstract class JwinUi extends StackPane {
 			runOnUiThread(() -> appName.setValue(project.getAppName()));
 			runOnUiThread(() -> version.setValue(project.getAppVersion()));
 			runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
-			runOnUiThread(() -> console.checkedProperty().set(project.isConsole()));
-			runOnUiThread(() -> admin.checkedProperty().set(project.isAdmin()));
+			runOnUiThread(() -> console.checkedProperty().set(project.isConsole() != null && project.isConsole()));
+			runOnUiThread(() -> admin.checkedProperty().set(project.isAdmin() != null && project.isAdmin()));
 			runOnUiThread(() -> guid.setValue(project.getGuid()));
 			project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
@@ -259,7 +277,7 @@ public abstract class JwinUi extends StackPane {
 		this.projectInUse = projectInUse;
 	}
 
-	public void saveAs() {
+	public boolean saveAs() {
 		JWinProject project = export();
 		saver.setInitialFileName(appName.getValue() + "_jWin_Project");
 		File saveTo = saver.showSaveDialog(ps);
@@ -267,7 +285,9 @@ public abstract class JwinUi extends StackPane {
 			FileDealer.write(project.serialize(), saveTo);
 			projectInUse = project;
 			fileInUse = saveTo;
+			return true;
 		}
+		return false;
 	}
 	
 	public void save() {

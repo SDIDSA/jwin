@@ -83,7 +83,7 @@ public class JwinUi1 extends JwinUi implements Styleable {
 		Button load = new Button(ps.getWindow(), "Load", -1);
 		load.setMinWidth(60);
 		load.setAction(() -> {
-			importProject(ps.getWindow());
+			importJavaProject(ps.getWindow());
 		});
 
 		saveLoad = new VBox(10, save, load);

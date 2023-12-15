@@ -1,6 +1,7 @@
 package org.luke.jwin.app.param.main;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,6 +28,7 @@ import javafx.scene.layout.VBox;
 
 public class ClassChooser extends BasicOverlay {
 	private Param param;
+	Supplier<Map<String, File>> classLister;
 
 	private Entry<String, File> value;
 	private Map<String, File> classNames;
@@ -40,6 +42,7 @@ public class ClassChooser extends BasicOverlay {
 		removeTop();
 		removeSubHead();
 
+		this.classLister = classLister;
 		this.param = param;
 
 		head.setKey("Main class selection");
@@ -103,6 +106,43 @@ public class ClassChooser extends BasicOverlay {
 			});
 			searcher.start();
 		}
+	}
+	
+	public Map<String, File> listMainClasses() {
+		Map<String, File> classes = classLister.get();
+		System.out.println(classes);
+		HashMap<String, File> res = new HashMap<>();
+		
+		classes.forEach((e, file) -> {
+			File f = new File(file.getAbsolutePath().concat("/").concat(e));
+			if(isMainClass(f)) {
+				String name = e.replace(".java", "").replace("/", ".").replace("\\", ".");
+				StringBuilder displayName = new StringBuilder();
+				String[] parts = name.split("\\.");
+				for (int i = parts.length - 1; i >= 0 && i >= parts.length - 3; i--) {
+					if (!displayName.isEmpty()) {
+						displayName.insert(0, '.');
+					}
+					displayName.insert(0, parts[i]);
+				}
+				if (parts.length > 3) {
+					displayName.insert(0, "... .");
+				}
+				
+				res.put(name, f);
+			};
+		});
+		
+		return res;
+	}
+	
+	private boolean isMainClass(File f) {
+		
+		String content = FileUtils.readFile(f);
+
+		String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
+
+		return formattedSource.contains("publicstaticvoidmain(String");
 	}
 
 	private void treatFound(String e) {

@@ -96,6 +96,24 @@ public class DependenciesParam extends Param {
 				Platform.runLater(onFinish);
 			}
 		} else {
+			File dk = config.getJdk().getValue();
+
+			if (dk == null) {
+				config.logStd("jdk was not set, attempting to detect from system...");
+				File f = config.getJdk().detectJdk();
+				if (f != null) {
+					final Long key = new Random().nextLong();
+					config.getJdk().set(f, " (found in your system)", () -> {
+						config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");
+						Platform.exitNestedEventLoop(key, null);
+					});
+					Platform.enterNestedEventLoop(key);
+				} else {
+					JwinActions.error("Missing Jdk", "You didn't select the jdk to compile your application");
+					return;
+				}
+			}
+			
 			startLoading();
 			new Thread(() -> {
 				resolving = true;
