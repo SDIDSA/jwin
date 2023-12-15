@@ -1,6 +1,7 @@
 package org.luke.jwin.app.display.ui2;
 
 import org.luke.gui.controls.popup.context.ContextMenu;
+import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.display.JwinUi;
 
@@ -9,21 +10,21 @@ public class SettingsMenu extends ContextMenu {
 	public SettingsMenu(Window window, JwinUi config) {
 		super(window);
 
-		FileMenu fileMen = new FileMenu(this, config);
+		MenuItem fileMen = new FileMenu(this, config);
 
-		ClassPathMenu cpMen = new ClassPathMenu(this, config);
+		MenuItem cpMen = new ClassPathMenu(this, config);
 
-		MainClassMenu mcMen = new MainClassMenu(this, config);
+		MenuItem mcMen = new MainClassMenu(this, config);
 
-		JdkMenu jdkMen = new JdkMenu(this, config);
+		MenuItem jdkMen = new JdkMenu(this, config);
 
-		JreMenu jreMen = new JreMenu(this, config);
+		MenuItem jreMen = new JreMenu(this, config);
 
-		DependencyMenu deps = new DependencyMenu(this, config);
+		MenuItem deps = new DependencyMenu(this, config);
 
-		ConsoleMenu conMen = new ConsoleMenu(this, config);
+		MenuItem conMen = new BooleanSetting(this, "Console", config.getConsole().checkedProperty());
 
-		RunAsAdmin adMen = new RunAsAdmin(this, config);
+		MenuItem adMen = new BooleanSetting(this, "Run as admin", config.getAdmin().checkedProperty());
 
 		addMenuItem(fileMen);
 		addMenuItem(cpMen);

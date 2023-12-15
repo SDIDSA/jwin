@@ -57,7 +57,11 @@ public class JwinUi2 extends JwinUi implements Styleable {
 		HBox.setHgrow(version, Priority.SOMETIMES);
 		HBox.setHgrow(publisher, Priority.SOMETIMES);
 
-		top = new HBox(10, appName, version, publisher, settings, run);
+		IconSetting icon = new IconSetting(ps.getWindow(), this.icon::select);
+		
+		this.icon.setOnSet(icon::set);
+		
+		top = new HBox(10, icon, appName, version, publisher, settings, run);
 		top.setAlignment(Pos.BOTTOM_CENTER);
 
 		logs = new ConsoleOutput(ps.getWindow());

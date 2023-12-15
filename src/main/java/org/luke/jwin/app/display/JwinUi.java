@@ -195,6 +195,7 @@ public abstract class JwinUi extends StackPane {
 			runOnUiThread(() -> appName.setValue(project.getAppName()));
 			runOnUiThread(() -> version.setValue(project.getAppVersion()));
 			runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
+			System.out.println(project.isConsole());
 			runOnUiThread(() -> console.checkedProperty().set(project.isConsole() != null && project.isConsole()));
 			runOnUiThread(() -> admin.checkedProperty().set(project.isAdmin() != null && project.isAdmin()));
 			runOnUiThread(() -> guid.setValue(project.getGuid()));
@@ -205,7 +206,10 @@ public abstract class JwinUi extends StackPane {
 
 			runOnUiThread(() -> {
 				logStd("resolving dependencies...");
-				dependencies.resolve(classpath::getPom, this, false, this::postImport);
+				dependencies.resolve(classpath::getPom, this, false, () -> {
+					logStd("dependencies resolved.");
+					postImport();
+				});
 			});
 
 			projectInUse = project;
@@ -294,6 +298,7 @@ public abstract class JwinUi extends StackPane {
 		JWinProject project = export();
 		if(fileInUse != null) {
 			FileDealer.write(project.serialize(), fileInUse);
+			projectInUse = project;
 		}
 	}
 

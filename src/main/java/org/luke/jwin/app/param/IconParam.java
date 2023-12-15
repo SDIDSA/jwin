@@ -1,6 +1,7 @@
 package org.luke.jwin.app.param;
 
 import java.io.File;
+import java.util.function.Consumer;
 
 import org.luke.gui.window.Window;
 
@@ -11,6 +12,8 @@ public class IconParam extends Param {
 
 	private File value;
 	
+	private Consumer<File> onSet;
+	
 	private FileChooser fc;
 	public IconParam(Window ps) {
 		super(ps, "Executable Icon");
@@ -19,15 +22,19 @@ public class IconParam extends Param {
 		fc.getExtensionFilters().add(new ExtensionFilter("icon", "*.ico"));
 		
 		addButton(ps, "select", () -> {
-			select(ps);
+			select();
 		});
 	}
 	
-	public void select(Window ps) {
-		File ico = fc.showOpenDialog(ps);
+	public void select() {
+		File ico = fc.showOpenDialog(getWindow());
 		if(ico != null) {
 			set(ico);
 		}
+	}
+	
+	public void setOnSet(Consumer<File> onSet) {
+		this.onSet = onSet;
 	}
 	
 	public void set(File ico) {
@@ -36,6 +43,7 @@ public class IconParam extends Param {
 		}
 		list.getChildren().clear();
 		value = ico;
+		if(onSet != null) onSet.accept(ico);
 		addFile(getWindow(), ico, ico.getName());
 	}
 	

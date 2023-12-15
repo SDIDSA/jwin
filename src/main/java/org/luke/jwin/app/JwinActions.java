@@ -248,7 +248,7 @@ public class JwinActions {
 			contin[0] = false;
 			alert("Missing icon", "you didn't select an icon for your app", AlertType.INFO, res -> {
 				if (res.equals(select)) {
-					config.getIcon().select(ps);
+					config.getIcon().select();
 					if (config.getIcon().getValue() != null) {
 						contin[0] = true;
 					}

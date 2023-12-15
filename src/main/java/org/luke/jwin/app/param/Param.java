@@ -170,8 +170,18 @@ public abstract class Param extends StackPane implements Styleable {
 		return line;
 	}
 
-	private static Image typeIcon(File file) {
+	public static Image typeIcon(File file) {
 		Icon icon = FileSystemView.getFileSystemView().getSystemIcon(file);
+		BufferedImage bImg = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+
+		Graphics2D graphics = bImg.createGraphics();
+		graphics.drawImage(((ImageIcon) icon).getImage(), 0, 0, null);
+		graphics.dispose();
+		return SwingFXUtils.toFXImage(bImg, null);
+	}
+
+	public static Image typeIcon(File file, int size) {
+		Icon icon = FileSystemView.getFileSystemView().getSystemIcon(file, size, size);
 		BufferedImage bImg = new BufferedImage(icon.getIconWidth(), icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
 
 		Graphics2D graphics = bImg.createGraphics();

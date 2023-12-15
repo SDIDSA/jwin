@@ -254,18 +254,18 @@ public class JWinProject {
 				DocumentBuilder builder = factory.newDocumentBuilder();
 
 				Document doc = builder.parse(cpFile);
-				
+
 				Element cpDoc = doc.getDocumentElement();
-				
+
 				NodeList entries = cpDoc.getElementsByTagName("classpathentry");
-				
-				for(int i = 0; i < entries.getLength(); i++) {
+
+				for (int i = 0; i < entries.getLength(); i++) {
 					Element entry = (Element) entries.item(i);
-					
-					if(entry.getAttribute("kind").equals("src") && !entry.getAttribute("output").contains("test")) {
+
+					if (entry.getAttribute("kind").equals("src") && !entry.getAttribute("output").contains("test")) {
 						String path = entry.getAttribute("path");
 						File pathFile = new File(root + "\\" + path);
-						if(pathFile.exists()) {
+						if (pathFile.exists()) {
 							classpath.add(pathFile);
 						}
 					}
@@ -274,22 +274,23 @@ public class JWinProject {
 				x.printStackTrace();
 			}
 		}
-		
-		File dProject = new File(root + "\\.project");
-		if(dProject.exists()) {try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			DocumentBuilder builder = factory.newDocumentBuilder();
 
-			Document doc = builder.parse(dProject);
-			
-			Element cpDoc = doc.getDocumentElement();
-			
-			Element nameEl = (Element) cpDoc.getElementsByTagName("name").item(0);
-			
-			appName = nameEl.getTextContent();
-		} catch (Exception x) {
-			x.printStackTrace();
-		}
+		File dProject = new File(root + "\\.project");
+		if (dProject.exists()) {
+			try {
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+
+				Document doc = builder.parse(dProject);
+
+				Element cpDoc = doc.getDocumentElement();
+
+				Element nameEl = (Element) cpDoc.getElementsByTagName("name").item(0);
+
+				appName = nameEl.getTextContent();
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
 		}
 
 		return new JWinProject(classpath, mainClass, jdk, jre, icon, manualJars, appName, appVersion, appPublisher,

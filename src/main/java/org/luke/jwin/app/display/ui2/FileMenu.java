@@ -13,7 +13,8 @@ public class FileMenu extends MenuMenuItem {
 		MenuItem save = new MenuItem(getSubMenu(), "Save");
 
 		getSubMenu().addOnShowing(() -> {
-			save.setDisable(config.getFileInUse() == null);
+			save.setDisable(
+					config.getFileInUse() == null || config.export().compare(config.getProjectInUse()).isEmpty());
 		});
 
 		save.setAction(() -> {
@@ -23,7 +24,7 @@ public class FileMenu extends MenuMenuItem {
 
 		addMenuItem(save);
 
-		addMenuItem("Save as",() -> {
+		addMenuItem("Save as", () -> {
 			menu.hide();
 			config.saveAs();
 		});
