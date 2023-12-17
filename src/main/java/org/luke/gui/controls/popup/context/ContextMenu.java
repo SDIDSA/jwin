@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.luke.gui.controls.SplineInterpolator;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.context.items.MenuItem;
+import org.luke.gui.controls.popup.context.items.MenuMenuItem;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -46,11 +47,23 @@ public class ContextMenu extends PopupControl implements Styleable {
 	private Scale scale;
 
 	protected MenuItem selected;
-	
+
 	private ArrayList<Runnable> onShowing;
+
+	private ArrayList<Runnable> onHiding;
+
+	private static ArrayList<ContextMenu> open;
+	private static int focused = 0;
+
+	static {
+		open = new ArrayList<>();
+	}
 
 	public ContextMenu(Window window) {
 		this.owner = window;
+
+		onShowing = new ArrayList<>();
+		onHiding = new ArrayList<>();
 
 		items = new ArrayList<>();
 		separators = new ArrayList<>();
@@ -81,17 +94,11 @@ public class ContextMenu extends PopupControl implements Styleable {
 		preroot.getChildren().add(clipped);
 		getScene().setRoot(preroot);
 
-		root.setOnMouseExited(e -> {
-//			if (selected != null) {
-//				selected.setActive(false);
-//				selected = null;
-//			}
-		});
-
 		getScene().setOnKeyPressed(this::handlePress);
 		getScene().setOnKeyReleased(this::handleRelease);
 
 		setOnHiding(e -> {
+			onHiding.forEach(Runnable::run);
 			if (selected != null) {
 				selected.setActive(false);
 				selected = null;
@@ -112,28 +119,46 @@ public class ContextMenu extends PopupControl implements Styleable {
 			root.setCacheHint(CacheHint.DEFAULT);
 		});
 
-		onShowing = new ArrayList<>();
-		
+		addOnShowing(() -> {
+			open.add(this);
+			if(open.size() == 1) {
+				focused = 0;
+			}
+		});
+
+		addOnHiding(() -> {
+			open.remove(this);
+			if(open.size() == 0) {
+				focused = 0;
+			}
+		});
+
 		applyStyle(window.getStyl());
 	}
-	
+
 	public void addOnShowing(Runnable r) {
 		onShowing.add(r);
 	}
 
+	public void addOnHiding(Runnable r) {
+		onHiding.add(r);
+	}
+
 	private void handleRelease(KeyEvent e) {
-		if (checkForAccelerator(e)) {
+		ContextMenu focused = open.get(ContextMenu.focused);
+		if (focused.checkForAccelerator(e)) {
 			return;
 		}
 		switch (e.getCode()) {
 		case ENTER, SPACE: {
-			if (selected != null) {
-				selected.fire();
+			if (focused.selected != null) {
+				focused.selected.fire();
 			}
 		}
 			break;
 		case ESCAPE:
-			this.hide();
+			focused.hide();
+			ContextMenu.focused--;
 			break;
 		default:
 			break;
@@ -142,13 +167,21 @@ public class ContextMenu extends PopupControl implements Styleable {
 	}
 
 	private void handlePress(KeyEvent e) {
+		ContextMenu focused = open.get(ContextMenu.focused);
 		switch (e.getCode()) {
 		case UP: {
-			up();
+			focused.up();
 		}
 			break;
 		case DOWN: {
-			down();
+			focused.down();
+		}
+			break;
+		case RIGHT, LEFT: {
+			if (focused.selected instanceof MenuMenuItem mmItem) {
+				mmItem.getSubMenu().down();
+				ContextMenu.focused++;
+			}
 		}
 			break;
 		default:
@@ -200,7 +233,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 	public void install(Node node) {
 		node.addEventFilter(MouseEvent.MOUSE_PRESSED, this::showPop);
 	}
-	
+
 	@Override
 	public void show(javafx.stage.Window owner) {
 		onShowing.forEach(Runnable::run);
@@ -447,7 +480,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		root.setBackground(Backgrounds.make(style.getBackgroundPrimary(), 10));
+		root.setBackground(Backgrounds.make(style.getBackgroundFloating(), 10));
 
 		if (!separators.isEmpty()) {
 			Background sepBac = Backgrounds.make(style.getBackgroundModifierAccent());

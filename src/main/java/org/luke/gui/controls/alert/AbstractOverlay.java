@@ -69,7 +69,7 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		center.setMinWidth(width);
 		center.setMaxWidth(width);
 		center.setPadding(new Insets(0, 16, 16, 16));
-		
+
 		Rectangle clip = new Rectangle();
 		clip.widthProperty().bind(center.widthProperty());
 		clip.heightProperty().bind(center.heightProperty());
@@ -93,7 +93,7 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		cancel.setUlOnHover(true);
 		cancel.setAction(this::hide);
 
-		done = new Button(session.getWindow(), "done", 5.0, 16 , 38);
+		done = new Button(session.getWindow(), "done", 5.0, 16, 38);
 		done.setFont(new Font(14, FontWeight.BOLD));
 
 		bottom.getChildren().addAll(new ExpandingHSpace(), cancel, done);
@@ -103,15 +103,19 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		form = new Form();
 		form.setDefaultButton(done);
 	}
-	
+
+	public void removeBottom() {
+		removeContent(bottom);
+	}
+
 	public void addToBottom(int index, Node node) {
 		bottom.getChildren().add(index, node);
 	}
-	
+
 	public void removeTop() {
 		root.getChildren().remove(top);
 	}
-	
+
 	public void removeCancel() {
 		bottom.getChildren().remove(cancel);
 	}
@@ -168,7 +172,11 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		preRoot.setBackground(Backgrounds.make(style.getBackgroundPrimary(), new CornerRadii(8, 8, 0, 0, false)));
+		preRoot.backgroundProperty()
+				.bind(Bindings.when(bottom.sceneProperty().isNull())
+						.then(Backgrounds.make(style.getBackgroundPrimary(), 8))
+						.otherwise(Backgrounds.make(style.getBackgroundPrimary(), new CornerRadii(8, 8, 0, 0, false))));
+
 		bottom.setBackground(Backgrounds.make(style.getBackgroundSecondary(), new CornerRadii(0, 0, 8, 8, false)));
 
 		top.setFill(style.getTextNormal());
@@ -181,7 +189,7 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		closeIcon.fillProperty().bind(Bindings.when(closeIcon.hoverProperty()).then(style.getHeaderPrimary())
 				.otherwise(style.getHeaderSecondary()));
 	}
-	
+
 	@Override
 	public void applyStyle(ObjectProperty<Style> style) {
 		Styleable.bindStyle(this, style);

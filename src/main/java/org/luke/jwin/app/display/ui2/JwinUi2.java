@@ -110,11 +110,15 @@ public class JwinUi2 extends JwinUi implements Styleable {
 	@Override
 	public void preRun(Process p) {
 		top.setDisable(true);
+		logs.setOnStop(() -> {
+			stop(p);
+		});
 	}
 
 	@Override
 	public void postRun(boolean ran) {
 		top.setDisable(false);
+		logs.setOnStop(null);
 	}
 
 	@Override

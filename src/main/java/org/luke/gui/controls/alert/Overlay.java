@@ -139,8 +139,16 @@ public class Overlay extends StackPane {
 		this.onShown.add(index, onShown);
 	}
 
+	public void addContent(Node... cont) {
+		this.content.getChildren().addAll(cont);
+	}
+
 	public void setContent(Node... cont) {
 		this.content.getChildren().setAll(cont);
+	}
+	
+	public void removeContent(Node...cont) {
+		this.content.getChildren().removeAll(cont);
 	}
 
 	public void show() {
@@ -162,7 +170,7 @@ public class Overlay extends StackPane {
 		hide.setOnFinished(e -> {
 			owner.getChildren().remove(this);
 			last().setDisable(false);
-
+			
 			owner.requestFocus();
 
 			onHidden.forEach(Runnable::run);

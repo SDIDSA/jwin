@@ -250,9 +250,9 @@ public class Tooltip extends PopupControl implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		content.setBackground(Backgrounds.make(style.getBackgroundPrimary(), 5.0));
+		content.setBackground(Backgrounds.make(style.getBackgroundFloating(), 5.0));
 		text.setFill(style.getTextNormal());
-		arr.setFill(style.getBackgroundPrimary());
+		arr.setFill(style.getBackgroundFloating());
 	}
 	
 	@Override

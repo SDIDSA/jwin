@@ -217,13 +217,19 @@ public class JwinActions {
 					Console con = new Console(window.getLoadedPage(), command);
 					con.show();
 
-					command.addOnExit(() -> Platform.runLater(con::hide));
-					con.addOnHidden(() -> {
-						config.setStopped(true);
-						if (p.isAlive()) {
-							p.descendants().forEach(ProcessHandle::destroy);
-						}
+					Runnable end = () -> config.stop(p);
+
+					command.addOnExit(ec -> {
+						Platform.runLater(() -> {
+							con.exited(ec);
+							con.setOnStop(null);
+						});
 					});
+
+					con.setOnStop(end);
+
+					con.addOnHidden(end);
+					con.setAction(end);
 				});
 			}
 

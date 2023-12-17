@@ -9,25 +9,30 @@ import org.luke.gui.window.Window;
 import javafx.beans.property.ObjectProperty;
 
 public class ConsoleLine extends Text implements Styleable {
-
+	private static Font f = new Font(Font.DEFAULT_MONO_FAMILY, 16);
+	
 	private ConsoleLineType type;
 
 	public ConsoleLine(Window window, String content, ConsoleLineType type) {
 		super(content);
 
 		this.type = type;
-
-		setFont(new Font(Font.DEFAULT_MONO_FAMILY, 16));
+		
+		setFont(f);
 		
 		setLineSpacing(4);
 		
 		applyStyle(window.getStyl());
 	}
-
+	
+	public ConsoleLineType getType() {
+		return type;
+	}
+	
 	@Override
 	public void applyStyle(Style style) {
 		setFill(type == ConsoleLineType.IN ? style.getTextPositive()
-				: (type == ConsoleLineType.ERROUT ? style.getTextWarning() : style.getHeaderSecondary()));
+				: (type == ConsoleLineType.ERROUT ? style.getTextDanger() : style.getHeaderSecondary()));
 	}
 
 	@Override

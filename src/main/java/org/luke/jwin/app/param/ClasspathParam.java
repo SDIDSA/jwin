@@ -87,7 +87,7 @@ public class ClasspathParam extends Param {
 			File f = new File(ent.getValue().getAbsolutePath().concat("/").concat(ent.getKey()));
 			String content = FileUtils.readFile(f);
 			String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
-			if(formattedSource.contains("(System.in)")) {
+			if(formattedSource.contains("(System.in)") || formattedSource.contains("System.out") || formattedSource.contains("System.err")) {
 				return true;
 			}
 		}

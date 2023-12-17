@@ -101,6 +101,8 @@ public class Progress extends StackPane implements Styleable {
 		val.addListener(listener);
 		widthProperty().addListener(listener);
 		
+		visibleProperty().bind(indeterminate.not());
+		
 		getChildren().addAll(track, thumb);
 		
 		applyStyle(win.getStyl());

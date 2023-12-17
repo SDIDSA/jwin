@@ -22,7 +22,7 @@ public class Command {
 	private ArrayList<Consumer<String>> inputHandlers;
 	private ArrayList<Consumer<String>> errorHandlers;
 	
-	private ArrayList<Runnable> onExit;
+	private ArrayList<Consumer<Integer>> onExit;
 
 	public Command(Consumer<String> inputHandler, Consumer<String> errorHandler, String... command) {
 		this.command = command;
@@ -70,7 +70,7 @@ public class Command {
 		}
 	}
 	
-	public void addOnExit(Runnable r) {
+	public void addOnExit(Consumer<Integer> r) {
 		onExit.add(r);
 	}
 
@@ -81,13 +81,13 @@ public class Command {
 			new Thread(() -> {
 				while(process.isAlive()) {
 					try {
-						Thread.sleep(10);
+						Thread.sleep(100);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
 				
-				onExit.forEach(Runnable::run);
+				onExit.forEach(oe -> oe.accept(process.exitValue()));
 			}).start();
 			
 			input = new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8);

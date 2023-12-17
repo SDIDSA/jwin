@@ -293,6 +293,37 @@ public class JWinProject {
 			}
 		}
 
+		File pom = new File(root + "\\pom.xml");
+		if (pom.exists()) {
+			
+			File jav = new File(root + "\\src\\main\\java");
+			File res = new File(root + "\\src\\main\\resources");
+
+			if (jav.exists() && jav.isDirectory()) {
+				classpath.add(jav);
+			}
+			if (res.exists() && res.isDirectory()) {
+				classpath.add(res);
+			}
+			
+			try {
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+
+				Document doc = builder.parse(pom);
+				
+				Element proj = ((Element)doc.getElementsByTagName("project").item(0));
+				
+				appName = proj.getElementsByTagName("artifactId").item(0).getTextContent();
+				appVersion = proj.getElementsByTagName("version").item(0).getTextContent();
+				appPublisher = proj.getElementsByTagName("groupId").item(0).getTextContent();
+				
+				
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+
 		return new JWinProject(classpath, mainClass, jdk, jre, icon, manualJars, appName, appVersion, appPublisher,
 				console, admin, guid, fileTypeAsso, urlProtocolAsso);
 	}

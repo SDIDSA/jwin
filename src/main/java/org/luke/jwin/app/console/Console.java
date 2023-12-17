@@ -16,7 +16,9 @@ import javafx.scene.layout.HBox;
 
 public class Console extends BasicOverlay {
 	
-	ColorIcon send;
+	private ColorIcon send;
+	private HBox preInput;
+	private ConsoleOutput output;
 	
 	public Console(Page ps, Command c) {
 		super(ps, 550);
@@ -25,7 +27,7 @@ public class Console extends BasicOverlay {
 		
 		head.setKey("Application Console");
 
-		ConsoleOutput output = new ConsoleOutput(ps.getWindow());
+		output = new ConsoleOutput(ps.getWindow());
 		
 		TextVal input = new TextVal(getWindow(), "Input");
 		input.setInputFont(new Font(Font.DEFAULT_MONO_FAMILY, 16));
@@ -63,16 +65,23 @@ public class Console extends BasicOverlay {
 		output.setMinWidth(0);
 		output.maxWidthProperty().bind(center.widthProperty().subtract(32));
 		
-		HBox preInput = new HBox(10, input, send);
+		preInput = new HBox(10, input, send);
 		preInput.setAlignment(Pos.BOTTOM_CENTER);
 		
 		center.getChildren().addAll(output, preInput);
-
-		addOnShown(() -> {
-			
-		});
+		
+		removeBottom();
 
 		applyStyle(ps.getWindow().getStyl());
+	}
+	
+	public void setOnStop(Runnable onStop) {
+		output.setOnStop(onStop);
+	}
+	
+	public void exited(int ec) {
+		output.addOutput("Your app exited with code " + ec);
+		preInput.setDisable(true);
 	}
 
 	@Override
