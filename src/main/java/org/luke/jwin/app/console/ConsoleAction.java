@@ -20,6 +20,7 @@ public class ConsoleAction extends ColoredIcon {
 		setPadding(3);
 		
 		Tooltip tt = new Tooltip(win, tooltip, Direction.UP, 0, 10);
+		tt.setPadding(4);
 		tt.setFont(new Font(14));
 		Tooltip.install(this, tt);
 		

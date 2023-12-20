@@ -1,7 +1,6 @@
 package org.luke.jwin.app.about;
 
 import org.luke.gui.NodeUtils;
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.SplineInterpolator;
 import org.luke.gui.controls.alert.BasicOverlay;
@@ -16,6 +15,7 @@ import org.luke.gui.controls.space.Separator;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
 
 import javafx.animation.KeyFrame;
@@ -107,8 +107,8 @@ public class Credits extends BasicOverlay {
 
 		Runnable showProjects = () -> {
 			Timeline animation = new Timeline(new KeyFrame(Duration.seconds(.5),
-					new KeyValue(projects.translateXProperty(), 0, SplineInterpolator.OVERSHOOT),
-					new KeyValue(about.translateXProperty(), -center.getWidth(), SplineInterpolator.OVERSHOOT)));
+					new KeyValue(projects.translateXProperty(), 0, SplineInterpolator.EASE_BOTH),
+					new KeyValue(about.translateXProperty(), -root.getWidth(), SplineInterpolator.EASE_BOTH)));
 
 			projects.setOpacity(1);
 			
@@ -120,15 +120,15 @@ public class Credits extends BasicOverlay {
 				about.setDisable(true);
 			});
 
-			projects.setTranslateX(preCenter.getWidth());
+			projects.setTranslateX(root.getWidth());
 
 			animation.playFromStart();
 		};
 
 		Runnable hideProjects = () -> {
 			Timeline animation = new Timeline(new KeyFrame(Duration.seconds(.5),
-					new KeyValue(projects.translateXProperty(), center.getWidth(), SplineInterpolator.OVERSHOOT),
-					new KeyValue(about.translateXProperty(), 0, SplineInterpolator.OVERSHOOT)));
+					new KeyValue(projects.translateXProperty(), root.getWidth(), SplineInterpolator.EASE_BOTH),
+					new KeyValue(about.translateXProperty(), 0, SplineInterpolator.EASE_BOTH)));
 
 			about.setMouseTransparent(false);
 			about.setDisable(false);

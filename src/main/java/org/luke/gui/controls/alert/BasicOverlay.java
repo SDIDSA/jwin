@@ -1,10 +1,11 @@
 package org.luke.gui.controls.alert;
 
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.TextTransform;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.style.Style;
+import org.luke.gui.window.Page;
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.layout.StackPane;
@@ -49,7 +50,6 @@ public abstract class BasicOverlay extends AbstractOverlay {
 
 	@Override
 	public void hide() {
-		form.clearErrors();
 		super.hide();
 	}
 

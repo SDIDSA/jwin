@@ -114,7 +114,7 @@ public class DeprecatedInputStyle extends InputStyle {
 
 	@Override
 	public void applyStyle(Style style) {
-		applyBack(style.getDeprecatedTextInputBg());
+		applyBack(style.getBackgroundTertiaryOr());
 		setBorder(style.getDeprecatedTextInputBorder(), style.getDeprecatedTextInputBorderHover(), style.getTextLink());
 	}
 

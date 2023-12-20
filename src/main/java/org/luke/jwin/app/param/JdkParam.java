@@ -1,6 +1,8 @@
 package org.luke.jwin.app.param;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
@@ -31,7 +33,11 @@ public class JdkParam extends JavaParam {
 	public void detect() {
 		startLoading();
 		new Thread(() -> {
-			File jdk = detectJdk();
+			List<File> detected = detectJdk();
+			if(detected.isEmpty()) {
+				return;
+			}
+			File jdk = detected.get(0);
 
 			Platform.runLater(() -> {
 				if (jdk != null && jdk.exists()) {
@@ -42,25 +48,37 @@ public class JdkParam extends JavaParam {
 		}).start();
 	}
 	
-	public File detectJdk() {
-		String[] source = new String[1];
-		Command find = new Command(line -> source[0] = line, "cmd.exe", "/C", "where javac");
+	private static List<File> detected;
+	
+	public synchronized static List<File> detectJdkCache() {
+		if(detected == null) {
+			detected = detectJdk();
+		}
+		
+		return detected;
+	}
+	 
+	private static List<File> detectJdk() {
+		ArrayList<File> res = new ArrayList<>();
+		
+		ArrayList<String> sources = new ArrayList<>();
+		Command find = new Command(line -> sources.add(line), "cmd.exe", "/C", "dir /b /s javac.exe");
 
 		try {
-			find.execute(new File("/")).waitFor();
+			find.execute(new File("C:\\Program Files")).waitFor();
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
 		
-		if (source[0] != null) {
-			File javac = new File(source[0]);
-			if (javac.exists()) {
-				return javac.getParentFile().getParentFile();
+		for(String source : sources) {
+			File javac = new File(source);
+			if (javac.exists() && getVersionFromDir(javac.getParentFile().getParentFile()) != null) {
+				res.add(javac.getParentFile().getParentFile());
 			}
 		}
 		
-		return null;
+		return res;
 	}
 
 }

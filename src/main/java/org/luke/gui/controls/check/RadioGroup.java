@@ -20,6 +20,16 @@ public class RadioGroup {
 		}
 	}
 
+	public RadioGroup(KeyedRadio...items) {
+		radios = new ArrayList<>();
+		
+		value = new SimpleObjectProperty<>();
+
+		for (KeyedRadio radio : items) {
+			add(radio.getCheck());
+		}
+	}
+
 	public void add(Radio radio) {
 		radio.checkedProperty().addListener((obs, ov, nv) -> {
 			if (nv.booleanValue()) {

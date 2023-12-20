@@ -3,13 +3,13 @@ package org.luke.gui.controls.tab;
 import java.util.ArrayList;
 
 import org.luke.gui.controls.space.Separator;
-import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Orientation;
+import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderPane;
 
 public class TabPane extends BorderPane implements Styleable {
@@ -60,7 +60,7 @@ public class TabPane extends BorderPane implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		setBorder(Borders.make(style.getBackgroundTertiary(), 7.0, 2.0));
+		setBorder(Border.EMPTY);
 	}
 
 	@Override

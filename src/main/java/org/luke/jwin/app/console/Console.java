@@ -1,10 +1,10 @@
 package org.luke.jwin.app.console;
 
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.style.Style;
+import org.luke.gui.window.Page;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.ui.TextVal;
 

@@ -69,8 +69,8 @@ public class NodePopup extends PopupControl implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		root.setBackground(Backgrounds.make(style.getBackgroundPrimary(), 11.0));
-		root.setBorder(Borders.make(style.getBackgroundFloating(), 10.0));
+		root.setBackground(Backgrounds.make(style.getBackgroundPrimaryOr(), 11.0));
+		root.setBorder(Borders.make(style.getBackgroundFloatingOr(), 10.0));
 	}
 	
 	@Override

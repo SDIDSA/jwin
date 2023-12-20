@@ -9,6 +9,7 @@ import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.controls.label.unkeyed.Text;
 import org.luke.gui.controls.label.unkeyed.TextNode;
+import org.luke.gui.style.ColorItem;
 import org.luke.gui.window.Window;
 
 import javafx.scene.paint.Color;
@@ -18,46 +19,51 @@ import javafx.scene.text.TextFlow;
 public class MultiText extends TextFlow {
 	private Window window;
 
-	private ArrayList<TextNode> nodes;
+	private ArrayList<TextNode> textNodes;
+	private ArrayList<ColorItem> nodes;
 
 	private Color fill;
 
-	private Font font;
-
 	public MultiText(Window window) {
 		this.window = window;
+		textNodes = new ArrayList<>();
 		nodes = new ArrayList<>();
-
-		font = Font.DEFAULT;
 	}
 
 	public MultiText(Window window, String key, Font font) {
 		this(window);
 
-		this.font = font;
-
-		addKeyedLabel(key, font);
+		addLabel(key, font);
 	}
 
 	public void setFill(Color fill) {
 		this.fill = fill;
-		nodes.forEach(node -> {
-			if (node instanceof Text label) {
-				label.setFill(fill);
+		getChildren().forEach((e) -> {
+			if(e instanceof javafx.scene.text.Text t) {
+				t.setFill(fill);
 			}
 		});
+		nodes.forEach(node -> node.setFill(fill));
 	}
 
 	public void setKey(int index, String key) {
-		if (nodes.get(index) instanceof KeyedTextNode node) {
+		if (textNodes.get(index)instanceof KeyedTextNode node) {
 			node.setKey(key);
 		} else {
 			throw new IllegalArgumentException("the TextNode at " + index + " is not a KeyedTextNode");
 		}
 	}
 
+	public void setTransform(int index, TextTransform transform) {
+		textNodes.get(index).setTransform(transform);
+	}
+
+	public void setTransform(TextTransform transform) {
+		setTransform(0, transform);
+	}
+
 	public void setAction(int index, Runnable action) {
-		if (nodes.get(index) instanceof Link link) {
+		if (textNodes.get(index)instanceof Link link) {
 			link.setAction(action);
 		} else {
 			throw new IllegalArgumentException("the TextNode at " + index + " is not a Link");
@@ -68,58 +74,66 @@ public class MultiText extends TextFlow {
 		setKey(0, key);
 	}
 
-	public void addKeyedLabel(String key, Font font) {
-		Label lab = new Label(window, key, font);
-		if (fill != null) {
-			lab.setFill(fill);
-		}
-		addNode(lab);
+	public void addLabel(String key, Font font) {
+		addTextNode(new Label(window, key, font));
 	}
 
-	public void addKeyedLabel(String key) {
-		addKeyedLabel(key, font);
+	public void addLabel(String key) {
+		addLabel(key, Font.DEFAULT);
 	}
 
-	public void addLabel(String txt, Font font) {
-		Text lab = new Text(txt, font);
-		if (fill != null) {
-			lab.setFill(fill);
-		}
-		addNode(lab);
+	public void addText(String value, Font font) {
+		addTextNode(new Text(value, font));
 	}
 
-	public void addLabel(String txt) {
-		addLabel(txt, font);
-	}
-
-	public void addLink(String key, Font font) {
-		addNode(new Link(window, key, font));
+	public void addText(String key) {
+		addText(key, Font.DEFAULT);
 	}
 
 	public void addKeyedLink(String key, Font font) {
-		addNode(new KeyedLink(window, key, font));
+		addTextNode(new KeyedLink(window, key, font));
+	}
+
+	public void addKeyedLink(String key) {
+		addKeyedLink(key, Font.DEFAULT);
+	}
+
+	public void addLink(String key, Font font) {
+		addTextNode(new Link(window, key, font));
 	}
 
 	public void addLink(String key) {
-		addLink(key, font);
+		addLink(key, Font.DEFAULT);
 	}
 
-	private void addNode(TextNode node) {
+	private void addTextNode(TextNode node) {
+		textNodes.add(node);
+		addNode(node);
+	}
+
+	private void addNode(ColorItem node) {
 		nodes.add(node);
+		if (fill != null) {
+			node.setFill(fill);
+		}
 		getChildren().add(node.getNode());
 	}
 
-	public void clear() {
-		nodes.clear();
-		getChildren().clear();
+	public void addNode(int index, ColorItem node) {
+		nodes.add(node);
+		if (fill != null) {
+			node.setFill(fill);
+		}
+		getChildren().add(index, node.getNode());
 	}
 
 	public void center() {
 		setTextAlignment(TextAlignment.CENTER);
 	}
-	
-	public void setFont(Font font) {
-		this.font = font;
-		nodes.forEach(n -> n.setFont(font));
+
+	public void clear() {
+		textNodes.clear();
+		nodes.clear();
+		getChildren().clear();
 	}
 }

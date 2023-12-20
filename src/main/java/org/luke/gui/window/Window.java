@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.json.JSONObject;
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.image.ImageProxy;
 import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.locale.Locale;

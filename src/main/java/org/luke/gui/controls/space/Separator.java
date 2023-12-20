@@ -52,7 +52,7 @@ public class Separator extends Region implements Styleable {
 	@Override
 	public void applyStyle(Style style) {
 		setFill(style.getBackgroundModifierAccent());
-		ds.setColor(style.getBackgroundTertiary());
+		ds.setColor(style.getBackgroundTertiaryOr());
 	}
 
 	@Override

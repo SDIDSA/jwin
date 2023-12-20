@@ -23,11 +23,12 @@ import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.file.FileUtils;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.console.Console;
-import org.luke.jwin.app.display.JwinUi;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.JWinProject;
 import org.luke.jwin.app.file.UrlProtocolAssociation;
+import org.luke.jwin.app.layout.JwinUi;
+import org.luke.jwin.app.param.JdkParam;
 
 import javafx.application.Platform;
 import javafx.stage.DirectoryChooser;
@@ -84,8 +85,9 @@ public class JwinActions {
 
 		if (dk == null) {
 			config.logStd("jdk was not set, attempting to detect from system...");
-			File f = config.getJdk().detectJdk();
-			if (f != null) {
+			List<File> fs = JdkParam.detectJdkCache();
+			if (!fs.isEmpty()) {
+				File f = fs.get(0);
 				final Long key = new Random().nextLong();
 				config.getJdk().set(f, " (found in your system)", () -> {
 					config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");

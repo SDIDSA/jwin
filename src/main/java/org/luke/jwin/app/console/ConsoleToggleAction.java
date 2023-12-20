@@ -25,6 +25,7 @@ public class ConsoleToggleAction extends ColorIcon {
 		enabled = new SimpleBooleanProperty(false);
 		
 		Tooltip tt = new Tooltip(win, tooltip, Direction.UP, 0, 10);
+		tt.setPadding(4);
 		tt.setFont(new Font(14));
 		
 		setCursor(Cursor.HAND);

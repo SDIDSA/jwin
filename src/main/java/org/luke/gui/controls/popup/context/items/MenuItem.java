@@ -124,7 +124,7 @@ public class MenuItem extends HBox implements Styleable {
 	
 	@Override
 	public void applyStyle(Style style) {
-		lab.fillProperty().bind(Bindings.when(active).then(Color.WHITE).otherwise(fill == null ? style.getInteractiveNormal() : fill));
+		lab.fillProperty().bind(Bindings.when(active).then(style.getTextOnAccent()).otherwise(fill == null ? style.getInteractiveNormal() : fill));
 		backgroundProperty().bind(Bindings.when(active).then(Backgrounds.make(fill == null ? style.getAccent() : fill, 7)).otherwise(Background.EMPTY));
 	}
 

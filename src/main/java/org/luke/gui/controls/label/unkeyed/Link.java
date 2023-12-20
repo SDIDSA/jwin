@@ -2,6 +2,7 @@ package org.luke.gui.controls.label.unkeyed;
 
 import org.luke.gui.NodeUtils;
 import org.luke.gui.controls.Font;
+import org.luke.gui.controls.label.TextTransform;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -15,6 +16,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Paint;
 
 public class Link extends StackPane implements Styleable, TextNode {
 	protected Text label;
@@ -104,5 +106,15 @@ public class Link extends StackPane implements Styleable, TextNode {
 	@Override
 	public void applyStyle(ObjectProperty<Style> style) {
 		Styleable.bindStyle(this, style);
+	}
+
+	@Override
+	public void setFill(Paint fill) {
+		//links shouldn't be recolored ?
+	}
+	
+	@Override
+	public void setTransform(TextTransform tt) {
+		label.setTransform(tt);	
 	}
 }

@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.alert.ButtonType;
@@ -17,6 +16,7 @@ import org.luke.gui.controls.scroll.Scrollable;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.file.FileUtils;
 import org.luke.gui.style.Style;
+import org.luke.gui.window.Page;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.param.Param;
 
@@ -205,7 +205,7 @@ public class ClassChooser extends BasicOverlay {
 	@Override
 	public void applyStyle(Style style) {
 		preResults.getScrollBar().setThumbFill(style.getChannelsDefault());
-		preResults.setBackground(Backgrounds.make(style.getBackgroundTertiary(), 5.0));
+		preResults.setBackground(Backgrounds.make(style.getBackgroundTertiaryOr(), 5.0));
 		super.applyStyle(style);
 	}
 }

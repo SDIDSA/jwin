@@ -3,11 +3,12 @@ package org.luke.gui.controls.alert;
 import java.util.ArrayList;
 import java.util.Random;
 
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.SplineInterpolator;
 import org.luke.gui.factory.Backgrounds;
+import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
 
+import javafx.animation.Animation.Status;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
@@ -55,6 +56,9 @@ public class Overlay extends StackPane {
 		content = new VBox();
 		content.setAlignment(Pos.CENTER);
 		content.setPickOnBounds(false);
+		
+		content.maxWidthProperty().bind(owner.widthProperty());
+		content.maxHeightProperty().bind(owner.heightProperty());
 
 		addOnShowing(() -> {
 			back.setCache(true);
@@ -72,11 +76,11 @@ public class Overlay extends StackPane {
 			content.setCacheHint(CacheHint.SPEED);
 		});
 
-		show = new Timeline(new KeyFrame(Duration.seconds(.25),
-				new KeyValue(back.opacityProperty(), 1, SplineInterpolator.OVERSHOOT),
-				new KeyValue(content.opacityProperty(), 1, SplineInterpolator.OVERSHOOT),
-				new KeyValue(content.scaleXProperty(), 1, SplineInterpolator.OVERSHOOT),
-				new KeyValue(content.scaleYProperty(), 1, SplineInterpolator.OVERSHOOT)));
+		show = new Timeline(new KeyFrame(Duration.seconds(.2),
+				new KeyValue(back.opacityProperty(), 1, SplineInterpolator.EASE_OUT),
+				new KeyValue(content.opacityProperty(), 1, SplineInterpolator.EASE_OUT),
+				new KeyValue(content.scaleXProperty(), 1, SplineInterpolator.EASE_OUT),
+				new KeyValue(content.scaleYProperty(), 1, SplineInterpolator.EASE_OUT)));
 
 		show.setOnFinished(e -> {
 			onShown.forEach(Runnable::run);
@@ -85,12 +89,17 @@ public class Overlay extends StackPane {
 			content.setCache(false);
 		});
 
-		hide = new Timeline(new KeyFrame(Duration.seconds(.25),
-				new KeyValue(back.opacityProperty(), 0, SplineInterpolator.ANTICIPATE),
-				new KeyValue(content.opacityProperty(), 0, SplineInterpolator.ANTICIPATE),
-				new KeyValue(content.scaleXProperty(), .7, SplineInterpolator.ANTICIPATE),
-				new KeyValue(content.scaleYProperty(), .7, SplineInterpolator.ANTICIPATE)));
+		hide = new Timeline(
+				new KeyFrame(Duration.seconds(.2), new KeyValue(back.opacityProperty(), 0, SplineInterpolator.EASE_IN),
+						new KeyValue(content.opacityProperty(), 0, SplineInterpolator.EASE_IN),
+						new KeyValue(content.scaleXProperty(), .8, SplineInterpolator.EASE_IN),
+						new KeyValue(content.scaleYProperty(), .8, SplineInterpolator.EASE_IN)));
 
+
+		back.setOpacity(0);
+		content.setScaleX(.8);
+		content.setScaleY(.8);
+		
 		back.setOnMouseClicked(e -> {
 			if (autoHide)
 				hide();
@@ -113,6 +122,13 @@ public class Overlay extends StackPane {
 
 	public void setOwner(Pane owner) {
 		this.owner = owner;
+
+		
+		content.maxWidthProperty().unbind();
+		content.maxHeightProperty().unbind();
+		
+		content.maxWidthProperty().bind(owner.widthProperty());
+		content.maxHeightProperty().bind(owner.heightProperty());
 	}
 
 	public void setAutoHide(boolean autoHide) {
@@ -146,16 +162,17 @@ public class Overlay extends StackPane {
 	public void setContent(Node... cont) {
 		this.content.getChildren().setAll(cont);
 	}
-	
-	public void removeContent(Node...cont) {
+
+	public void removeContent(Node... cont) {
 		this.content.getChildren().removeAll(cont);
 	}
 
 	public void show() {
+		if (getScene() != null && hide.getStatus() != Status.RUNNING) {
+			hide();
+			return;
+		}
 		hide.stop();
-		back.setOpacity(0);
-		content.setScaleX(.7);
-		content.setScaleY(.7);
 		if (!owner.getChildren().contains(this)) {
 			last().setDisable(true);
 			owner.getChildren().add(this);
@@ -166,11 +183,20 @@ public class Overlay extends StackPane {
 	}
 
 	public void hide() {
+		if (getScene() == null) {
+			show();
+			return;
+		}
 		show.stop();
 		hide.setOnFinished(e -> {
+			boolean hidingLast = this == last();
 			owner.getChildren().remove(this);
-			last().setDisable(false);
-			
+			if(hidingLast) {
+				last().setDisable(false);
+			}else {
+				this.setDisable(false);
+			}
+
 			owner.requestFocus();
 
 			onHidden.forEach(Runnable::run);

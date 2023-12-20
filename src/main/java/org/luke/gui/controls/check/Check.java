@@ -15,7 +15,6 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 
 public class Check extends StackPane implements Styleable {
 	private BooleanProperty checked;
@@ -61,18 +60,18 @@ public class Check extends StackPane implements Styleable {
 
 			if (checkedVal) {
 				if (invertedVal) {
-					setBorder(Borders.make(Color.WHITE, 2.0, 2.0));
-					setBackground(Backgrounds.make(Color.WHITE, 2.0));
+					setBorder(Borders.make(style.getTextOnAccent(), 2.0, 2.0));
+					setBackground(Backgrounds.make(style.getTextOnAccent(), 2.0));
 					tick.setBorder(Borders.make(style.getAccent(), new BorderWidths(0, 2, 2, 0)));
 				} else {
 					setBorder(Borders.make(style.getAccent(), 2.0, 2.0));
 					setBackground(Backgrounds.make(style.getAccent(), 2.0));
-					tick.setBorder(Borders.make(Color.WHITE, new BorderWidths(0, 2, 2, 0)));
+					tick.setBorder(Borders.make(style.getTextOnAccent(), new BorderWidths(0, 2, 2, 0)));
 				}
 			} else {
 				setBackground(Background.EMPTY);
 				if (invertedVal) {
-					setBorder(Borders.make(Color.WHITE, 2.0, 2.0));
+					setBorder(Borders.make(style.getTextOnAccent(), 2.0, 2.0));
 				} else {
 					setBorder(Borders.make(style.getChannelsDefault(), 2.0, 2.0));
 				}

@@ -1,12 +1,12 @@
 package org.luke.jwin.app.more;
 
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.space.Separator;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Page;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.UrlProtocolAssociation;

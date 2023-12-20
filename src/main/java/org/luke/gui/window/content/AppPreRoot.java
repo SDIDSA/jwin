@@ -2,7 +2,7 @@ package org.luke.gui.window.content;
 
 import java.awt.Dimension;
 
-import org.luke.gui.app.pages.Page;
+import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
 import org.luke.gui.window.content.app_bar.AppBar;
 import org.luke.gui.window.content.app_bar.AppBarButton;

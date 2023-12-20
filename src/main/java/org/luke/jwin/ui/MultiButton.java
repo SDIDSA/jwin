@@ -23,20 +23,20 @@ public class MultiButton extends HBox implements Styleable {
 	
 	private ContextMenu options;
 	
+	private ColorIcon ic;
+	
 	public MultiButton(Window window, String key) {
 		super(4);
 		
 		main = new org.luke.gui.controls.button.Button(window, key, new CornerRadii(5,2,2,5, false), 100, 40);
 		main.setFill(Color.TRANSPARENT);
-		main.setTextFill(Color.WHITE);
 		main.setFont(new Font(14, FontWeight.NORMAL));
 		
 		setAlignment(Pos.CENTER);
 		setMaxHeight(40);
 		
 		preIc = new AbstractButton(window, new CornerRadii(2,5,5,2, false), 40, 24);
-		ColorIcon ic = new ColorIcon("menu-right", 12, 10);
-		ic.setFill(Color.WHITE);
+		ic = new ColorIcon("menu-right", 12, 10);
 		ic.setRotate(90);
 		preIc.add(ic);
 		
@@ -66,6 +66,8 @@ public class MultiButton extends HBox implements Styleable {
 	public void applyStyle(Style style) {
 		main.setFill(style.getAccent());
 		preIc.setFill(style.getAccent());
+		main.setTextFill(style.getTextOnAccent());
+		ic.setFill(style.getTextOnAccent());
 	}
 	
 	@Override

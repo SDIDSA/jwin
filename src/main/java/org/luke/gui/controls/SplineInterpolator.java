@@ -7,6 +7,9 @@ public class SplineInterpolator extends Interpolator {
 	public static final SplineInterpolator ANTICIPATEOVERSHOOT = new SplineInterpolator(0.68, -0.6, 0.32, 1.6);
 	public static final SplineInterpolator ANTICIPATE = new SplineInterpolator(0.36, 0, 0.66, -0.56);
 	public static final SplineInterpolator OVERSHOOT = new SplineInterpolator(0.34, 1.56, 0.64, 1);
+	public static final SplineInterpolator EASE_OUT = new SplineInterpolator(0, 0, 0.16, 0.99);
+	public static final SplineInterpolator EASE_IN = new SplineInterpolator(0.82, 0.01, 1, 1);
+	public static final SplineInterpolator EASE_BOTH = new SplineInterpolator(0.5, 0, 0.5, 1);
 
 	private final double x1;
 	private final double y1;

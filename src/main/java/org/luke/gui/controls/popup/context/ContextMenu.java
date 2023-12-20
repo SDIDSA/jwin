@@ -121,14 +121,14 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 		addOnShowing(() -> {
 			open.add(this);
-			if(open.size() == 1) {
+			if (open.size() == 1) {
 				focused = 0;
 			}
 		});
 
 		addOnHiding(() -> {
 			open.remove(this);
-			if(open.size() == 0) {
+			if (open.size() == 0) {
 				focused = 0;
 			}
 		});
@@ -238,6 +238,12 @@ public class ContextMenu extends PopupControl implements Styleable {
 	public void show(javafx.stage.Window owner) {
 		onShowing.forEach(Runnable::run);
 		super.show(owner);
+	}
+
+	@Override
+	public void show(Node ownerNode, double anchorX, double anchorY) {
+		onShowing.forEach(Runnable::run);
+		super.show(ownerNode, anchorX, anchorY);
 	}
 
 	public void showPop(MouseEvent ev) {
@@ -480,7 +486,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		root.setBackground(Backgrounds.make(style.getBackgroundFloating(), 10));
+		root.setBackground(Backgrounds.make(style.getBackgroundFloatingOr(), 10));
 
 		if (!separators.isEmpty()) {
 			Background sepBac = Backgrounds.make(style.getBackgroundModifierAccent());

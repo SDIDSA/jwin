@@ -43,7 +43,7 @@ public class ModernInputStyle extends InputStyle {
 
 	@Override
 	public void applyStyle(Style style) {
-		applyBack(style.getBackgroundTertiary());
+		applyBack(style.getBackgroundTertiaryOr());
 	}
 
 }

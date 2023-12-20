@@ -16,8 +16,10 @@ import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.effect.DropShadow;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 public class ConsoleOutput extends VBox implements Styleable {
 	private Window win;
@@ -155,7 +157,8 @@ public class ConsoleOutput extends VBox implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		setBackground(Backgrounds.make(style.getBackgroundTertiary(), 8));
+		setBackground(Backgrounds.make(style.getBackgroundTertiaryOr(), 8));
+		setEffect(new DropShadow(10, Color.gray(0, .3)));
 	}
 
 	@Override

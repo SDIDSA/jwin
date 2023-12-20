@@ -85,23 +85,21 @@ public class Progress extends StackPane implements Styleable {
 		
 		indeterminate.addListener((obs, ov, nv) -> {
 			if(nv) {
-				thumb.setOpacity(0.5);
+				setOpacity(0.2);
 				timer.start();
 			}
 			
 			if(!nv) {
 				timer.stop();
-				thumb.setOpacity(1);
+				setOpacity(1);
 			}
 		});
 		
-		thumb.setOpacity(.5);
 		timer.start();
+		setOpacity(0.2);
 		
 		val.addListener(listener);
 		widthProperty().addListener(listener);
-		
-		visibleProperty().bind(indeterminate.not());
 		
 		getChildren().addAll(track, thumb);
 		

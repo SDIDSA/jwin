@@ -2,12 +2,11 @@ package org.luke.gui.window.content;
 
 import java.awt.Dimension;
 
-import org.luke.gui.app.pages.Page;
-import org.luke.gui.app.utils.Colors;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
 import org.luke.gui.window.content.app_bar.AppBar;
 import org.luke.gui.window.content.app_bar.AppBarButton;
@@ -22,6 +21,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 
 public class AppRoot extends BorderPane implements Styleable {
+	public static final Color DEFAULT_WINDOW_BORDER = Color.gray(.5);
 
 	private AppPreRoot parent;
 	private MoveResizeHelper helper;
@@ -38,7 +38,7 @@ public class AppRoot extends BorderPane implements Styleable {
 
 		addEventFilter(MouseEvent.MOUSE_PRESSED, e -> requestFocus());
 
-		setBorderFill(Colors.DEFAULT_WINDOW_BORDER, 1);
+		setBorderFill(DEFAULT_WINDOW_BORDER, 1);
 
 		helper = new MoveResizeHelper(window, parent, 5);
 
@@ -127,7 +127,7 @@ public class AppRoot extends BorderPane implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		setFill(style.getBackgroundPrimary());
+		setFill(style.getBackgroundSecondary());
 	}
 
 	@Override

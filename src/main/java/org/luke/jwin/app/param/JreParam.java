@@ -23,7 +23,7 @@ import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.JwinActions;
-import org.luke.jwin.app.display.JwinUi;
+import org.luke.jwin.app.layout.JwinUi;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;

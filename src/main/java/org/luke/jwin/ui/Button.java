@@ -4,7 +4,6 @@ import org.luke.gui.controls.Font;
 import org.luke.gui.style.Style;
 import org.luke.gui.window.Window;
 
-import javafx.scene.paint.Color;
 import javafx.scene.text.FontWeight;
 
 public class Button extends org.luke.gui.controls.button.Button {
@@ -33,7 +32,7 @@ public class Button extends org.luke.gui.controls.button.Button {
 			return;
 		}
 		
-		setTextFill(Color.WHITE);
+		setTextFill(style.getTextOnAccent());
 		setFill(style.getAccent());
 		
 		super.applyStyle(style);

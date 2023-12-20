@@ -1,6 +1,5 @@
 package org.luke.jwin.app;
 
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.check.RadioGroup;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.context.ContextMenu;
@@ -11,8 +10,9 @@ import org.luke.gui.style.Style;
 import org.luke.gui.window.Window;
 import org.luke.gui.window.content.app_bar.AppBarButton;
 import org.luke.jwin.app.about.Credits;
-import org.luke.jwin.app.display.JwinUi1;
-import org.luke.jwin.app.display.ui2.JwinUi2;
+import org.luke.jwin.app.layout.JwinUi1;
+import org.luke.jwin.app.layout.settings.SettingsPan;
+import org.luke.jwin.app.layout.ui2.JwinUi2;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -20,13 +20,11 @@ import javafx.stage.Stage;
 
 public class Jwin extends Application {
 
-	Credits about;
-
 	@Override
 	public void start(Stage ps) throws Exception {
 		System.setProperty("prism.lcdtext", "false");
 
-		Window window = new Window(this, Style.DARK, Locale.EN_US);
+		Window window = new Window(this, Style.GRAY_1, Locale.EN_US);
 
 		ContextMenu settings = new ContextMenu(window);
 
@@ -50,29 +48,21 @@ public class Jwin extends Application {
 
 		appTheme.valueProperty().addListener((obs, ov, nv) -> {
 			if (nv == light.getCheck()) {
-				window.setStyle(Style.LIGHT);
+				window.setStyle(Style.DARK_1);
 			} else {
-				window.setStyle(Style.DARK);
+				window.setStyle(Style.LIGHT_1);
 			}
 		});
+
+		JwinHome home = new JwinHome(window);
+
+		Credits about = new Credits(home);
 
 		appUi.valueProperty().addListener((obs, ov, nv) -> {
-			JwinHome h = new JwinHome(window, nv == classic.getCheck() ? JwinUi1.class : JwinUi2.class);
-			if (about == null)
-				about = new Credits(h);
-			about.setOwner(h);
-
-			Page old = window.getLoadedPage();
-			if (old != null && old instanceof JwinHome home) {
-				if (home.getConfig().getFileInUse() != null)
-					h.getConfig().importProject(home.getConfig().getFileInUse());
-				else
-					h.getConfig().loadProject(home.getConfig().export());
-			}
-
-			window.loadPage(h);
-			settings.hide();
+			home.setConfig(nv == simplified.getCheck() ? JwinUi2.class : JwinUi1.class);
 		});
+
+		SettingsPan sets = new SettingsPan(home);
 
 		settings.addMenuItem(color);
 		settings.addMenuItem(ui);
@@ -89,7 +79,13 @@ public class Jwin extends Application {
 		window.setTaskIcon("jwin-task-icon");
 
 		window.setTitle("jWin");
-		window.setOnShown(e -> simplified.getCheck().setChecked(true));
+
+		openSettings.setAction(sets::show);
+
+		window.setOnShown(e -> {
+			window.loadPage(home);
+			simplified.getCheck().setChecked(true);
+		});
 		window.show();
 	}
 }

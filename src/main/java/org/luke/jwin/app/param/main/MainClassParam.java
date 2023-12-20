@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Supplier;
 
-import org.luke.gui.app.pages.Page;
+import org.luke.gui.window.Page;
 import org.luke.jwin.app.param.Param;
 
 public class MainClassParam extends Param {

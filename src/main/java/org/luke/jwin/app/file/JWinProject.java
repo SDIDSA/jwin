@@ -9,8 +9,7 @@ import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.luke.jwin.app.display.JwinUi;
-
+import org.luke.jwin.app.layout.JwinUi;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 
@@ -299,10 +298,10 @@ public class JWinProject {
 			File jav = new File(root + "\\src\\main\\java");
 			File res = new File(root + "\\src\\main\\resources");
 
-			if (jav.exists() && jav.isDirectory()) {
+			if (jav.exists() && jav.isDirectory() && !classpath.contains(jav)) {
 				classpath.add(jav);
 			}
-			if (res.exists() && res.isDirectory()) {
+			if (res.exists() && res.isDirectory() && !classpath.contains(res)) {
 				classpath.add(res);
 			}
 			

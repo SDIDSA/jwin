@@ -30,7 +30,7 @@ public class AlertButton extends Button implements Styleable {
 	public void applyStyle(Style style) {
 		super.applyStyle(style);
 		if(type.isFilled()) {
-			setTextFill(Color.WHITE);
+			setTextFill(style.getTextOnAccent());
 			if(type.getFill() == null) {
 				setFill(style.getAccent());
 			}else {

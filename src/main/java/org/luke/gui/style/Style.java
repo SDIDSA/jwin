@@ -1,6 +1,9 @@
 package org.luke.gui.style;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.text.CaseUtils;
 import org.luke.gui.file.FileUtils;
@@ -8,14 +11,52 @@ import org.luke.gui.file.FileUtils;
 import javafx.scene.paint.Color;
 
 public class Style {
-	public static final Style DARK = new Style("dark");
-	public static final Style LIGHT = new Style("light");
+	public static final Style DARK_1 = new Style("dark", Color.web("#666666"), 0.5);
+	public static final Style DARK_2 = new Style("dark", Color.web("#367640"), 0.5);
+	public static final Style DARK_3 = new Style("dark", Color.web("#D33232"), 0.5);
+	public static final Style DARK_4 = new Style("dark", Color.web("#027BC6"), 0.5);
+
+	public static final Style GRAY_1 = new Style("dark", Color.web("#666666"), 1);
+	public static final Style GRAY_2 = new Style("dark", Color.web("#367640"), 1);
+	public static final Style GRAY_3 = new Style("dark", Color.web("#D33232"), 1);
+	public static final Style GRAY_4 = new Style("dark", Color.web("#027BC6"), 1);
+
+	public static final Style LIGHT_1 = new Style("light", Color.web("#666666"), 1);
+	public static final Style LIGHT_2 = new Style("light", Color.web("#367640"), 1);
+	public static final Style LIGHT_3 = new Style("light", Color.web("#D33232"), 1);
+	public static final Style LIGHT_4 = new Style("light", Color.web("#027BC6"), 1);
+
+	public static final List<Style> DARK = new ArrayList<>(
+			Arrays.asList(new Style[] { DARK_1, DARK_2, DARK_3, DARK_4 }));
+
+	public static final List<Style> GRAY = new ArrayList<>(
+			Arrays.asList(new Style[] { GRAY_1, GRAY_2, GRAY_3, GRAY_4 }));
+
+	public static final List<Style> LIGHT = new ArrayList<>(
+			Arrays.asList(new Style[] { LIGHT_1, LIGHT_2, LIGHT_3, LIGHT_4 }));
+
+	public static final List<Style> FEW_STYLES = new ArrayList<>(
+			Arrays.asList(new Style[] { DARK_1, GRAY_1, LIGHT_1 }));
+
+	public static final List<Style> ALL_STYLES = new ArrayList<>();
+
+	static {
+		ALL_STYLES.addAll(DARK);
+		ALL_STYLES.addAll(GRAY);
+		ALL_STYLES.addAll(LIGHT);
+	}
 
 	private Color accent;
 	private HashMap<String, Color> colors;
 
-	private Style(String theme) {
+	private String themeName;
+	private double brightnessModifier;
+
+	public Style(String theme, Color accent, double brightnessModifier) {
 		colors = new HashMap<>();
+		this.themeName = theme;
+		this.accent = accent;
+		this.brightnessModifier = brightnessModifier;
 
 		String content = FileUtils.readFile("/themes/" + theme + ".txt");
 
@@ -37,8 +78,22 @@ public class Style {
 				// IGNORE
 			}
 		}
-
-		accent = Color.web("#6C7356");
+	}
+	
+	public String getThemeName() {
+		return themeName;
+	}
+	
+	public boolean isDark() {
+		return themeName.equals("dark") && brightnessModifier == 0.5;
+	}
+	
+	public boolean isGray() {
+		return themeName.equals("dark") && brightnessModifier == 1;
+	}
+	
+	public boolean isLight() {
+		return themeName.equals("light");
 	}
 
 	private static Color parseHSL(String hslString) {
@@ -92,12 +147,30 @@ public class Style {
 		return Color.rgb(rgb[0], rgb[1], rgb[2], alpha);
 	}
 
+	public Style setBrightnessModifier(double brightnessModifier) {
+		return new Style(themeName, accent, brightnessModifier);
+	}
+
 	public Color getAccent() {
 		return accent;
 	}
 
 	public void setAccent(Color accent) {
 		this.accent = accent;
+	}
+
+	public Color getTextOnAccent() {
+		return getContrastColor(accent);
+	}
+
+	public static Color getContrastColor(Color backgroundColor) {
+		double luminance = 0.299 * backgroundColor.getRed() + 0.587 * backgroundColor.getGreen()
+				+ 0.114 * backgroundColor.getBlue();
+		return luminance > 0.5 ? Color.BLACK : Color.WHITE;
+	}
+
+	private Color mix(Color brightness, Color hue) {
+		return brightness.interpolate(hue, 0.12);
 	}
 
 	/* ********************************** */
@@ -122,24 +195,12 @@ public class Style {
 		return colors.get("textLink");
 	}
 
-	public Color getTextLinkLowSaturation() {
-		return colors.get("textLinkLowSaturation");
-	}
-
 	public Color getTextPositive() {
 		return colors.get("textPositive");
 	}
 
-	public Color getTextWarning() {
-		return colors.get("textWarning");
-	}
-
 	public Color getTextDanger() {
 		return colors.get("textDanger");
-	}
-
-	public Color getTextBrand() {
-		return colors.get("textBrand");
 	}
 
 	public Color getInteractiveNormal() {
@@ -154,44 +215,36 @@ public class Style {
 		return colors.get("interactiveActive");
 	}
 
-	public Color getInteractiveMuted() {
-		return colors.get("interactiveMuted");
+	public Color getBackgroundPrimaryOr() {
+		return colors.get("backgroundPrimary").deriveColor(0, 1, brightnessModifier, 1);
 	}
 
 	public Color getBackgroundPrimary() {
-		return colors.get("backgroundPrimary");
+		return mix(getBackgroundPrimaryOr(), accent);
+	}
+
+	public Color getBackgroundSecondaryOr() {
+		return colors.get("backgroundSecondary").deriveColor(0, 1, brightnessModifier, 1);
 	}
 
 	public Color getBackgroundSecondary() {
-		return colors.get("backgroundSecondary");
+		return mix(getBackgroundSecondaryOr(), accent);
 	}
 
-	public Color getBackgroundSecondaryAlt() {
-		return colors.get("backgroundSecondaryAlt");
+	public Color getBackgroundTertiaryOr() {
+		return colors.get("backgroundTertiary").deriveColor(0, 1, brightnessModifier, 1);
 	}
 
 	public Color getBackgroundTertiary() {
-		return colors.get("backgroundTertiary");
+		return mix(getBackgroundTertiaryOr(), accent);
 	}
 
-	public Color getBackgroundAccent() {
-		return colors.get("backgroundAccent");
+	public Color getBackgroundFloatingOr() {
+		return colors.get("backgroundFloating").deriveColor(0, 1, brightnessModifier, 1);
 	}
 
 	public Color getBackgroundFloating() {
-		return colors.get("backgroundFloating");
-	}
-
-	public Color getBackgroundNestedFloating() {
-		return colors.get("backgroundNestedFloating");
-	}
-
-	public Color getBackgroundMobilePrimary() {
-		return colors.get("backgroundMobilePrimary");
-	}
-
-	public Color getBackgroundMobileSecondary() {
-		return colors.get("backgroundMobileSecondary");
+		return mix(getBackgroundFloatingOr(), accent);
 	}
 
 	public Color getBackgroundModifierHover() {
@@ -210,34 +263,6 @@ public class Style {
 		return colors.get("backgroundModifierAccent");
 	}
 
-	public Color getInfoPositiveText() {
-		return colors.get("infoPositiveText");
-	}
-
-	public Color getInfoWarningText() {
-		return colors.get("infoWarningText");
-	}
-
-	public Color getInfoDangerText() {
-		return colors.get("infoDangerText");
-	}
-
-	public Color getInfoHelpBackground() {
-		return colors.get("infoHelpBackground");
-	}
-
-	public Color getInfoHelpForeground() {
-		return colors.get("infoHelpForeground");
-	}
-
-	public Color getInfoHelpText() {
-		return colors.get("infoHelpText");
-	}
-
-	public Color getStatusWarningText() {
-		return colors.get("statusWarningText");
-	}
-
 	public Color getScrollbarThinThumb() {
 		return colors.get("scrollbarThinThumb");
 	}
@@ -254,72 +279,8 @@ public class Style {
 		return colors.get("scrollbarAutoTrack");
 	}
 
-	public Color getScrollbarAutoScrollbarColorThumb() {
-		return colors.get("scrollbarAutoScrollbarColorThumb");
-	}
-
-	public Color getScrollbarAutoScrollbarColorTrack() {
-		return colors.get("scrollbarAutoScrollbarColorTrack");
-	}
-
-	public Color getLogoPrimary() {
-		return colors.get("logoPrimary");
-	}
-
-	public Color getControlBrandForeground() {
-		return colors.get("controlBrandForeground");
-	}
-
-	public Color getControlBrandForegroundNew() {
-		return colors.get("controlBrandForegroundNew");
-	}
-
-	public Color getBackgroundMentioned() {
-		return colors.get("backgroundMentioned");
-	}
-
-	public Color getBackgroundMentionedHover() {
-		return colors.get("backgroundMentionedHover");
-	}
-
-	public Color getBackgroundMessageHover() {
-		return colors.get("backgroundMessageHover");
-	}
-
 	public Color getChannelsDefault() {
 		return colors.get("channelsDefault");
-	}
-
-	public Color getChanneltextareaBackground() {
-		return colors.get("channeltextareaBackground");
-	}
-
-	public Color getActivityCardBackground() {
-		return colors.get("activityCardBackground");
-	}
-
-	public Color getTextboxMarkdownSyntax() {
-		return colors.get("textboxMarkdownSyntax");
-	}
-
-	public Color getDeprecatedCardBg() {
-		return colors.get("deprecatedCardBg");
-	}
-
-	public Color getDeprecatedCardEditableBg() {
-		return colors.get("deprecatedCardEditableBg");
-	}
-
-	public Color getDeprecatedStoreBg() {
-		return colors.get("deprecatedStoreBg");
-	}
-
-	public Color getDeprecatedQuickswitcherInputBackground() {
-		return colors.get("deprecatedQuickswitcherInputBackground");
-	}
-
-	public Color getDeprecatedQuickswitcherInputPlaceholder() {
-		return colors.get("deprecatedQuickswitcherInputPlaceholder");
 	}
 
 	public Color getDeprecatedTextInputBg() {
@@ -334,20 +295,8 @@ public class Style {
 		return colors.get("deprecatedTextInputBorderHover");
 	}
 
-	public Color getDeprecatedTextInputBorderDisabled() {
-		return colors.get("deprecatedTextInputBorderDisabled");
-	}
-
-	public Color getDeprecatedTextInputPrefix() {
-		return colors.get("deprecatedTextInputPrefix");
-	}
-
 	public Color getCloseIconActive() {
 		return colors.get("closeIconActive");
-	}
-
-	public Color getCountryCodeItemHover() {
-		return colors.get("countryCodeItemHover");
 	}
 
 	public Color getSecondaryButtonBack() {
@@ -356,17 +305,5 @@ public class Style {
 
 	public Color getLinkButtonText() {
 		return colors.get("linkButtonText");
-	}
-
-	public Color getCountryCodeItemText() {
-		return colors.get("countryCodeItemText");
-	}
-
-	public Color getCountryNameItemText() {
-		return colors.get("countryNameItemText");
-	}
-
-	public Color getSessionWindowBorder() {
-		return colors.get("sessionWindowBorder");
 	}
 }

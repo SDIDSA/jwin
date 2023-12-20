@@ -14,11 +14,15 @@ import java.util.function.DoubleConsumer;
 import java.util.function.Supplier;
 
 import org.luke.gui.controls.tab.TabPane;
+import org.luke.gui.factory.Backgrounds;
+import org.luke.gui.factory.Borders;
+import org.luke.gui.style.Style;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.JwinActions;
-import org.luke.jwin.app.display.JwinUi;
 import org.luke.jwin.app.file.FileDealer;
+import org.luke.jwin.app.layout.JwinUi;
+import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.app.param.Param;
 import javafx.application.Platform;
 import javafx.scene.layout.Priority;
@@ -67,6 +71,8 @@ public class DependenciesParam extends Param {
 		
 		listCont.getChildren().remove(sp);
 		listCont.getChildren().add(disp);
+		
+		applyStyle(ps.getStyl());
 	}
 	
 	public void addJars(JwinUi config) {
@@ -100,8 +106,9 @@ public class DependenciesParam extends Param {
 
 			if (dk == null) {
 				config.logStd("jdk was not set, attempting to detect from system...");
-				File f = config.getJdk().detectJdk();
-				if (f != null) {
+				List<File> fs = JdkParam.detectJdkCache();
+				if (!fs.isEmpty()) {
+					File f = fs.get(0);
 					final Long key = new Random().nextLong();
 					config.getJdk().set(f, " (found in your system)", () -> {
 						config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");
@@ -234,6 +241,14 @@ public class DependenciesParam extends Param {
 	public void clear() {
 		resolved.clear();
 		manual.clear();
+	}
+	
+	@Override
+	public void applyStyle(Style style) {
+		super.applyStyle(style);
+
+		listCont.setBackground(Backgrounds.make(style.getBackgroundTertiaryOr(), 5.0));
+		listCont.setBorder(Borders.make(style.getDeprecatedTextInputBorder(), 5.0));
 	}
 
 }

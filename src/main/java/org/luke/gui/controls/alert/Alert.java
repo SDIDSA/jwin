@@ -3,7 +3,6 @@ package org.luke.gui.controls.alert;
 import java.util.EnumMap;
 import java.util.function.Function;
 
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.label.MultiText;
@@ -12,6 +11,7 @@ import org.luke.gui.controls.space.FixedVSpace;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
 
 import javafx.beans.binding.Bindings;
@@ -177,7 +177,7 @@ public class Alert extends Overlay implements Styleable {
 	}
 
 	public void addLabel(String key, Font font) {
-		body.addKeyedLabel(key, font);
+		body.addLabel(key, font);
 	}
 
 	public void addUnkeyedLabel(String key) {
@@ -211,7 +211,7 @@ public class Alert extends Overlay implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		preRoot.setBackground(Backgrounds.make(style.getBackgroundPrimary(), new CornerRadii(8, 8, 0, 0, false)));
+		preRoot.setBackground(Backgrounds.make(style.getBackgroundPrimaryOr(), new CornerRadii(8, 8, 0, 0, false)));
 		bottom.setBackground(Backgrounds.make(style.getBackgroundSecondary(), new CornerRadii(0, 0, 8, 8, false)));
 
 		closeIcon.fillProperty().bind(Bindings.when(closeIcon.hoverProperty()).then(style.getHeaderPrimary())

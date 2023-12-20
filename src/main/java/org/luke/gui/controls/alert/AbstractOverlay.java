@@ -1,8 +1,5 @@
 package org.luke.gui.controls.alert;
 
-import org.json.JSONArray;
-import org.luke.gui.app.components.Form;
-import org.luke.gui.app.pages.Page;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.button.Button;
 import org.luke.gui.controls.image.ColorIcon;
@@ -11,6 +8,7 @@ import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
+import org.luke.gui.window.Page;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -37,8 +35,6 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 	protected Button done;
 	protected MultiText top;
 	protected VBox center;
-
-	protected Form form;
 
 	protected AbstractOverlay(Page session, double width) {
 		super(session);
@@ -99,9 +95,6 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		bottom.getChildren().addAll(new ExpandingHSpace(), cancel, done);
 
 		setContent(preRoot, bottom);
-
-		form = new Form();
-		form.setDefaultButton(done);
 	}
 
 	public void removeBottom() {
@@ -128,10 +121,6 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		this(session, 440);
 	}
 
-	public void applyErrors(JSONArray errors) {
-		form.applyErrors(errors);
-	}
-
 	public BooleanProperty doneDisabled() {
 		return done.disableProperty();
 	}
@@ -141,10 +130,7 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 	}
 
 	public void setAction(Runnable run) {
-		done.setAction(() -> {
-			if (form.check())
-				run.run();
-		});
+		done.setAction(run);
 	}
 
 	public void setOnCancel(Runnable action) {
@@ -166,7 +152,6 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 
 	@Override
 	public void hide() {
-		form.clearErrors();
 		super.hide();
 	}
 
@@ -174,8 +159,8 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 	public void applyStyle(Style style) {
 		preRoot.backgroundProperty()
 				.bind(Bindings.when(bottom.sceneProperty().isNull())
-						.then(Backgrounds.make(style.getBackgroundPrimary(), 8))
-						.otherwise(Backgrounds.make(style.getBackgroundPrimary(), new CornerRadii(8, 8, 0, 0, false))));
+						.then(Backgrounds.make(style.getBackgroundPrimaryOr(), 8))
+						.otherwise(Backgrounds.make(style.getBackgroundPrimaryOr(), new CornerRadii(8, 8, 0, 0, false))));
 
 		bottom.setBackground(Backgrounds.make(style.getBackgroundSecondary(), new CornerRadii(0, 0, 8, 8, false)));
 
@@ -184,7 +169,7 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		cancel.setTextFill(style.getLinkButtonText());
 
 		done.setFill(style.getAccent());
-		done.setTextFill(Color.WHITE);
+		done.setTextFill(style.getTextOnAccent());
 
 		closeIcon.fillProperty().bind(Bindings.when(closeIcon.hoverProperty()).then(style.getHeaderPrimary())
 				.otherwise(style.getHeaderSecondary()));

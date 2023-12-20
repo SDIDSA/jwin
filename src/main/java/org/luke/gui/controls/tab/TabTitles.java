@@ -16,9 +16,10 @@ public class TabTitles extends HBox implements Styleable {
 		applyStyle(window.getStyl());
 	}
 
+	
 	@Override
 	public void applyStyle(Style style) {
-		setBackground(Backgrounds.make(style.getBackgroundFloating(), new CornerRadii(5, 5, 0, 0, false)));
+		setBackground(Backgrounds.make(style.getBackgroundTertiaryOr(), new CornerRadii(5, 5, 0, 0, false)));
 	}
 
 	@Override
