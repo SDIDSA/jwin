@@ -33,20 +33,23 @@ public class ThemeSetting extends VBox implements Styleable {
 
 		HBox few = new HBox(20);
 		few.setPadding(new Insets(20));
-		few.setPrefSize(0, 0);
+		few.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+		few.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+		few.setPrefSize(52 * 4 + 20 * 5, 52 * 1 + 20 * 2);
 		few.setAlignment(Pos.CENTER_LEFT);
 
 		for (Style s : Style.FEW_STYLES) {
 			ThemeOption to = new ThemeOption(settings.getWindow(), s);
 			few.getChildren().add(to);
-			few.maxHeightProperty().unbind();
-			few.maxHeightProperty().bind(to.heightProperty());
 		}
 
-		ThemeButton showMore = new ThemeButton(settings.getWindow(), "sort-down", "more options");
+		ThemeButton showMore = new ThemeButton(settings.getWindow(), "sort-down", "more_options");
 		few.getChildren().add(showMore);
 
 		GridPane all = new GridPane();
+		all.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+		all.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+		all.setPrefSize(52 * 5 + 20 * 6, 52 * 3 + 20 * 4);
 		all.setPadding(new Insets(20));
 		all.setHgap(20);
 		all.setVgap(15);
@@ -69,10 +72,10 @@ public class ThemeSetting extends VBox implements Styleable {
 		all.setTranslateY(100);
 		all.setMouseTransparent(true);
 
-		ThemeButton showLess = new ThemeButton(settings.getWindow(), "sort-down", "less options");
+		ThemeButton showLess = new ThemeButton(settings.getWindow(), "sort-down", "less_options");
 		showLess.setRotate(180);
 
-		ThemeButton customTheme = new ThemeButton(settings.getWindow(), "palette", "custom colors");
+		ThemeButton customTheme = new ThemeButton(settings.getWindow(), "palette", "custom_colors");
 
 		all.add(showLess, 4, 0);
 		all.add(customTheme, 4, 1);
@@ -85,15 +88,15 @@ public class ThemeSetting extends VBox implements Styleable {
 
 		ColorPicker cp = new ColorPicker(settings.getWindow(), 160);
 
-		ThemeButton backToMore = new ThemeButton(settings.getWindow(), "sort-down", "go back to options");
+		ThemeButton backToMore = new ThemeButton(settings.getWindow(), "sort-down", "go_back_to_options");
 		backToMore.setRotate(180);
 
-		ThemeButton useThisColor = new ThemeButton(settings.getWindow(), "done", "use this color", Direction.DOWN, 0, 0);
+		ThemeButton useThisColor = new ThemeButton(settings.getWindow(), "done", "use_this_color", Direction.DOWN, 20, 20);
 
 		HBox action = new HBox(15, useThisColor, backToMore);
 		action.setAlignment(Pos.CENTER_RIGHT);
 
-		Label text = new Label(settings.getWindow(), "Text Preview", new Font(16));
+		Label text = new Label(settings.getWindow(), "text_preview", new Font(16));
 
 		StackPane cPrev = new StackPane(text);
 		cPrev.setMinSize(200, 60);
@@ -149,9 +152,8 @@ public class ThemeSetting extends VBox implements Styleable {
 
 		disp.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		disp.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-
-		disp.prefHeightProperty().bind(few.heightProperty());
 		disp.prefWidthProperty().bind(few.widthProperty());
+		disp.prefHeightProperty().bind(few.heightProperty());
 
 		Rectangle clip = new Rectangle();
 		clip.setArcWidth(30);
@@ -163,6 +165,7 @@ public class ThemeSetting extends VBox implements Styleable {
 		disp.setClip(clip);
 
 		showMore.setAction(() -> {
+			
 			few.setMaxWidth(few.getWidth());
 			all.setMaxWidth(all.getWidth());
 			Timeline sma = new Timeline(new KeyFrame(Duration.millis(300),
@@ -246,10 +249,12 @@ public class ThemeSetting extends VBox implements Styleable {
 			Radio m = group.getValue();
 			Style s = new Style((m == dark.getCheck() || m == gray.getCheck()) ? "dark" : "light", cp.getValue(),
 					(m == dark.getCheck() ? 0.5 : 1));
-			settings.getWindow().getStyl().set(s);
+			settings.getWindow().setStyle(s);
 		});
 
 		getChildren().addAll(disp);
+		
+		minHeightProperty().bind(disp.prefHeightProperty());
 
 		applyStyle(settings.getWindow().getStyl());
 	}

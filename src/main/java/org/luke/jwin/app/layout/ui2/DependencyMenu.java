@@ -5,24 +5,25 @@ import java.io.File;
 import org.luke.gui.controls.popup.context.ContextMenu;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
+import org.luke.gui.locale.Locale;
 import org.luke.jwin.app.layout.JwinUi;
 
 public class DependencyMenu extends MenuMenuItem {
 
 	public DependencyMenu(ContextMenu menu, JwinUi config) {
-		super(menu, "Dependencies");
+		super(menu, "dependencies");
 
-		MenuMenuItem manual = new MenuMenuItem(menu, "manual dependecies (jar)");
-		MenuMenuItem maven = new MenuMenuItem(menu, "maven dependencies");
+		MenuMenuItem manual = new MenuMenuItem(menu, "manual_dependencies");
+		MenuMenuItem auto = new MenuMenuItem(menu, "resolved_dependencies");
 
-		MenuItem addManual = new MenuItem(manual.getSubMenu(), "Add");
+		MenuItem addManual = new MenuItem(manual.getSubMenu(), "add", true);
 		addManual.setAction(() -> {
 			manual.getSubMenu().hide();
 			menu.hide();
 			config.getDependencies().addJars(config);
 		});
 
-		MenuItem clearManual = new MenuItem(manual.getSubMenu(), "Clear");
+		MenuItem clearManual = new MenuItem(manual.getSubMenu(), "clear", true);
 		clearManual.setAction(() -> {
 			manual.getSubMenu().hide();
 			menu.hide();
@@ -30,28 +31,25 @@ public class DependencyMenu extends MenuMenuItem {
 			config.logStd("Manual dependencies were cleared");
 		});
 
-		MenuItem resolveMaven = new MenuItem(maven.getSubMenu(), "Resolve");
-		resolveMaven.setAction(() -> {
+		MenuItem resolve = new MenuItem(auto.getSubMenu(), "resolve", true);
+		resolve.setAction(() -> {
 			manual.getSubMenu().hide();
 			menu.hide();
-			config.logStd("Resolving maven dependencies...");
-			config.getDependencies().resolve(config.getClasspath()::getPom, config, true,
-					() -> config.logStd("Finished resolving maven dependencies ("
-							+ config.getDependencies().getResolvedJars().size() + " jars added)"));
+			config.getDependencies().resolve(config.getClasspath().getRoot());
 		});
 		addMenuItem(manual);
-		addMenuItem(maven);
+		addMenuItem(auto);
 
 		getSubMenu().addOnShowing(() -> {
 			manual.getSubMenu().clear();
-			maven.getSubMenu().clear();
+			auto.getSubMenu().clear();
 
 			manual.addMenuItem(addManual);
 			manual.addMenuItem(clearManual);
 			manual.getSubMenu().separate();
 
 			if (config.getDependencies().getManualJars().isEmpty()) {
-				MenuItem entDisp = new MenuItem(getSubMenu(), "(no manual dependencies)");
+				MenuItem entDisp = new MenuItem(getSubMenu(), "0_man_deps", true);
 				entDisp.setDisable(true);
 
 				manual.addMenuItem(entDisp);
@@ -66,14 +64,14 @@ public class DependencyMenu extends MenuMenuItem {
 				manual.addMenuItem(entDisp);
 			});
 
-			maven.addMenuItem(resolveMaven);
-			maven.getSubMenu().separate();
+			auto.addMenuItem(resolve);
+			auto.getSubMenu().separate();
 
 			if (config.getDependencies().getResolvedJars().isEmpty()) {
-				MenuItem entDisp = new MenuItem(getSubMenu(), "(no maven dependencies)");
+				MenuItem entDisp = new MenuItem(getSubMenu(), "0_auto_deps", true);
 				entDisp.setDisable(true);
 
-				maven.addMenuItem(entDisp);
+				auto.addMenuItem(entDisp);
 			}
 
 			for (int i = 0; i < config.getDependencies().getResolvedJars().size() && i < 5; i++) {
@@ -83,15 +81,15 @@ public class DependencyMenu extends MenuMenuItem {
 				MenuItem entDisp = new MenuItem(getSubMenu(), disp);
 				entDisp.setDisable(true);
 
-				maven.addMenuItem(entDisp);
+				auto.addMenuItem(entDisp);
 			}
 
 			int remaining = config.getDependencies().getResolvedJars().size() - 5;
 			if (remaining > 0) {
-				MenuItem entDisp = new MenuItem(getSubMenu(), "and " + remaining + " others...");
+				MenuItem entDisp = new MenuItem(getSubMenu(), Locale.key( "and_other_deps", "count", remaining));
 				entDisp.setDisable(true);
 
-				maven.addMenuItem(entDisp);
+				auto.addMenuItem(entDisp);
 			}
 		});
 	}

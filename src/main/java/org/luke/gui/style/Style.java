@@ -150,6 +150,10 @@ public class Style {
 	public Style setBrightnessModifier(double brightnessModifier) {
 		return new Style(themeName, accent, brightnessModifier);
 	}
+	
+	public double getBrightnessModifier() {
+		return brightnessModifier;
+	}
 
 	public Color getAccent() {
 		return accent;
@@ -157,6 +161,12 @@ public class Style {
 
 	public void setAccent(Color accent) {
 		this.accent = accent;
+	}
+
+	@Override
+	public String toString() {
+		return "Style [accent=" + accent + ", themeName=" + themeName + ", brightnessModifier=" + brightnessModifier
+				+ "]";
 	}
 
 	public Color getTextOnAccent() {
@@ -171,6 +181,14 @@ public class Style {
 
 	private Color mix(Color brightness, Color hue) {
 		return brightness.interpolate(hue, 0.12);
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof Style ost) {
+			return themeName.equals(ost.themeName) && brightnessModifier == ost.brightnessModifier && accent.equals(ost.accent);
+		}
+		return super.equals(obj);
 	}
 
 	/* ********************************** */

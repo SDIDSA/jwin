@@ -6,6 +6,8 @@ import java.util.function.Consumer;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.popup.context.ContextMenu;
 import org.luke.gui.controls.popup.context.items.KeyedMenuItem;
+import org.luke.gui.locale.Locale;
+import org.luke.gui.locale.Localized;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
@@ -33,7 +35,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 
-public class TextInput extends Input implements Styleable {
+public class TextInput extends Input implements Styleable, Localized {
+	private Window window;
 	private TextInputControl field;
 	private HBox preField;
 
@@ -48,6 +51,8 @@ public class TextInput extends Input implements Styleable {
 
 	public TextInput(Window window, Font font, String key, boolean hidden) {
 		super(key);
+
+		this.window = window;
 
 		field = hidden ? new PasswordField() : new TextField();
 		field.setBackground(Background.EMPTY);
@@ -95,6 +100,8 @@ public class TextInput extends Input implements Styleable {
 		prepareMenu(window);
 
 		setFont(font);
+		
+		applyLocale(window.getLocale());
 	}
 
 	public void setAction(Runnable action) {
@@ -173,8 +180,25 @@ public class TextInput extends Input implements Styleable {
 		}
 	}
 
-	public void setPrompt(String promt) {
-		field.setPromptText(promt);
+	boolean keyedPrompt = false;
+	String promptKey;
+
+	public void setPrompt(String key, boolean keyedPrompt) {
+		this.keyedPrompt = keyedPrompt;
+		if (keyedPrompt) {
+			promptKey = key;
+			applyLocale(window.getLocale().get());
+		} else {
+			field.setPromptText(key);
+		}
+	}
+	
+	public void setPrompt(String key) {
+		setPrompt(key, false);
+	}
+	
+	public void setKeyedPrompt(String key) {
+		setPrompt(key, true);
 	}
 
 	public void addPostField(Node... nodes) {
@@ -282,6 +306,17 @@ public class TextInput extends Input implements Styleable {
 	@Override
 	public void applyStyle(ObjectProperty<Style> style) {
 		Styleable.bindStyle(this, style);
+	}
+
+	@Override
+	public void applyLocale(Locale locale) {
+		if (keyedPrompt)
+			field.setPromptText(locale.get(promptKey));
+	}
+
+	@Override
+	public void applyLocale(ObjectProperty<Locale> locale) {
+		Localized.bindLocale(this, locale);
 	}
 
 }

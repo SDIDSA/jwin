@@ -1,6 +1,8 @@
 package org.luke.gui.controls.label;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.keyed.KeyedLink;
@@ -63,11 +65,16 @@ public class MultiText extends TextFlow {
 	}
 
 	public void setAction(int index, Runnable action) {
-		if (textNodes.get(index)instanceof Link link) {
+		List<Link> links = textNodes.stream().filter(n -> n instanceof Link).map(n -> (Link) n).collect(Collectors.toList());
+		if (links.get(index)instanceof Link link) {
 			link.setAction(action);
 		} else {
 			throw new IllegalArgumentException("the TextNode at " + index + " is not a Link");
 		}
+	}
+	
+	public void setAction(Runnable action) {
+		setAction(0, action);
 	}
 
 	public void setKey(String key) {
@@ -100,6 +107,10 @@ public class MultiText extends TextFlow {
 
 	public void addLink(String key, Font font) {
 		addTextNode(new Link(window, key, font));
+	}
+	
+	public void addSpace() {
+		addText(" ");
 	}
 
 	public void addLink(String key) {

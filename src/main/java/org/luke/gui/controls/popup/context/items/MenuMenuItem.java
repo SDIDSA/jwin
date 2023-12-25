@@ -4,7 +4,7 @@ import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.context.ContextMenu;
 
-public class MenuMenuItem extends MenuItem {
+public class MenuMenuItem extends KeyedMenuItem {
 	private ColorIcon arrow;
 
 	private ContextMenu subMenu;

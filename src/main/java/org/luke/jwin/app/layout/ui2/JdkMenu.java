@@ -1,23 +1,30 @@
 package org.luke.jwin.app.layout.ui2;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map.Entry;
-
 import org.luke.gui.controls.popup.context.ContextMenu;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
+import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.layout.JwinUi;
-import org.luke.jwin.app.param.JavaParam;
-import org.luke.jwin.app.param.JdkParam;
+import org.luke.jwin.local.managers.JdkManager;
+
+import javafx.application.Platform;
 
 public class JdkMenu extends MenuMenuItem {
 
 	public JdkMenu(ContextMenu menu, JwinUi config) {
-		super(menu, "JDK (compiles your code)");
+		super(menu, "jdk_compile");
 
-		MenuItem valItem = new MenuItem(getSubMenu(), "");
+		MenuItem valItem = new MenuItem(getSubMenu(), "", true);
 		valItem.setDisable(true);
+
+		MenuItem configureJdks = new MenuItem(getSubMenu(), "configure_jdk_versions", true);
+
+		configureJdks.setAction(() -> {
+			menu.hide();
+			Jwin.instance.openSettings("jdk versions");
+		});
+
 		getSubMenu().addOnShowing(() -> {
 			File val = config.getJdk().getValue();
 			String valDisp = "(not selected)";
@@ -25,39 +32,29 @@ public class JdkMenu extends MenuMenuItem {
 				valDisp = "jdk " + config.getJdk().getVersion();
 			}
 			valItem.setText(valDisp);
-		});
 
-		addMenuItem(valItem);
+			getSubMenu().clear();
 
-		getSubMenu().separate();
+			addMenuItem(valItem);
 
-		List<File> detected = JdkParam.detectJdkCache();
-		if (!detected.isEmpty()) {
-			for(File jdk : detected) {
-				Entry<String, File> version = JavaParam.getVersionFromDir(jdk);
-				if (version != null && version.getKey() != null) {
-					String disp = "system [ jdk " + version.getKey().replace("\"", "") + " ]";
+			getSubMenu().separate();
+
+			addMenuItem(configureJdks);
+
+			getSubMenu().separate();
+
+			new Thread(() -> {
+				JdkManager.allInstalls().forEach(jdk -> {
+					String disp = jdk.getVersion();
 					MenuItem detIt = new MenuItem(getSubMenu(), disp);
 					detIt.setAction(() -> {
 						menu.hide();
-						config.getJdk().set(jdk);
-						config.logStd("The project JDK was set to " + disp + " (found on your system)");
+						config.getJdk().set(jdk.getRoot());
+						config.logStd("The project JDK was set to " + disp);
 					});
-					addMenuItem(detIt);
-				}
-			}	
-		}
-
-		addMenuItem("browse", () -> {
-			menu.hide();
-			File selected = config.getJdk().browse();
-			if (selected != null) {
-				Entry<String, File> version = JavaParam.getVersionFromDir(selected);
-				if (version != null && version.getKey() != null) {
-					String disp = "jdk " + version.getKey().replace("\"", "");
-					config.logStd("The project JDK was set to " + disp + " (Selected by you)");
-				}
-			}
+					Platform.runLater(() -> addMenuItem(detIt));
+				});
+			}).start();
 		});
 	}
 

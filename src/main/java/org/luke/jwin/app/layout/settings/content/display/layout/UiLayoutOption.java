@@ -2,6 +2,7 @@ package org.luke.jwin.app.layout.settings.content.display.layout;
 
 import org.luke.gui.controls.check.KeyedRadio;
 import org.luke.gui.controls.check.Radio;
+import org.luke.gui.controls.image.layer_icon.UiLayoutIcon;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
@@ -12,8 +13,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
 import javafx.scene.Cursor;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.VBox;
 
@@ -32,7 +31,7 @@ public class UiLayoutOption extends VBox implements Styleable {
 			getCheck().checkedProperty().set(true);
 		});
 		
-		ImageView iv = new ImageView(new Image(getClass().getResourceAsStream("/images/" + img + ".png")));
+		UiLayoutIcon iv = new UiLayoutIcon(window, img, 128);
 
 		getChildren().setAll(top, iv);
 		

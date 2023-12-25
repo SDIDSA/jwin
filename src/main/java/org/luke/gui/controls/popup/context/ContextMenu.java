@@ -1,11 +1,13 @@
 package org.luke.gui.controls.popup.context;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 import org.luke.gui.controls.SplineInterpolator;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
+import org.luke.gui.controls.scroll.Scrollable;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -37,6 +39,7 @@ import javafx.util.Duration;
 
 public class ContextMenu extends PopupControl implements Styleable {
 	protected Window owner;
+	protected Scrollable sroll;
 	protected VBox root;
 	protected ArrayList<MenuItem> items;
 
@@ -82,14 +85,18 @@ public class ContextMenu extends PopupControl implements Styleable {
 		StackPane clipped = new StackPane();
 		clipped.setEffect(ds);
 
+		sroll = new Scrollable();
+		
 		Rectangle clip = new Rectangle();
 		clip.setArcHeight(4);
 		clip.setArcWidth(4);
-		clip.widthProperty().bind(root.widthProperty());
-		clip.heightProperty().bind(root.heightProperty());
+		clip.widthProperty().bind(sroll.widthProperty());
+		clip.heightProperty().bind(sroll.heightProperty());
 
-		root.setClip(clip);
-		clipped.getChildren().add(root);
+		sroll.setClip(clip);
+		clipped.getChildren().add(sroll);
+		
+		sroll.setContent(root);
 
 		preroot.getChildren().add(clipped);
 		getScene().setRoot(preroot);
@@ -107,16 +114,16 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 		scale = new Scale(.5, .5);
 
-		root.getTransforms().add(scale);
+		sroll.getTransforms().add(scale);
 
 		show = new Timeline(new KeyFrame(Duration.seconds(.2),
-				new KeyValue(root.opacityProperty(), 1, SplineInterpolator.OVERSHOOT),
+				new KeyValue(sroll.opacityProperty(), 1, SplineInterpolator.OVERSHOOT),
 				new KeyValue(scale.xProperty(), 1, SplineInterpolator.OVERSHOOT),
 				new KeyValue(scale.yProperty(), 1, SplineInterpolator.OVERSHOOT)));
 
 		show.setOnFinished(e -> {
-			root.setCache(false);
-			root.setCacheHint(CacheHint.DEFAULT);
+			sroll.setCache(false);
+			sroll.setCacheHint(CacheHint.DEFAULT);
 		});
 
 		addOnShowing(() -> {
@@ -132,8 +139,14 @@ public class ContextMenu extends PopupControl implements Styleable {
 				focused = 0;
 			}
 		});
+		
+		setVScrollable(500);
 
 		applyStyle(window.getStyl());
+	}
+	
+	public void setVScrollable(double maxHeight) {
+		sroll.setMaxHeight(maxHeight);
 	}
 
 	public void addOnShowing(Runnable r) {
@@ -251,7 +264,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 			setOnShown(e -> {
 				scale.setPivotY(0);
 				scale.setPivotX(0);
-				root.setOpacity(0);
+				sroll.setOpacity(0);
 				scale.setX(.5);
 				scale.setY(.5);
 				show.playFromStart();
@@ -285,6 +298,18 @@ public class ContextMenu extends PopupControl implements Styleable {
 		addMenuItem(item, null, null);
 	}
 
+	public void addMenuItems(MenuItem...is) {
+		for(MenuItem i : is) {
+			addMenuItem(i);
+		}
+	}
+
+	public void addMenuItems(Collection<? extends MenuItem> is) {
+		for(MenuItem i : is) {
+			addMenuItem(i);
+		}
+	}
+
 	public void addMenuItem(MenuItem i) {
 		i.setOnMouseClicked(e -> i.fire());
 		i.setOnMouseEntered(e -> select(i));
@@ -294,6 +319,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 	public void clear() {
 		root.getChildren().clear();
+		separators.clear();
 		items.clear();
 	}
 
@@ -391,7 +417,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 					ouverflow = false;
 
-					if (px + root.getWidth() + 15 > scrW) {
+					if (px + sroll.getWidth() + 15 > scrW) {
 						ouverflow = true;
 						direction = direction.flipToLeft();
 					}
@@ -401,7 +427,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 						direction = direction.flipToRight();
 					}
 
-					if (py + root.getHeight() + 15 > scrH) {
+					if (py + sroll.getHeight() + 15 > scrH) {
 						ouverflow = true;
 						direction = direction.flipToTop();
 					}
@@ -413,16 +439,16 @@ public class ContextMenu extends PopupControl implements Styleable {
 				}
 			}
 
-			scale.setPivotY(direction.isVertical() ? direction.isArrowFirst() ? 0 : root.getHeight() - 15
+			scale.setPivotY(direction.isVertical() ? direction.isArrowFirst() ? 0 : sroll.getHeight() - 15
 					: direction.isSecondFirst() ? 0
-							: direction.isSecondLast() ? root.getHeight() : root.getHeight() / 2);
-			scale.setPivotX(direction.isHorizontal() ? direction.isArrowFirst() ? 0 : root.getWidth() - 15
-					: direction.isSecondFirst() ? 0 : direction.isSecondLast() ? root.getWidth() : root.getWidth() / 2);
+							: direction.isSecondLast() ? sroll.getHeight() : sroll.getHeight() / 2);
+			scale.setPivotX(direction.isHorizontal() ? direction.isArrowFirst() ? 0 : sroll.getWidth() - 15
+					: direction.isSecondFirst() ? 0 : direction.isSecondLast() ? sroll.getWidth() : sroll.getWidth() / 2);
 
-			root.setCache(true);
-			root.setCacheHint(CacheHint.SPEED);
+			sroll.setCache(true);
+			sroll.setCacheHint(CacheHint.SPEED);
 
-			root.setOpacity(0);
+			sroll.setOpacity(0);
 			scale.setX(.5);
 			scale.setY(.5);
 			show.playFromStart();
@@ -453,13 +479,13 @@ public class ContextMenu extends PopupControl implements Styleable {
 		setOnShown(e -> {
 			node.getScene().getRoot().requestFocus();
 
-			root.setCache(true);
-			root.setCacheHint(CacheHint.SPEED);
+			sroll.setCache(true);
+			sroll.setCacheHint(CacheHint.SPEED);
 
 			scale.setPivotY(0);
 			scale.setPivotX(0);
 
-			root.setOpacity(0);
+			sroll.setOpacity(0);
 			scale.setX(.5);
 			scale.setY(.5);
 
@@ -486,7 +512,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		root.setBackground(Backgrounds.make(style.getBackgroundFloatingOr(), 10));
+		sroll.setBackground(Backgrounds.make(style.getBackgroundFloatingOr(), 10));
 
 		if (!separators.isEmpty()) {
 			Background sepBac = Backgrounds.make(style.getBackgroundModifierAccent());

@@ -90,6 +90,10 @@ public class ColorIcon extends StackPane implements Styleable {
 	public void setImage(String name, double size) {
 		setImage(name, size, size);
 	}
+	
+	public void setImage(String name) {
+		view.setImage(ImageProxy.loadResize(name, loadSize, displaySize));
+	}
 
 	public void setImage(String name, double loadSize, double displaySize) {
 		this.name = name;

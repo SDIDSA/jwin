@@ -56,16 +56,16 @@ public class JwinUi1 extends JwinUi implements Styleable {
 
 		VBox root2 = new VBox(15);
 
-		run = new Button(ps.getWindow(), "Run", -1);
-		run.setMinWidth(60);
+		run = new Button(ps.getWindow(), "run", -1);
+		run.setMinWidth(80);
 		run.setAction(() -> {
 			if (onRun != null) {
 				onRun.run();
 			}
 		});
 
-		compile = new Button(ps.getWindow(), "Build", -1);
-		compile.setMinWidth(60);
+		compile = new Button(ps.getWindow(), "build", -1);
+		compile.setMinWidth(80);
 		compile.setDisable(true);
 		compile.setAction(() -> {
 			if (onCompile != null) {
@@ -73,18 +73,19 @@ public class JwinUi1 extends JwinUi implements Styleable {
 			}
 		});
 
-		advanced = new Button(ps.getWindow(), "more\nsettings", -1);
+		advanced = new Button(ps.getWindow(), "more_n_settings", -1);
 		advanced.setMinWidth(80);
 		advanced.setTextAlignment(TextAlignment.CENTER);
 
-		Button save = new Button(ps.getWindow(), "Save", -1);
-		save.setMinWidth(60);
+		Button save = new Button(ps.getWindow(), "save", -1);
+		save.setMinWidth(80);
 		save.setAction(this::saveAs);
 
-		Button load = new Button(ps.getWindow(), "Load", -1);
-		load.setMinWidth(60);
+		Button load = new Button(ps.getWindow(), "load", -1);
+		load.setMinWidth(80);
 		load.setAction(() -> {
 			importProject(ps.getWindow());
+//			importJavaProject(ps.getWindow());
 		});
 
 		saveLoad = new VBox(10, save, load);
@@ -96,7 +97,7 @@ public class JwinUi1 extends JwinUi implements Styleable {
 		bottom.setAlignment(Pos.BOTTOM_CENTER);
 
 		progress = new ProgressBar(ps.getWindow());
-		state = new Label(ps.getWindow(), "doing nothing");
+		state = new Label(ps.getWindow(), "doing_nothing");
 
 		StackPane progressCont = new StackPane(progress, state);
 		progressCont.setAlignment(Pos.CENTER);
@@ -107,7 +108,7 @@ public class JwinUi1 extends JwinUi implements Styleable {
 		progress.minHeightProperty().bind(saveLoad.heightProperty());
 
 
-		Button generate = new Button(ps.getWindow(), "Generate", 100, 40);
+		Button generate = new Button(ps.getWindow(), "generate", 100, 40);
 		generate.setAction(() -> guid.setValue(UUID.randomUUID().toString()));
 
 		advanced.setAction(moreSettings::show);
@@ -115,7 +116,7 @@ public class JwinUi1 extends JwinUi implements Styleable {
 		preConsole = new HBox(10);
 		preConsole.setAlignment(Pos.CENTER);
 
-		guidLab = new Label(ps.getWindow(), "GUID");
+		guidLab = new Label(ps.getWindow(), "guid");
 		preConsole.getChildren().addAll(console, admin, new Separator(ps.getWindow(), Orientation.VERTICAL), guidLab,
 				guid, generate);
 
@@ -161,7 +162,7 @@ public class JwinUi1 extends JwinUi implements Styleable {
 	@Override
 	public void preRun(Process p) {
 		buildRun.setDisable(false);
-		run.setKey("Stop");
+		run.setKey("stop");
 		run.setDisable(false);
 		run.setAction(() -> stop(p));
 	}
@@ -232,5 +233,10 @@ public class JwinUi1 extends JwinUi implements Styleable {
 	@Override
 	public void logErr(String line) {
 		System.err.println(line);
+	}
+
+	@Override
+	public void logStdOver(String line) {
+		logStd(line);
 	}
 }

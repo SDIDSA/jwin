@@ -6,13 +6,13 @@ public enum ButtonType {
 	CLOSE("close"),
 	DONE("done"),
 	CANCEL("cancel", false),
-	DELETE("Delete"), 
-	USE_DEFAULT("Use Default"),
-	SELECT_NOW("Select now"),
-	YES("Yes"),
-	NO("No"), 
-	OK("Ok"), VIEW_LOG("View full error log"),
-	IGNORE("Ignore", false);
+	DELETE("delete"), 
+	USE_DEFAULT("use_default"),
+	SELECT_NOW("select_now"),
+	YES("yes"),
+	NO("no"), 
+	OK("ok"), VIEW_LOG("view_full_error_log"),
+	IGNORE("ignore", false);
 	
 	private String key;
 	private boolean filled;

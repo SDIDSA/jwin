@@ -8,6 +8,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
+import javafx.scene.effect.Effect;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -39,8 +40,21 @@ public class LayerIcon extends StackPane {
 		getChildren().add(layer);
 	}
 	
+	public void addLayer(String name, double loadSize, double displaySize) {
+		ColorIcon layer = new ColorIcon(name, loadSize, displaySize);
+		
+		setMaxSize(layer.getMaxWidth(), layer.getMaxHeight());
+		
+		layers.add(layer);
+		getChildren().add(layer);
+	}
+	
 	public void setAlignment(int layer, Pos alignment) {
 		setAlignment(layers.get(layer), alignment);
+	}
+	
+	public void setEffect(int layer, Effect effect) {
+		layers.get(layer).setEffect(effect);
 	}
 	
 	public void setFill(int layer, Color fill) {

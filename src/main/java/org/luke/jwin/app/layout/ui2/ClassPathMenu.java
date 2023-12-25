@@ -10,13 +10,13 @@ import org.luke.jwin.app.layout.JwinUi;
 public class ClassPathMenu extends MenuMenuItem {
 
 	public ClassPathMenu(ContextMenu menu, JwinUi config) {
-		super(menu, "Class path");
+		super(menu, "classpath");
 		
 		getSubMenu().addOnShowing(() -> {
 			getSubMenu().clear();
 			
 			if(config.getClasspath().getFiles().isEmpty()) {
-				MenuItem entDisp = new MenuItem(getSubMenu(), "(empty classpath)");
+				MenuItem entDisp = new MenuItem(getSubMenu(), "empty_classpath", true);
 				entDisp.setDisable(true);
 				
 				addMenuItem(entDisp);
@@ -32,13 +32,13 @@ public class ClassPathMenu extends MenuMenuItem {
 			});
 			
 			getSubMenu().separate();
-			addMenuItem("Clear", () -> {
+			addMenuItem("clear", () -> {
 				menu.hide();
 				config.getClasspath().clear();
 				config.logStd("the classpath was cleared");
 			});
 			
-			addMenuItem("Add", () -> {
+			addMenuItem("add", () -> {
 				menu.hide();
 				File added = config.getClasspath().add();
 				if(added != null) {

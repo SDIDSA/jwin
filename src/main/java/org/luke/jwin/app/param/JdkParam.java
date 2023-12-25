@@ -12,21 +12,23 @@ import javafx.stage.DirectoryChooser;
 
 public class JdkParam extends JavaParam {
 	private DirectoryChooser dc;
+
 	public JdkParam(Window ps) {
-		super(ps, "Jdk (will be used to compile your app)");
+		super(ps, "jdk_compile");
 
 		dc = new DirectoryChooser();
 		addButton(ps, "detect", () -> detect());
 		addButton(ps, "select", () -> browse());
 	}
-	
+
 	public File browse() {
 		File dir = dc.showDialog(getWindow());
 		if (dir != null) {
-			set(dir);
+			if (isJdk(dir))
+				set(dir);
 			return dir;
 		}
-		
+
 		return null;
 	}
 
@@ -34,7 +36,7 @@ public class JdkParam extends JavaParam {
 		startLoading();
 		new Thread(() -> {
 			List<File> detected = detectJdk();
-			if(detected.isEmpty()) {
+			if (detected.isEmpty()) {
 				return;
 			}
 			File jdk = detected.get(0);
@@ -47,20 +49,20 @@ public class JdkParam extends JavaParam {
 			});
 		}).start();
 	}
-	
+
 	private static List<File> detected;
-	
+
 	public synchronized static List<File> detectJdkCache() {
-		if(detected == null) {
+		if (detected == null) {
 			detected = detectJdk();
 		}
-		
+
 		return detected;
 	}
-	 
+
 	private static List<File> detectJdk() {
 		ArrayList<File> res = new ArrayList<>();
-		
+
 		ArrayList<String> sources = new ArrayList<>();
 		Command find = new Command(line -> sources.add(line), "cmd.exe", "/C", "dir /b /s javac.exe");
 
@@ -70,14 +72,14 @@ public class JdkParam extends JavaParam {
 			e.printStackTrace();
 			Thread.currentThread().interrupt();
 		}
-		
-		for(String source : sources) {
+
+		for (String source : sources) {
 			File javac = new File(source);
 			if (javac.exists() && getVersionFromDir(javac.getParentFile().getParentFile()) != null) {
 				res.add(javac.getParentFile().getParentFile());
 			}
 		}
-		
+
 		return res;
 	}
 

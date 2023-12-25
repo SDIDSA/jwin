@@ -31,13 +31,13 @@ public class MoreSettings extends BasicOverlay {
 		removeTop();
 		removeSubHead();
 		
-		head.setKey("More Settings");
+		head.setKey("more_settings");
 
 		fileTypeParam = new FileTypeParam(ps.getWindow());
 
 		urlProtocolParam = new UrlProtocolParam(ps.getWindow());
 
-		clearTemp = new Button(ps.getWindow(), "Clear jwin temp files", 20, 38);
+		clearTemp = new Button(ps.getWindow(), "clear_jwin_temp_files", 20, 38);
 
 		clearTemp.setAction(() -> {
 			clearTemp.startLoading();
@@ -48,8 +48,8 @@ public class MoreSettings extends BasicOverlay {
 			}).start();
 		});
 
-		center.getChildren().setAll(new MoreParam(ps, "Associate file type", fileTypeParam),
-				new MoreParam(ps, "Associate URL protocol", urlProtocolParam));
+		center.getChildren().setAll(new MoreParam(ps, "associate_file_type", fileTypeParam),
+				new MoreParam(ps, "associate_url_protocol", urlProtocolParam));
 		
 		addToBottom(0, clearTemp);
 		

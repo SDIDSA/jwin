@@ -36,7 +36,7 @@ public class JreParam extends JavaParam {
 	private FileChooser fc;
 
 	public JreParam(Window ps, JwinUi config) {
-		super(ps, "Jre (will be packed with your app)");
+		super(ps, "jre_pack");
 
 		dc = new DirectoryChooser();
 		addButton(ps, "directory", () -> browseDir());
@@ -73,20 +73,20 @@ public class JreParam extends JavaParam {
 	public void generateFromJdk(Window ps, JwinUi config, boolean alert, Runnable onFinish) {
 		startLoading();
 
-		config.logStd("Generating JRE using JLink...");
+		config.logStd("generating_jre");
 		new Thread(() -> {
 			Runnable cancel = () -> {
 				stopLoading();
-				config.logStd("JRE generation failed...");
+				config.logStd("jre_gen_failed");
 			};
 			Runnable invalidJdk = () -> {
 				cancel.run();
-				JwinActions.error("Invalid jdk", "The jdk you have specified can not be used to generate a jre");
+				JwinActions.error("invalid_jdk_head", "invalid_jdk_body");
 			};
 
 			if (config.getDependencies().isResolving()) {
 				cancel.run();
-				JwinActions.warn("Resolving dependencies", "try again after dependencies are successfully resolved");
+				JwinActions.warn("resolving_dependencies", "still_resolving");
 				return;
 			}
 
@@ -114,8 +114,6 @@ public class JreParam extends JavaParam {
 
 			File preGen = new File(System.getProperty("java.io.tmpdir") + "/jwin_preGen_" + new Random().nextInt(9999));
 			preGen.mkdir();
-
-			JwinActions.deleteDirOnShutdown(preGen);
 
 			File preGenLibs = null;
 			try {
@@ -162,20 +160,21 @@ public class JreParam extends JavaParam {
 				Predicate<String> isValid = dep -> dep.indexOf("java.") == 0 || dep.indexOf("jdk.") == 0;
 
 				String mr = "base";
+
+				String com = "jdeps --ignore-missing-deps -q --recursive  --multi-release " + mr
+						+ " --print-module-deps --class-path \"" + preGenLibs.getAbsolutePath() + "\\*\" \""
+						+ preGenBin.getAbsolutePath() + "\"";
+
 				// analyze code for module dependencies
 				Command analCode = new Command(line -> {
-					String[] parts = line.split("\\s+");
-
-					if (parts.length == 3) {
-						String dep = parts[parts.length - 1];
-
-						if (!deps.contains(dep) && isValid.test(dep)) {
-							deps.add(dep);
+					if (!line.isBlank()) {
+						for (String dep : line.split(",")) {
+							if (!deps.contains(dep) && isValid.test(dep)) {
+								deps.add(dep);
+							}
 						}
 					}
-				}, "cmd", "/C",
-						"jdeps -cp \"" + preGenBin.getAbsolutePath() + "\" --multi-release " + mr + " --module-path \""
-								+ preGenLibs.getAbsolutePath() + "\" \"" + preGenBin.getAbsolutePath() + "\"");
+				}, "cmd", "/C", com);
 
 				analCode.execute(jdkBin).waitFor();
 				deps.remove("bin");

@@ -3,6 +3,7 @@ package org.luke.jwin.app.console;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.image.ColorIcon;
+import org.luke.gui.locale.Locale;
 import org.luke.gui.style.Style;
 import org.luke.gui.window.Page;
 import org.luke.jwin.app.Command;
@@ -80,7 +81,7 @@ public class Console extends BasicOverlay {
 	}
 	
 	public void exited(int ec) {
-		output.addOutput("Your app exited with code " + ec);
+		output.addOutput(Locale.key("exited_with_code", "code", ec));
 		preInput.setDisable(true);
 	}
 

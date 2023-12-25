@@ -7,14 +7,12 @@ import org.luke.gui.window.Window;
 
 import javafx.beans.property.ObjectProperty;
 
-public class KeyedTooltip extends Tooltip implements Localized {
-
+public class KeyedTooltip extends TextTooltip implements Localized {
 	private String key;
 
 	public KeyedTooltip(Window window, String key, Direction direction, double offsetX, double offsetY) {
 		super(window, "", direction, offsetX, offsetY);
-
-		this.key = key;
+		this.key = key;		
 		applyLocale(window.getLocale());
 	}
 
@@ -22,14 +20,24 @@ public class KeyedTooltip extends Tooltip implements Localized {
 		this(window, key, direction, 0, 0);
 	}
 
+	public void setKey(String key) {
+		this.key = key;
+		
+		applyLocale(owner.getLocale().get());
+	}
+
 	@Override
 	public void applyLocale(Locale locale) {
-		setText(locale.get(key));
+		if (key != null && !key.isEmpty()) {
+			setText(locale.get(key));
+		} else {
+			setText("");
+		}
 	}
-	
+
 	@Override
 	public void applyLocale(ObjectProperty<Locale> locale) {
-		Localized.bindLocale(this, locale);	
+		Localized.bindLocale(this, locale);
 	}
 
 }

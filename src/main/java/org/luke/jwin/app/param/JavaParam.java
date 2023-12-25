@@ -15,6 +15,7 @@ import java.util.zip.ZipFile;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.keyed.Label;
+import org.luke.gui.controls.label.unkeyed.Text;
 import org.luke.gui.window.Window;
 
 import javafx.application.Platform;
@@ -84,7 +85,13 @@ public class JavaParam extends Param {
 	}
 
 	public boolean isJdk() {
-		File javac = new File(value.getAbsolutePath().concat("/bin/javac.exe"));
+		return isJdk(value);
+	}
+
+	public static boolean isJdk(File root) {
+		if (root == null || !root.exists())
+			return false;
+		File javac = new File(root.getAbsolutePath().concat("/bin/javac.exe"));
 		return javac.exists();
 	}
 
@@ -123,7 +130,7 @@ public class JavaParam extends Param {
 				this.value = version.getValue();
 				Platform.runLater(() -> {
 					list.getChildren().clear();
-					addFile(getWindow(), value, value.getName() + additional, new Label(getWindow(), this.version));
+					addFile(getWindow(), value, value.getName() + additional, new Text(this.version));
 				});
 			}
 			Platform.runLater(this::stopLoading);

@@ -22,9 +22,9 @@ public class SettingsMenu extends ContextMenu {
 
 		MenuItem deps = new DependencyMenu(this, config);
 
-		MenuItem conMen = new BooleanSetting(this, "Console", config.getConsole().checkedProperty());
+		MenuItem conMen = new BooleanSetting(this, "console", config.getConsole().checkedProperty());
 
-		MenuItem adMen = new BooleanSetting(this, "Run as admin", config.getAdmin().checkedProperty());
+		MenuItem adMen = new BooleanSetting(this, "run_as_admin", config.getAdmin().checkedProperty());
 
 		addMenuItem(fileMen);
 		addMenuItem(cpMen);
@@ -35,7 +35,7 @@ public class SettingsMenu extends ContextMenu {
 		addMenuItem(conMen);
 		addMenuItem(adMen);
 
-		addMenuItem("More settings", config.getMoreSettings()::show);
+		addMenuItem("more_settings", config.getMoreSettings()::show);
 	}
 
 }

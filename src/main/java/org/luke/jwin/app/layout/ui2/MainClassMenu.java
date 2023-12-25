@@ -11,7 +11,7 @@ import org.luke.jwin.app.layout.JwinUi;
 public class MainClassMenu extends MenuMenuItem {
 
 	public MainClassMenu(ContextMenu menu, JwinUi config) {
-		super(menu, "Main Class");
+		super(menu, "main_class");
 
 		MenuItem valItem = new MenuItem(getSubMenu(), "");
 		valItem.setDisable(true);
@@ -28,7 +28,7 @@ public class MainClassMenu extends MenuMenuItem {
 
 		getSubMenu().separate();
 
-		addMenuItem("Select Main Class", () -> {
+		addMenuItem("select_main_class", () -> {
 			menu.hide();
 			String n = config.getMainClass().showChooser();
 			if (n != null)

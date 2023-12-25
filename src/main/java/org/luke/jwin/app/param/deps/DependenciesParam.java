@@ -2,13 +2,10 @@ package org.luke.jwin.app.param.deps;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.Supplier;
@@ -16,13 +13,11 @@ import java.util.function.Supplier;
 import org.luke.gui.controls.tab.TabPane;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.factory.Borders;
+import org.luke.gui.locale.Locale;
 import org.luke.gui.style.Style;
 import org.luke.gui.window.Window;
-import org.luke.jwin.app.Command;
-import org.luke.jwin.app.JwinActions;
-import org.luke.jwin.app.file.FileDealer;
+import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.layout.JwinUi;
-import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.app.param.Param;
 import javafx.application.Platform;
 import javafx.scene.layout.Priority;
@@ -33,157 +28,161 @@ import javafx.stage.FileChooser.ExtensionFilter;
 public class DependenciesParam extends Param {
 
 	private TabPane disp;
-	
+
 	private DepTab resolved;
 	private DepTab manual;
 
 	private boolean resolving = false;
 
 	private FileChooser fc;
-	public DependenciesParam(Window ps, Supplier<List<File>> pomSupplier, JwinUi config) {
-		super(ps, "Dependencies");
+
+	public DependenciesParam(Window ps, Supplier<File> rootSupplier, JwinUi config) {
+		super(ps, "dependencies");
 		VBox.setVgrow(this, Priority.SOMETIMES);
 
 		disp = new TabPane(ps);
 		VBox.setVgrow(listCont, Priority.ALWAYS);
-		
-		resolved = new DepTab(this, "Resolved Dependencies");
-		manual = new DepTab(this, "Manual Dependencies");
-		
+
+		resolved = new DepTab(this, "resolved_dependencies");
+		manual = new DepTab(this, "manual_dependencies");
+
 		disp.addTab(resolved);
 		disp.addTab(manual);
-	
+
 		list.getChildren().add(disp);
 
 		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("jar files", "*.jar"));
-		addButton(ps, "add jars", () -> {
+		addButton(ps, "add_jars", () -> {
 			List<File> files = fc.showOpenMultipleDialog(ps);
 			if (files != null && !files.isEmpty()) {
 				files.forEach(this::addManualJar);
 				disp.select(manual);
 			}
 		});
-		
+
 		disp.select(manual);
 
-		addButton(ps, "resolve", () -> resolve(pomSupplier, config, true));
-		
+		addButton(ps, "resolve", () -> resolve(rootSupplier.get()));
+
 		listCont.getChildren().remove(sp);
 		listCont.getChildren().add(disp);
-		
+
 		applyStyle(ps.getStyl());
 	}
-	
+
 	public void addJars(JwinUi config) {
 		List<File> files = fc.showOpenMultipleDialog(getWindow());
 		if (files != null && !files.isEmpty()) {
 			files.forEach(f -> {
 				addManualJar(f);
-				config.logStd(f.getName() + " was added to the project's dependencies");
+				config.logStd(Locale.key("jar_added", "name", f.getName()));
 			});
 			disp.select(manual);
 		}
 	}
 
-	public void resolve(Supplier<List<File>> pomSupplier, JwinUi config, boolean alert) {
-		resolve(pomSupplier, config, alert, null);
+	private final Consumer<Boolean> defOnFin = (r) -> {
+		if (r) {
+			Jwin.instance.getConfig()
+					.logStd(Locale.key("finished_resolving", "count", getResolvedJars().size()));
+		} else {
+			Jwin.instance.getConfig().logErr("failed_to_resolve");
+		}
+	};
+
+	public void resolve(File root) {
+		resolve(root, null);
 	}
 
-	public void resolve(Supplier<List<File>> pomSupplier, JwinUi config, boolean alert, Runnable onFinish) {
+	public void resolve(File root, Consumer<Boolean> onFinish) {
+		Jwin.instance.getConfig().logStd("resolving_dependencies");
+
 		resolved.clear();
-		List<File> poms = pomSupplier.get();
-		if (poms.isEmpty()) {
-			if (alert) {
-				JwinActions.warn("Failed to resolve dependencies", "no pom.xml files found for the selected classpath");
-			}
 
-			if(onFinish != null) {
-				Platform.runLater(onFinish);
-			}
-		} else {
-			File dk = config.getJdk().getValue();
+		if (root == null) {
+			Jwin.instance.getConfig().logErr("no_build_tool");
+			defOnFin.accept(false);
+			if (onFinish != null)
+				onFinish.accept(false);
 
-			if (dk == null) {
-				config.logStd("jdk was not set, attempting to detect from system...");
-				List<File> fs = JdkParam.detectJdkCache();
-				if (!fs.isEmpty()) {
-					File f = fs.get(0);
-					final Long key = new Random().nextLong();
-					config.getJdk().set(f, " (found in your system)", () -> {
-						config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");
-						Platform.exitNestedEventLoop(key, null);
-					});
-					Platform.enterNestedEventLoop(key);
-				} else {
-					JwinActions.error("Missing Jdk", "You didn't select the jdk to compile your application");
-					return;
-				}
-			}
-			
-			startLoading();
-			new Thread(() -> {
-				resolving = true;
-				
-				Consumer<File> pomResolver = pom -> {
-					File temp = new File(
-							System.getProperty("java.io.tmpdir") + "/jwin_lib_dep_" + new Random().nextInt(999999));
-					temp.mkdir();
-
-					JwinActions.deleteDirOnShutdown(temp);
-
-					File mvn = new File(URLDecoder.decode(getClass().getResource("/mvn/bin/mvn.cmd").getFile(),
-							Charset.defaultCharset()));
-
-					File mvnRoot = new File(
-							System.getProperty("java.io.tmpdir") + "/jwin_mvn_root_" + new Random().nextInt(9999));
-					mvnRoot.mkdir();
-					JwinActions.deleteDirOnShutdown(mvnRoot);
-					
-					JwinActions.copyDirCont(mvn.getParentFile().getParentFile(), mvnRoot, null);
-					
-					File tempMvn = new File(mvnRoot.getAbsolutePath().concat("/bin/mvn.cmd"));
-					
-					String toReplace = "@REM ==== START VALIDATION ====";
-					FileDealer.write(
-							FileDealer.read(tempMvn).replace(toReplace,
-									toReplace + "\nset JAVA_HOME=" + config.getJdk().getValue().getAbsolutePath()),
-							new File(tempMvn.getAbsolutePath().replace("mvn.cmd", "cmvn.cmd")));
-					Command command = new Command("cmd.exe", "/C",
-							"cmvn -f \"" + pom.getAbsolutePath()
-									+ "\" dependency:copy-dependencies -DoutputDirectory=\"" + temp.getAbsolutePath()
-									+ "\" -Dhttps.protocols=TLSv1.2");
-
-					try {
-						command.execute(tempMvn.getParentFile()).waitFor();
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-						Thread.currentThread().interrupt();
-					}
-
-					for (File f : temp.listFiles()) {
-						Platform.runLater(() -> addResolvedJar(f));
-					}
-				};
-				
-				try {
-					poms.forEach(pomResolver);
-				}catch(Exception x) {
-					x.printStackTrace();
-					JwinActions.error("Operation Failed", "Failed to resolve dependencies, make sure the jdk you selected is valid");
-				}
-
-				Platform.runLater(() -> {
-					stopLoading();
-					disp.select(resolved);
-				});
-				resolving = false;
-
-				if(onFinish != null) {
-					Platform.runLater(onFinish);
-				}
-			}).start();
+			return;
 		}
+
+		File pom = pom(root);
+		if (pom.exists()) {
+			Jwin.instance.getConfig().logStd(Locale.key("detected_file", "file", "pom.xml"));
+			resolveMaven(root, pom, onFinish);
+		} else {
+			File grad = grad(root);
+			Jwin.instance.getConfig().logStd(Locale.key("detected_file", "file", grad.getName()));
+			resolveGradle(root, grad, onFinish);
+		}
+	}
+
+	private void resolveMaven(File root, File pom, Consumer<Boolean> onFinish) {
+		startLoading();
+
+		new Thread(() -> {
+			resolving = true;
+
+			List<File> jars = MavenResolver.resolve(pom);
+
+			if (jars != null) {
+				Platform.runLater(() -> jars.forEach(resolved::addJar));
+			}
+			resolving = false;
+
+			Platform.runLater(() -> {
+				stopLoading();
+				disp.select(resolved);
+			});
+
+			Platform.runLater(() -> {
+				defOnFin.accept(jars != null);
+			});
+			if (onFinish != null) {
+				Platform.runLater(() -> onFinish.accept(jars != null));
+			}
+		}).start();
+	}
+
+	private void resolveGradle(File root, File grad, Consumer<Boolean> onFinish) {
+		startLoading();
+
+		new Thread(() -> {
+			resolving = true;
+
+			List<File> jars = GradleResolver.resolve(grad);
+
+			if (jars != null) {
+				Platform.runLater(() -> jars.forEach(resolved::addJar));
+			}
+			resolving = false;
+
+			Platform.runLater(() -> {
+				stopLoading();
+				disp.select(resolved);
+			});
+
+			Platform.runLater(() -> {
+				defOnFin.accept(jars != null);
+			});
+			if (onFinish != null) {
+				Platform.runLater(() -> onFinish.accept(jars != null));
+			}
+		}).start();
+	}
+
+	private File pom(File root) {
+		return new File(root.getAbsolutePath() + "\\pom.xml");
+	}
+
+	private File grad(File root) {
+		File grv = new File(root.getAbsolutePath() + "\\build.gradle");
+		File ktl = new File(root.getAbsolutePath() + "\\build.gradle.kts");
+
+		return grv.exists() ? grv : ktl;
 	}
 
 	public boolean isResolving() {
@@ -221,9 +220,9 @@ public class DependenciesParam extends Param {
 
 		for (int i = 0; i < deps.size(); i++) {
 			File dep = deps.get(i);
-			
+
 			Files.copy(dep.toPath(), Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
-			
+
 			final int fi = i;
 			if (onProgress != null) {
 				onProgress.accept((fi / (double) deps.size()) * .2);
@@ -236,13 +235,13 @@ public class DependenciesParam extends Param {
 	public void clearManuals() {
 		manual.clear();
 	}
-	
+
 	@Override
 	public void clear() {
 		resolved.clear();
 		manual.clear();
 	}
-	
+
 	@Override
 	public void applyStyle(Style style) {
 		super.applyStyle(style);

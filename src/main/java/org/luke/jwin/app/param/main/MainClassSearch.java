@@ -25,7 +25,7 @@ public class MainClassSearch extends StackPane implements Styleable {
 
 		field = new ModernTextInput(window, new Font(14), "classSearch", false);
 
-		field.setPrompt("Search for class");
+		field.setKeyedPrompt("search_for_class");
 		icon = new ColorIcon("search", 24, 20);
 		field.addPostField(icon, new FixedHSpace(10));
 

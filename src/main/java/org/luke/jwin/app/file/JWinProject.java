@@ -14,6 +14,7 @@ import org.w3c.dom.*;
 import javax.xml.parsers.*;
 
 public class JWinProject {
+	private static final String PROJECT_ROOT = "root";
 	private static final String CLASSPATH = "classpath";
 	private static final String MAIN_CLASS = "mainClass";
 	private static final String JDK = "jdk";
@@ -31,6 +32,8 @@ public class JWinProject {
 
 	private static final String CLASS_NAME = "className";
 	private static final String FILE_PATH = "filePath";
+
+	private File root;
 
 	private ArrayList<File> classpath;
 	private Entry<String, File> mainClass;
@@ -54,9 +57,10 @@ public class JWinProject {
 	private FileTypeAssociation fileTypeAsso;
 	private UrlProtocolAssociation urlProtocolAsso;
 
-	private JWinProject(List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
+	private JWinProject(File root, List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
 			List<File> manualJars, String appName, String appVersion, String appPublisher, Boolean console,
 			Boolean admin, String guid, FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
+		this.root = root;
 		this.classpath = new ArrayList<>(classpath);
 		this.mainClass = mainClass;
 		this.jdk = jdk;
@@ -74,6 +78,7 @@ public class JWinProject {
 	}
 
 	public JWinProject(JwinUi config) {
+		this.root = config.getClasspath().getRoot();
 		this.classpath = new ArrayList<>(config.getClasspath().getFiles());
 		this.mainClass = config.getMainClass().getValue();
 		this.jdk = config.getJdk().getValue();
@@ -88,6 +93,14 @@ public class JWinProject {
 		this.guid = config.getGuid().getValue();
 		this.fileTypeAsso = config.getMoreSettings().getFileTypeAssociation();
 		this.urlProtocolAsso = config.getMoreSettings().getUrlProtocolAssociation();
+	}
+
+	public File getRoot() {
+		return root;
+	}
+
+	public void setRoot(File root) {
+		this.root = root;
 	}
 
 	public void setUrlProtocolAsso(UrlProtocolAssociation urlProtocolAsso) {
@@ -185,6 +198,7 @@ public class JWinProject {
 		JSONObject mc = new JSONObject();
 		mc.put(CLASS_NAME, mainClass == null ? "" : mainClass.getKey());
 		mc.put(FILE_PATH, mainClass == null ? "" : mainClass.getValue());
+		data.put(PROJECT_ROOT, root);
 		data.put(CLASSPATH, serializeFileList(classpath));
 		data.put(MAIN_CLASS, mc);
 		data.put(JDK, jdk == null ? "" : jdk.getAbsolutePath());
@@ -212,7 +226,10 @@ public class JWinProject {
 	public static JWinProject deserialize(String data) {
 		JSONObject obj = new JSONObject(data);
 		JSONObject mc = obj.getJSONObject(MAIN_CLASS);
-		return new JWinProject(deserializeFileList(obj.getJSONArray(CLASSPATH)),
+
+		String root = obj.isNull(PROJECT_ROOT) ? null : obj.getString(PROJECT_ROOT);
+
+		return new JWinProject(root == null ? null : new File(root), deserializeFileList(obj.getJSONArray(CLASSPATH)),
 				Map.entry(mc.getString(CLASS_NAME), new File(mc.getString(FILE_PATH))), new File(obj.getString(JDK)),
 				new File(obj.getString(JRE)), new File(obj.getString(ICON)),
 				deserializeFileList(obj.getJSONArray(MANUAL_JARS)), obj.getString(APP_NAME), obj.getString(APP_VERSION),
@@ -294,7 +311,60 @@ public class JWinProject {
 
 		File pom = new File(root + "\\pom.xml");
 		if (pom.exists()) {
-			
+
+			File jav = new File(root + "\\src\\main\\java");
+			File res = new File(root + "\\src\\main\\resources");
+
+			if (jav.exists() && jav.isDirectory() && !classpath.contains(jav)) {
+				classpath.add(jav);
+			}
+			if (res.exists() && res.isDirectory() && !classpath.contains(res)) {
+				classpath.add(res);
+			}
+
+			try {
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();
+
+				Document doc = builder.parse(pom);
+
+				Element proj = ((Element) doc.getElementsByTagName("project").item(0));
+
+				NodeList artifactIds = proj.getElementsByTagName("artifactId");
+				for(int i = 0; i < artifactIds.getLength(); i++) {
+					Node n = artifactIds.item(i);
+					Node p = n.getParentNode();
+					if(p instanceof Element e && e.getTagName().equals("project")) {
+						appName = n.getTextContent();
+					}
+				}
+
+				NodeList versions = proj.getElementsByTagName("version");
+				for(int i = 0; i < versions.getLength(); i++) {
+					Node n = versions.item(i);
+					Node p = n.getParentNode();
+					if(p instanceof Element e && e.getTagName().equals("project")) {
+						appVersion = n.getTextContent();
+					}
+				}
+
+				NodeList groupIds = proj.getElementsByTagName("groupId");
+				for(int i = 0; i < groupIds.getLength(); i++) {
+					Node n = groupIds.item(i);
+					Node p = n.getParentNode();
+					if(p instanceof Element e && e.getTagName().equals("project")) {
+						appPublisher = n.getTextContent();
+					}
+				}
+
+			} catch (Exception x) {
+				x.printStackTrace();
+			}
+		}
+		File grad1 = new File(root + "\\build.gradle");
+		File grad2 = new File(root + "\\build.gradle.kts");
+		
+		if(grad1.exists() || grad2.exists()) {
 			File jav = new File(root + "\\src\\main\\java");
 			File res = new File(root + "\\src\\main\\resources");
 
@@ -305,26 +375,11 @@ public class JWinProject {
 				classpath.add(res);
 			}
 			
-			try {
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder builder = factory.newDocumentBuilder();
-
-				Document doc = builder.parse(pom);
-				
-				Element proj = ((Element)doc.getElementsByTagName("project").item(0));
-				
-				appName = proj.getElementsByTagName("artifactId").item(0).getTextContent();
-				appVersion = proj.getElementsByTagName("version").item(0).getTextContent();
-				appPublisher = proj.getElementsByTagName("groupId").item(0).getTextContent();
-				
-				
-			} catch (Exception x) {
-				x.printStackTrace();
-			}
+			appName = root.getName();
 		}
 
-		return new JWinProject(classpath, mainClass, jdk, jre, icon, manualJars, appName, appVersion, appPublisher,
-				console, admin, guid, fileTypeAsso, urlProtocolAsso);
+		return new JWinProject(root, classpath, mainClass, jdk, jre, icon, manualJars, appName, appVersion,
+				appPublisher, console, admin, guid, fileTypeAsso, urlProtocolAsso);
 	}
 
 	private static JSONArray serializeFileList(List<File> list) {

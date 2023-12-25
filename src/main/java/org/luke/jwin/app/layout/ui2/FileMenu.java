@@ -8,9 +8,9 @@ import org.luke.jwin.app.layout.JwinUi;
 public class FileMenu extends MenuMenuItem {
 
 	public FileMenu(ContextMenu menu, JwinUi config) {
-		super(menu, "File");
+		super(menu, "file");
 
-		MenuItem save = new MenuItem(getSubMenu(), "Save");
+		MenuItem save = new MenuItem(getSubMenu(), "save", true);
 
 		getSubMenu().addOnShowing(() -> {
 			save.setDisable(
@@ -24,17 +24,17 @@ public class FileMenu extends MenuMenuItem {
 
 		addMenuItem(save);
 
-		addMenuItem("Save as", () -> {
+		addMenuItem("save_as", () -> {
 			menu.hide();
 			config.saveAs();
 		});
 
-		addMenuItem("Import Jwin Project", () -> {
+		addMenuItem("import_jwin_project", () -> {
 			menu.hide();
 			config.importProject(menu.getOwner());
 		});
 
-		addMenuItem("Import Java Project", () -> {
+		addMenuItem("import_java_project", () -> {
 			menu.hide();
 			config.importJavaProject(menu.getOwner());
 		});

@@ -15,7 +15,7 @@ public class UrlProtocolParam extends VBox {
 	public UrlProtocolParam(Window window) {
 		super(10);
 
-		protocol = new TextVal(window, "URL Protocol");
+		protocol = new TextVal(window, "url_protocol");
 		enable = new KeyedCheck(window, "enable", 16);
 
 		protocol.disableProperty().bind(enable.checkedProperty().not());

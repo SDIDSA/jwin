@@ -1,12 +1,41 @@
 package org.luke.gui.controls.shape;
 
+import org.luke.gui.style.ColorItem;
+
+import javafx.scene.Node;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Polygon;
 
-public class Triangle extends Polygon {
+public class Triangle extends StackPane implements ColorItem {
+
+	private Polygon poly;
+
 	public Triangle(double size) {
-		getPoints().addAll(
-				size / 2, size / 2,
-	            size, 0.0,
-	            size, size);
+		poly = new Polygon();
+
+		setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
+		setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
+
+		getChildren().add(poly);
+		setSize(size);
 	}
+
+	public void setSize(double size) {
+		double offset = (size * 0.4);
+		poly.getPoints().setAll(0.0, size / 2, size, -offset, size, size + offset);
+
+		setPrefSize(size, size);
+	}
+
+	@Override
+	public void setFill(Paint fill) {
+		poly.setFill(fill);
+	}
+
+	@Override
+	public Node getNode() {
+		return this;
+	}
+
 }

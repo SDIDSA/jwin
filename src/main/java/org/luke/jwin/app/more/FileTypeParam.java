@@ -30,12 +30,12 @@ public class FileTypeParam extends VBox {
 		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("icon", "*.ico"));
 
-		typeName = new TextVal(ps, "Type name");
-		typeName.setPrompt("My Special Extension");
-		typeExtension = new TextVal(ps, "Type extension");
+		typeName = new TextVal(ps, "type_name");
+		typeName.setKeyedPrompt("my_special_extention");
+		typeExtension = new TextVal(ps, "type_extension");
 		typeExtension.setPrompt(".ext");
 
-		iconPath = new TextVal(ps, "Type icon");
+		iconPath = new TextVal(ps, "type_icon");
 		iconPath.setPrompt("type_icon.ico");
 		Button selectIcon = new Button(ps, "select", 20, 40);
 		selectIcon.setMinWidth(100);

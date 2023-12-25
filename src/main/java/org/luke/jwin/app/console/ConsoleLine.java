@@ -1,24 +1,22 @@
 package org.luke.jwin.app.console;
 
 import org.luke.gui.controls.Font;
-import org.luke.gui.controls.label.unkeyed.Text;
+import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
 
 import javafx.beans.property.ObjectProperty;
 
-public class ConsoleLine extends Text implements Styleable {
+public class ConsoleLine extends Label implements Styleable {
 	private static Font f = new Font(Font.DEFAULT_MONO_FAMILY, 16);
 	
 	private ConsoleLineType type;
 
 	public ConsoleLine(Window window, String content, ConsoleLineType type) {
-		super(content);
+		super(window, content, f);
 
 		this.type = type;
-		
-		setFont(f);
 		
 		setLineSpacing(4);
 		

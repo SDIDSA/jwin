@@ -14,7 +14,7 @@ public class MainClassParam extends Param {
 	private ClassChooser mclassChooser;
 
 	public MainClassParam(Page ps, Supplier<Map<String, File>> classLister) {
-		super(ps.getWindow(), "Main class");
+		super(ps.getWindow(), "main_class");
 		mclassChooser = new ClassChooser(ps, classLister, this);
 		addButton(ps.getWindow(), "select", () -> showChooser());
 	}

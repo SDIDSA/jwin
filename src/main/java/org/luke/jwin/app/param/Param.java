@@ -10,6 +10,7 @@ import javax.swing.filechooser.FileSystemView;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.Loading;
 import org.luke.gui.controls.label.keyed.Label;
+import org.luke.gui.controls.label.unkeyed.Text;
 import org.luke.gui.controls.scroll.Scrollable;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.factory.Borders;
@@ -131,9 +132,9 @@ public abstract class Param extends StackPane implements Styleable {
 		top.getChildren().add(button);
 	}
 
-	private ArrayList<Label> files = new ArrayList<>();
+	private ArrayList<Text> files = new ArrayList<>();
 	public HBox addFile(Window window, File file, String name, Node... post) {
-		Label lab = new Label(window, name, new Font(12));
+		Text lab = new Text(name, new Font(12));
 		files.add(lab);
 		lab.setFill(window.getStyl().get().getTextNormal());
 		
@@ -152,7 +153,7 @@ public abstract class Param extends StackPane implements Styleable {
 	}
 
 	public HBox generateLine(Window window, File file, String name, Node... post) {
-		Label lab = new Label(window, name, new Font(12));
+		Text lab = new Text(name, new Font(12));
 		files.add(lab);
 		lab.setFill(window.getStyl().get().getTextNormal());
 		
@@ -204,7 +205,7 @@ public abstract class Param extends StackPane implements Styleable {
 		pi.setFill(style.getTextNormal());
 		
 		sp.setBackground(Backgrounds.make(style.getBackgroundTertiaryOr(), 5.0));
-		sp.setBorder(Borders.make(style.getDeprecatedTextInputBorder(), 5.0));
+		sp.setBorder(Borders.make(style.getDeprecatedTextInputBorder(), Borders.OUTSIDE, 5.0));
 		sp.getScrollBar().setThumbFill(style.getChannelsDefault());
 		
 		files.removeIf(lab -> lab.getScene() == null);

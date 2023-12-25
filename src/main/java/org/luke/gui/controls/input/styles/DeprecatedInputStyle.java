@@ -25,7 +25,9 @@ public class DeprecatedInputStyle extends InputStyle {
 
 		borderProperty = new SimpleObjectProperty<>();
 
-		borderProperty.addListener((obs, ov, nv) -> applyBorder(nv));
+		borderProperty.addListener((obs, ov, nv) -> {
+			applyBorder(nv);
+		});
 
 		input.hoverProperty().addListener((obs, ov, nv) -> {
 			if (!input.isFocus() || ignoreFocus) {
@@ -40,7 +42,7 @@ public class DeprecatedInputStyle extends InputStyle {
 
 	@Override
 	public void focus(boolean focus) {
-		if(ignoreFocus) {
+		if (ignoreFocus) {
 			return;
 		}
 		if (focus) {
@@ -52,7 +54,7 @@ public class DeprecatedInputStyle extends InputStyle {
 
 	@Override
 	public void hover() {
-		if(ignoreHover) {
+		if (ignoreHover) {
 			return;
 		}
 		exit.stop();
@@ -61,7 +63,7 @@ public class DeprecatedInputStyle extends InputStyle {
 
 	@Override
 	public void unhover() {
-		if(ignoreHover) {
+		if (ignoreHover) {
 			return;
 		}
 		enter.stop();
@@ -70,7 +72,7 @@ public class DeprecatedInputStyle extends InputStyle {
 
 	@Override
 	public void focus() {
-		if(ignoreFocus) {
+		if (ignoreFocus) {
 			return;
 		}
 		unfocus.stop();
@@ -79,7 +81,7 @@ public class DeprecatedInputStyle extends InputStyle {
 
 	@Override
 	public void unfocus() {
-		if(ignoreFocus) {
+		if (ignoreFocus) {
 			return;
 		}
 		this.focus.stop();
@@ -108,6 +110,7 @@ public class DeprecatedInputStyle extends InputStyle {
 
 		enter = new Timeline(
 				new KeyFrame(Duration.seconds(.2), new KeyValue(borderProperty, hover, Interpolator.EASE_BOTH)));
+
 		exit = new Timeline(
 				new KeyFrame(Duration.seconds(.2), new KeyValue(borderProperty, border, Interpolator.EASE_BOTH)));
 	}

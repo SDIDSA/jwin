@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -21,6 +22,7 @@ import org.luke.gui.controls.alert.Alert;
 import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.file.FileUtils;
+import org.luke.gui.locale.Locale;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.console.Console;
 import org.luke.jwin.app.file.FileDealer;
@@ -29,6 +31,7 @@ import org.luke.jwin.app.file.JWinProject;
 import org.luke.jwin.app.file.UrlProtocolAssociation;
 import org.luke.jwin.app.layout.JwinUi;
 import org.luke.jwin.app.param.JdkParam;
+import org.luke.jwin.local.LocalStore;
 
 import javafx.application.Platform;
 import javafx.stage.DirectoryChooser;
@@ -53,51 +56,64 @@ public class JwinActions {
 		fc = new DirectoryChooser();
 	}
 
-	public void run() {
+	private void preRun() {
 		List<File> cp = config.getClasspath().getFiles();
 
 		if (cp.isEmpty()) {
-			error("Missing classpath", "You didn't add any classpath folders");
+			error("missing_cp_head", "missing_cp_body");
 			return;
 		}
 
 		if (config.getMainClass().getValue() == null) {
-			config.logStd("main class was not set, attempting to set automatically...");
+			config.separate();
+			config.logStd("mc_auto_attempt");
 			Map<String, File> mcs = config.getMainClass().listMainClasses();
 
 			if (mcs.size() == 1) {
 				Map.Entry<String, File> mc = mcs.entrySet().iterator().next();
-				config.logStd("setting the main class to " + mc.getValue());
+				config.logStd(Locale.key("mc_auto_set", "class", mc.getKey()));
 				config.getMainClass().set(mc);
 			} else {
-				error("Main class required", "You didn't specify the main class for your application");
+				error("mc_required_head", "mc_required_body");
 				return;
 			}
 		}
 
 		if (!config.getClasspath().isValidMainClass(config.getMainClass().getValue().getValue())) {
-			error("invalid mainClass",
-					"The main class you selected doesn't belong in any of your classpath entries, are you sure you didn't remove it?");
+			error("mc_invalid_head", "mc_invalid_body");
 			return;
 		}
 
 		File dk = config.getJdk().getValue();
 
 		if (dk == null) {
-			config.logStd("jdk was not set, attempting to detect from system...");
-			List<File> fs = JdkParam.detectJdkCache();
-			if (!fs.isEmpty()) {
-				File f = fs.get(0);
-				final Long key = new Random().nextLong();
-				config.getJdk().set(f, " (found in your system)", () -> {
-					config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");
-					Platform.exitNestedEventLoop(key, null);
+			config.separate();
+			config.logStd("jdk was not set");
+
+			File defJdk = new File(LocalStore.getDefaultJdk());
+			if (defJdk.exists()) {
+				Semaphore s = new Semaphore(0);
+				config.getJdk().set(defJdk, "", () -> {
+					config.logStd("using default jdk : " + config.getJdk().getVersion());
+					s.release();
 				});
-				Platform.enterNestedEventLoop(key);
+				s.acquireUninterruptibly();
 			} else {
-				error("Missing Jdk", "You didn't select the jdk to compile your application");
-				return;
+				List<File> fs = JdkParam.detectJdkCache();
+				if (!fs.isEmpty()) {
+					File f = fs.get(0);
+					Semaphore s = new Semaphore(0);
+					config.getJdk().set(f, " (found in your system)", () -> {
+						config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");
+						s.release();
+					});
+					s.acquireUninterruptibly();
+				} else {
+					error("Missing Jdk", "You didn't select the jdk to compile your application");
+					return;
+				}
 			}
+			config.separate();
 		}
 
 		if (!config.getJdk().isJdk()) {
@@ -109,18 +125,34 @@ public class JwinActions {
 		File rt = config.getJre().getValue();
 
 		if (rt == null) {
-			config.logStd("jre was not set, attempting to generate from jdk using jlink...");
-			final Long key = new Random().nextLong();
-			config.getDependencies().resolve(config.getClasspath()::getPom, config, false, () -> {
-				Platform.exitNestedEventLoop(key, null);
-			});
-			Platform.enterNestedEventLoop(key);
+			config.separate();
+			config.logStd("jre was not set, using the selected jdk to run");
+			config.logStd("\tconsider generating a minimal jre with jlink before building the installer");
+			config.logStd("\tas packing a jdk with the installer tremendously increases the package size");
+			config.separate();
 
-			final Long key2 = new Random().nextLong();
-			config.getJre().generateFromJdk(ps, config, false, () -> {
-				Platform.exitNestedEventLoop(key2, null);
+			List<File> jars = config.getDependencies().getJars();
+			boolean rereso = jars.isEmpty();
+			for (File jar : jars) {
+				if (!jar.exists()) {
+					rereso = true;
+					break;
+				}
+			}
+
+			if (rereso) {
+				Semaphore s = new Semaphore(0);
+				config.getDependencies().resolve(config.getClasspath().getRoot(), (r) -> {
+					s.release();
+				});
+				s.acquireUninterruptibly();
+			}
+
+			Semaphore s = new Semaphore(0);
+			config.getJre().set(config.getJdk().getValue(), () -> {
+				s.release();
 			});
-			Platform.enterNestedEventLoop(key2);
+			s.acquireUninterruptibly();
 
 			rt = config.getJre().getValue();
 			if (rt == null) {
@@ -153,46 +185,44 @@ public class JwinActions {
 		}
 
 		config.disable(true, false);
+
+		preBuild = new File(System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
+		preBuild.mkdir();
+
+		config.setState("copying_dependencies");
+		File preBuildLibs = null;
+		try {
+			preBuildLibs = config.getDependencies().copy(preBuild, config::setProgress);
+		} catch (IOException e2) {
+			copyDependenciesFailure();
+			config.onErr();
+			return;
+		}
+
+		config.setState("copying_runtime");
+		config.getJre().copy(preBuild, config::setProgress);
+
+		config.setState("compiling_source_code");
+		try {
+			config.getClasspath().compile(preBuild, preBuildLibs, config.getJdk().getValue(),
+					config.getMainClass().getValue(), config::incrementProgress, config.getMainClass()::setAltMain);
+		} catch (IllegalStateException x) {
+			compileFailure();
+			config.onErr();
+			return;
+		}
+
+		config.setState("copying_resources");
+		config.getClasspath().copyRes(preBuild, config::setProgress);
+	}
+
+	public void run() {
 		new Thread(() -> {
-			config.logStd("creating temp folder");
-			preBuild = new File(System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
-			preBuild.mkdir();
-
-			deleteDirOnShutdown(preBuild);
-
-			config.logStd("Copying dependencies to the temp folder");
-			config.setState("Copying dependencies");
-			File preBuildLibs = null;
-			try {
-				preBuildLibs = config.getDependencies().copy(preBuild, config::setProgress);
-			} catch (IOException e2) {
-				copyDependenciesFailure();
-				config.onErr();
-				return;
-			}
-
-			config.logStd("Copying java runtime...");
-			config.setState("Copying runtime");
-			config.getJre().copy(preBuild, config::setProgress);
-
-			config.logStd("Compiling source code...");
-			config.setState("Compiling source code");
-			try {
-				config.getClasspath().compile(preBuild, preBuildLibs, config.getJdk().getValue(),
-						config.getMainClass().getValue(), config::incrementProgress, config.getMainClass()::setAltMain);
-			} catch (IllegalStateException x) {
-				compileFailure();
-				config.onErr();
-				return;
-			}
-
-			config.logStd("Copying resources...");
-			config.setState("Copying resources");
-			config.getClasspath().copyRes(preBuild, config::setProgress);
+			preRun();
 
 			config.setProgress(-1);
-			config.setState("Running...");
-			config.logStd("Running your project");
+			config.logStd("running_proj");
+			config.setState("running");
 
 			StringBuilder errBuilder = new StringBuilder();
 
@@ -235,7 +265,7 @@ public class JwinActions {
 				});
 			}
 
-			config.logStd("your project is running");
+			config.logStd("proj_running");
 
 			config.run(p, showLog, errBuilder);
 		}).start();
@@ -250,29 +280,9 @@ public class JwinActions {
 			return;
 		}
 
-		ButtonType useDefault = ButtonType.USE_DEFAULT;
-		ButtonType select = ButtonType.SELECT_NOW;
 		if (config.getIcon().getValue() == null || !config.getIcon().getValue().exists()) {
-			contin[0] = false;
-			alert("Missing icon", "you didn't select an icon for your app", AlertType.INFO, res -> {
-				if (res.equals(select)) {
-					config.getIcon().select();
-					if (config.getIcon().getValue() != null) {
-						contin[0] = true;
-					}
-				} else if (res.equals(useDefault)) {
-					config.getIcon().set(new File(
-							URLDecoder.decode(getClass().getResource("/def.ico").getFile(), Charset.defaultCharset())));
-					if (config.getIcon().getValue() != null) {
-						contin[0] = true;
-					}
-				}
-
-			}, useDefault, select, ButtonType.CANCEL);
-		}
-
-		if (!contin[0]) {
-			return;
+			config.getIcon().set(new File(
+					URLDecoder.decode(getClass().getResource("/def.ico").getFile(), Charset.defaultCharset())));
 		}
 
 		if (config.getAppName().getValue().isBlank()) {
@@ -281,41 +291,36 @@ public class JwinActions {
 		}
 
 		if (config.getVersion().getValue().isBlank()) {
-			error("Missing app version", "The application version field is required");
-			return;
+			config.getVersion().setValue("0.0.1");
 		}
 
 		if (config.getGuid().getValue() == null || config.getGuid().getValue().isBlank()) {
 			String guid = UUID.randomUUID().toString();
-			config.logStd("a guid was generated for your project : " + guid);
+			config.logStd(Locale.key("guid_generated", "guid", guid));
 			config.getGuid().setValue(guid);
-//			error("Missing app GUID",
-//					"click generate to generate a new GUID, it is recommended to save the project for future builds so you can use the same GUID");
-//			return;
-		}
-
-		if (!preBuild.exists()) {
-			error("Temp files can't be found",
-					"Pre Build files were deleted or not correctly generated, try running again");
-			return;
 		}
 
 		// Check for warnings
 		if (config.getJre().isJdk()) {
-			warn("Using JDK as a runtime", "not recommended unless required by your app (increases package size)");
+			boolean[] cont = new boolean[] { true };
+			alert("using_jdk_as_runtime", "not_recommended_warning", AlertType.ERROR, res -> {
+				if (res != ButtonType.YES) {
+					cont[0] = false;
+				}
+			}, ButtonType.CANCEL, ButtonType.YES);
+			if (!cont[0])
+				return;
 		}
 
 		if (config.getFileInUse() == null) {
-			alert("Do you want to save the project before building ?",
-					"It is recommended to save this project so you can use the same GUID when you build it again, do not use the same GUID with different projects",
-					AlertType.CONFIRM, res -> {
-						if (res.equals(ButtonType.YES)) {
-							if (config.saveAs())
-								config.logStd("project saved.");
-						} else if (res.equals(ButtonType.CANCEL)) {
-							contin[0] = false;
-						}
-					});
+			alert("save_before_building", "save_project_recommendation", AlertType.CONFIRM, res -> {
+				if (res.equals(ButtonType.YES)) {
+					if (config.saveAs())
+						config.logStd("project_saved");
+				} else if (res.equals(ButtonType.CANCEL)) {
+					contin[0] = false;
+				}
+			});
 		} else {
 			JWinProject exported = config.export();
 			List<String> diffs = exported.compare(config.getProjectInUse());
@@ -324,8 +329,7 @@ public class JwinActions {
 				StringBuilder diffStr = new StringBuilder();
 				diffs.forEach(diff -> diffStr.append("\t").append(diff).append("\n"));
 
-				alert("Do you want to save the changes you made ?",
-						"You made changes to the following properties : \n\t" + diffStr.toString().trim(),
+				alert("save_changes_head", Locale.key("save_changes_body", "diffStr", diffStr.toString().trim()),
 						AlertType.CONFIRM, res -> {
 							if (res.equals(ButtonType.YES)) {
 								FileDealer.write(exported.serialize(), config.getFileInUse());
@@ -345,12 +349,11 @@ public class JwinActions {
 		File preSaveTo = config.getFileInUse() == null ? null : config.getFileInUse().getParentFile();
 		if (preSaveTo == null) {
 			contin[0] = false;
-			alert("Select output directory", "select the directory where you want to save the generated installer",
-					AlertType.INFO, res -> {
-						if (res.equals(ButtonType.OK)) {
-							contin[0] = true;
-						}
-					}, ButtonType.OK);
+			alert("select_output_directory", "select_directory_description", AlertType.INFO, res -> {
+				if (res.equals(ButtonType.OK)) {
+					contin[0] = true;
+				}
+			}, ButtonType.OK);
 			if (!contin[0]) {
 				return;
 			}
@@ -362,6 +365,8 @@ public class JwinActions {
 		if (saveTo != null) {
 			config.disable(true, true);
 			new Thread(() -> {
+				preRun();
+
 				config.setState("Generating launcher");
 
 				File preBuildBat = new File(
@@ -522,12 +527,11 @@ public class JwinActions {
 	}
 
 	public static void compileFailure() {
-		error("Failed to compile your code",
-				"please check your code and classpath settings for potential errors, also don't forget to resolve dependencies");
+		error("failed_to_compile_head", "failed_to_compile_body");
 	}
 
 	public static void copyDependenciesFailure() {
-		error("Failed to copy dependencies", "the referenced jar files might have been deleted, try resolving again");
+		error("failed_copy_deps_head", "failed_copy_deps_body");
 	}
 
 	public static void warn(String head, String content) {
@@ -585,10 +589,6 @@ public class JwinActions {
 		alert(head, content, type, onRes, null, types);
 	}
 
-	public static void deleteDirOnShutdown(File dir) {
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteDir(dir)));
-	}
-
 	public static void deleteDir(File dir) {
 		try (Stream<Path> stream = Files.walk(dir.toPath())) {
 			stream.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
@@ -598,6 +598,9 @@ public class JwinActions {
 	}
 
 	public static void copyDirCont(File src, File dest, Runnable onItemCopied) {
+		if (!dest.exists()) {
+			dest.mkdir();
+		}
 		for (File file : src.listFiles()) {
 			Path relative = src.toPath().relativize(file.toPath());
 			File target = Paths.get(dest.getAbsolutePath(), relative.toString()).toFile();

@@ -57,47 +57,42 @@ public class Credits extends BasicOverlay {
 		removeSubHead();
 		removeCancel();
 
-		head.setKey("About JWin");
+		head.setKey("about_jwin");
 
-		version = new Text("1.2.1", new Font("monospace", 16));
+		version = new Text("1.2.2", new Font("monospace", 16));
 
-		copyRighted = new Text("Copyright " + (char) 169 + " 2022\nThis product is copyrighted by Zinelabidine Teyar", new Font(12));
+		copyRighted = new Label(ps.getWindow(), "copyright", new Font(12));
 		copyRighted.setLineSpacing(5);
 		copyRighted.setTextAlignment(TextAlignment.CENTER);
 
-		license1 = new MultiText(ps.getWindow(),
-				"This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.",
-				new Font(12));
+		license1 = new MultiText(ps.getWindow(), "this_program_license", new Font(12));
 		license1.setLineSpacing(3);
 
-		license2 = new MultiText(ps.getWindow(),
-				"You should have received a copy of the GNU General Public License along with this program. If not, see ",
-				new Font(12));
-		license2.addLink("GNU General Public License v3.0", new Font(12));
+		license2 = new MultiText(ps.getWindow(), "you_should_have_received_a_copy", new Font(12));
+		license2.addKeyedLink("gpl_3", new Font(12));
 		license2.setLineSpacing(3);
-		license2.setAction(1, () -> ps.getWindow().openLink("https://www.gnu.org/licenses/gpl-3.0.txt"));
+		license2.setAction(() -> ps.getWindow().openLink("https://www.gnu.org/licenses/gpl-3.0.txt"));
 
-		thirdParties = new MultiText(ps.getWindow(), "JWin uses and heavily relies on ", new Font(14));
-		thirdParties.addLink("other open-source projects");
+		thirdParties = new MultiText(ps.getWindow(), "jwin_uses_and_relies_on", new Font(14));
+		thirdParties.addSpace();
+		thirdParties.addKeyedLink("other_opensource_projects");
 
-		madeBy = new MultiText(ps.getWindow(), "Developed and maintained by", new Font(14));
+		madeBy = new MultiText(ps.getWindow(), "developed_and_maintained_by", new Font(14));
 
 		VBox about = new VBox(10, copyRighted, new Separator(ps.getWindow(), Orientation.HORIZONTAL), license1,
 				license2, new Separator(ps.getWindow(), Orientation.HORIZONTAL), thirdParties,
 				new Separator(ps.getWindow(), Orientation.HORIZONTAL), madeBy, new Me(ps.getWindow()));
 
-		
 		back = new Back(ps.getWindow());
-		
 
 		VBox projects = new VBox(15, back,
-				new Project(ps.getWindow(), "Apache Maven", "maven", "https://maven.apache.org/", "Apache License 2.0",
+				new Project(ps.getWindow(), "Apache Maven", "maven", "https://maven.apache.org/", "apache_lic_2",
 						"https://maven.apache.org/ref/3.0/license.html"),
 				new Project(ps.getWindow(), "inno Setup", "innosetup", "https://jrsoftware.org/isinfo.php",
-						"Modified BSD license", "https://jrsoftware.org/files/is/license.txt"),
+						"modified_bsd_lic", "https://jrsoftware.org/files/is/license.txt"),
 				new Project(ps.getWindow(), "Bat To Exe Converter", "b2e", "https://github.com/99fk", null, null),
 				new Project(ps.getWindow(), "thumbnailator", "coobird", "https://github.com/coobird/thumbnailator",
-						"MIT License", "https://github.com/coobird/thumbnailator/blob/master/LICENSE"));
+						"mit_lic", "https://github.com/coobird/thumbnailator/blob/master/LICENSE"));
 		projects.setOpacity(0);
 		projects.setDisable(true);
 		projects.setMouseTransparent(true);
@@ -111,10 +106,10 @@ public class Credits extends BasicOverlay {
 					new KeyValue(about.translateXProperty(), -root.getWidth(), SplineInterpolator.EASE_BOTH)));
 
 			projects.setOpacity(1);
-			
+
 			projects.setMouseTransparent(false);
 			projects.setDisable(false);
-			
+
 			animation.setOnFinished(e -> {
 				about.setMouseTransparent(true);
 				about.setDisable(true);
@@ -132,7 +127,7 @@ public class Credits extends BasicOverlay {
 
 			about.setMouseTransparent(false);
 			about.setDisable(false);
-			
+
 			animation.setOnFinished(e -> {
 				projects.setMouseTransparent(true);
 				projects.setDisable(true);
@@ -141,7 +136,7 @@ public class Credits extends BasicOverlay {
 			animation.playFromStart();
 		};
 
-		thirdParties.setAction(1, showProjects);
+		thirdParties.setAction(showProjects);
 		back.setAction(hideProjects);
 
 		center.getChildren().setAll(preCenter);
@@ -152,31 +147,31 @@ public class Credits extends BasicOverlay {
 		addToBottom(0, icon);
 
 		done.setAction(this::hide);
-		done.setKey("Close");
+		done.setKey("close");
 
 		about.setAlignment(Pos.CENTER);
 
 		applyStyle(ps.getWindow().getStyl());
 	}
-	
+
 	private static class Back extends HBox implements Styleable {
 
 		private ColorIcon backIcon;
 		private Label backLab;
-		
+
 		private Label thirdParties;
 
 		private Runnable action;
-		
+
 		public Back(Window window) {
 			super(10);
-			
+
 			setAlignment(Pos.CENTER_LEFT);
 			setPadding(new Insets(10));
 			setCursor(Cursor.HAND);
-			
-			thirdParties = new Label(window, "Third-Party Software", new Font(Font.DEFAULT_FAMILY_MEDIUM, 14));
-			
+
+			thirdParties = new Label(window, "third_party_software", new Font(Font.DEFAULT_FAMILY_MEDIUM, 14));
+
 			backIcon = new ColorIcon("back", 18, 16);
 			backLab = new Label(window, "back", new Font(12));
 
@@ -184,9 +179,9 @@ public class Credits extends BasicOverlay {
 
 			setOnMouseClicked(this::fire);
 			setOnKeyPressed(this::fire);
-			
+
 			getChildren().addAll(backIcon, backLab, new ExpandingHSpace(), thirdParties);
-			
+
 			applyStyle(window.getStyl());
 		}
 
@@ -210,7 +205,7 @@ public class Credits extends BasicOverlay {
 		public void setAction(Runnable action) {
 			this.action = action;
 		}
-		
+
 		@Override
 		public void applyStyle(Style style) {
 			backIcon.setFill(style.getTextNormal());
@@ -219,7 +214,7 @@ public class Credits extends BasicOverlay {
 			backgroundProperty().bind(
 					Bindings.when(hoverProperty()).then(Backgrounds.make(style.getBackgroundModifierSelected(), 7.0))
 							.otherwise(Backgrounds.make(style.getBackgroundModifierAccent(), 7.0)));
-			
+
 			NodeUtils.focusBorder(this, style.getTextLink(), 7.0);
 		}
 
@@ -227,7 +222,7 @@ public class Credits extends BasicOverlay {
 		public void applyStyle(ObjectProperty<Style> style) {
 			Styleable.bindStyle(this, style);
 		}
-		
+
 	}
 
 	private static class Project extends VBox implements Styleable {
@@ -255,11 +250,12 @@ public class Credits extends BasicOverlay {
 			Link website = new Link(window, websiteString, new Font(12));
 			website.setAction(() -> window.openLink(websiteString));
 
-			license = new MultiText(window, licenseName == null ? "Unknow license type" : "Licensed under ",
+			license = new MultiText(window, licenseName == null ? "unknown_license_type" : "licensed_under",
 					new Font(12));
 			if (licenseName != null) {
-				license.addLink(licenseName, new Font(12));
-				license.setAction(1, () -> window.openLink(licenselink));
+				license.addSpace();
+				license.addKeyedLink(licenseName, new Font(12));
+				license.setAction(() -> window.openLink(licenselink));
 			}
 
 			topLeft.getChildren().addAll(name, website, license);
@@ -349,8 +345,6 @@ public class Credits extends BasicOverlay {
 		license2.setFill(style.getTextNormal());
 		thirdParties.setFill(style.getTextNormal());
 		madeBy.setFill(style.getTextNormal());
-
-		
 
 		super.applyStyle(style);
 	}

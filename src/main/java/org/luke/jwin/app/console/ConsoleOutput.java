@@ -31,7 +31,7 @@ public class ConsoleOutput extends VBox implements Styleable {
 	ConsoleToggleAction autoScroll;
 
 	ArrayList<ConsoleLine> allLines;
-	
+
 	private ConsoleAction stop;
 
 	public ConsoleOutput(Window win) {
@@ -50,7 +50,7 @@ public class ConsoleOutput extends VBox implements Styleable {
 		sc.setMinWidth(0);
 		sc.maxWidthProperty().bind(widthProperty().subtract(10));
 
-		wrap = new ConsoleToggleAction(win, "wrap", "Soft wrap");
+		wrap = new ConsoleToggleAction(win, "wrap", "soft_wrap");
 		wrap.enabledProperty().addListener((obs, ov, nv) -> {
 			if (ov.booleanValue() != nv.booleanValue()) {
 				allLines.forEach(l -> {
@@ -59,19 +59,19 @@ public class ConsoleOutput extends VBox implements Styleable {
 			}
 		});
 
-		autoScroll = new ConsoleToggleAction(win, "auto-scroll", "Auto Scroll On output");
+		autoScroll = new ConsoleToggleAction(win, "auto-scroll", "auto_scroll_on_output");
 		autoScroll.setEnabled(true);
 
-		ConsoleAction erase = new ConsoleAction(win, "erase", "Clear All");
-		ConsoleAction gup = new ConsoleAction(win, "scroll-up", "Go Up");
-		ConsoleAction gdown = new ConsoleAction(win, "scroll-up", "Go Down");
+		ConsoleAction erase = new ConsoleAction(win, "erase", "clear_all");
+		ConsoleAction gup = new ConsoleAction(win, "scroll-up", "go_up");
+		ConsoleAction gdown = new ConsoleAction(win, "scroll-up", "go_down");
 		gdown.setRotate(180);
 
 		erase.setDisable(true);
 		lines.getChildren().addListener((ListChangeListener<? super Node>) c -> {
 			erase.setDisable(allLines.isEmpty());
 		});
-		
+
 		erase.setAction(() -> {
 			allLines.clear();
 			lines.getChildren().clear();
@@ -80,31 +80,27 @@ public class ConsoleOutput extends VBox implements Styleable {
 		gup.setAction(() -> sc.getScrollBar().positionProperty().set(0));
 		gdown.setAction(() -> sc.getScrollBar().positionProperty().set(1));
 
-		ConsoleToggleAction consIn = new ConsoleToggleAction(win, "consin", "Display input lines");
+		ConsoleToggleAction consIn = new ConsoleToggleAction(win, "consin", "display_input_lines");
 		consIn.setEnabled(true);
-		ConsoleToggleAction consOut = new ConsoleToggleAction(win, "consout", "Display output lines");
+		ConsoleToggleAction consOut = new ConsoleToggleAction(win, "consout", "display_output_lines");
 		consOut.setEnabled(true);
-		ConsoleToggleAction consErr = new ConsoleToggleAction(win, "conserr", "Display error lines");
+		ConsoleToggleAction consErr = new ConsoleToggleAction(win, "conserr", "display_error_lines");
 		consErr.setEnabled(true);
-		
-		stop = new ConsoleAction(win, "stop", "Stop running app");
-		stop.setDisable(true);
 
+		stop = new ConsoleAction(win, "stop", "stop_running_app");
+		stop.setDisable(true);
 
 		consIn.enabledProperty().addListener((obs, ov, nv) -> {
 			refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
 		});
 
-
 		consOut.enabledProperty().addListener((obs, ov, nv) -> {
 			refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
 		});
 
-
 		consErr.enabledProperty().addListener((obs, ov, nv) -> {
 			refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
 		});
-
 
 		HBox top = new HBox(5, new ExpandingHSpace(), consIn, consOut, consErr,
 				new Separator(win, Orientation.VERTICAL), wrap, autoScroll, new Separator(win, Orientation.VERTICAL),
@@ -114,21 +110,22 @@ public class ConsoleOutput extends VBox implements Styleable {
 
 		applyStyle(win.getStyl());
 	}
-	
+
 	public void setOnStop(Runnable onStop) {
 		stop.setAction(onStop);
 		stop.setDisable(onStop == null);
 	}
-	
+
 	public void refreshLines(boolean input, boolean output, boolean err) {
 		lines.getChildren().clear();
-		
+
 		HashMap<ConsoleLineType, Boolean> enabled = new HashMap<>();
 		enabled.put(ConsoleLineType.IN, input);
 		enabled.put(ConsoleLineType.STDOUT, output);
 		enabled.put(ConsoleLineType.ERROUT, err);
 		allLines.forEach(line -> {
-			if(enabled.get(line.getType())) lines.getChildren().add(line);
+			if (enabled.get(line.getType()))
+				lines.getChildren().add(line);
 		});
 	}
 
@@ -140,6 +137,14 @@ public class ConsoleOutput extends VBox implements Styleable {
 
 		if (autoScroll.isEnabled()) {
 			sc.getScrollBar().positionProperty().set(1);
+		}
+	}
+
+	public void overrideLast(String content) {
+		if (allLines.isEmpty()) {
+			addOutput(content);
+		} else {
+			allLines.get(allLines.size() - 1).setKey(content);
 		}
 	}
 

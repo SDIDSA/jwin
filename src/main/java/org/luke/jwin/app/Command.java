@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.function.Consumer;
 
+import org.luke.gui.exception.ErrorHandler;
+
 public class Command {
 	private String[] command;
 
@@ -66,7 +68,7 @@ public class Command {
 			input.append(System.lineSeparator());
 			input.flush();
 		} catch (IOException e) {
-			System.out.println("failed to write to process input due to " + e.getMessage());
+			ErrorHandler.handle(e, "write to process input");
 		}
 	}
 	
@@ -104,7 +106,6 @@ public class Command {
 							if (inputHandler != null)
 								inputHandler.accept(fline);
 						});
-						System.out.println("Std : " + line);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -123,7 +124,6 @@ public class Command {
 							if (errorHandler != null)
 								errorHandler.accept(fline);
 						});
-						System.out.println("Err : " + line);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();

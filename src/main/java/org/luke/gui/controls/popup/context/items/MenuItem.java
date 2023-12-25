@@ -100,6 +100,10 @@ public class MenuItem extends HBox implements Styleable {
 		this(menu, key, null, false);
 	}
 	
+	public MenuItem(ContextMenu menu, String text, boolean b) {
+		this(menu, text, null, b);
+	}
+
 	public void setAction(Runnable action) {
 		this.action = action;
 	}

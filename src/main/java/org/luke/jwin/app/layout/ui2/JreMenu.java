@@ -10,7 +10,7 @@ import org.luke.jwin.app.layout.JwinUi;
 public class JreMenu extends MenuMenuItem {
 
 	public JreMenu(ContextMenu menu, JwinUi config) {
-		super(menu, "JRE (runs your app)");
+		super(menu, "jre_pack");
 		
 		MenuItem valItem = new MenuItem(getSubMenu(), "");
 		valItem.setDisable(true);
@@ -27,17 +27,17 @@ public class JreMenu extends MenuMenuItem {
 
 		getSubMenu().separate();
 		
-		addMenuItem("Generate with JLink", () -> {
+		addMenuItem("generate_with_jlink", () -> {
 			menu.hide();
 			config.getJre().generateFromJdk(menu.getOwner(), config);
 		});
 		
-		addMenuItem("Browse Archive", () -> {
+		addMenuItem("browse_archive", () -> {
 			menu.hide();
 			config.getJre().browseArchive();
 		});
 		
-		addMenuItem("Browse Folder", () -> {
+		addMenuItem("browse_folder", () -> {
 			menu.hide();
 			config.getJre().browseDir();
 		});

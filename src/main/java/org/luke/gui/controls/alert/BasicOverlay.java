@@ -45,7 +45,7 @@ public abstract class BasicOverlay extends AbstractOverlay {
 	}
 
 	protected BasicOverlay(Page session) {
-		this(session, 440);
+		this(session, 460);
 	}
 
 	@Override

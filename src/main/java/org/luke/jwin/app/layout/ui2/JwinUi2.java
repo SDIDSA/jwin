@@ -1,8 +1,9 @@
 package org.luke.jwin.app.layout.ui2;
 
+import org.luke.gui.controls.input.InputIconButton;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.popup.Direction;
-import org.luke.gui.controls.popup.tooltip.Tooltip;
+import org.luke.gui.controls.popup.tooltip.TextTooltip;
 import org.luke.gui.controls.space.Separator;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -35,8 +36,8 @@ public class JwinUi2 extends JwinUi implements Styleable {
 	public JwinUi2(Page ps) {
 		super(ps);
 
-		MultiButton run = new MultiButton(ps.getWindow(), "Run");
-		run.addAction("Build installer", () -> {
+		MultiButton run = new MultiButton(ps.getWindow(), "run");
+		run.addAction("build_installer", () -> {
 			if (onCompile != null) {
 				logStd("building installer...");
 				onCompile.run();
@@ -49,7 +50,7 @@ public class JwinUi2 extends JwinUi implements Styleable {
 			}
 		});
 
-		Button settings = new Button(ps.getWindow(), "Settings", 100, 40);
+		Button settings = new Button(ps.getWindow(), "settings", 100, 40);
 
 		SettingsMenu settingsMen = new SettingsMenu(ps.getWindow(), this);
 
@@ -59,12 +60,20 @@ public class JwinUi2 extends JwinUi implements Styleable {
 		HBox.setHgrow(publisher, Priority.SOMETIMES);
 
 		IconSetting icon = new IconSetting(ps.getWindow(), this.icon::select);
-		
-		Tooltip.install(icon, Direction.DOWN, "Click to select app icon");
+
+		TextTooltip.install(icon, Direction.UP, "select_app_icon", 15, 15, true);;
 
 		this.icon.setOnSet(icon::set);
 
-		top = new HBox(10, icon, appName, version, publisher, settings, run);
+		InputIconButton imp = new InputIconButton(ps.getWindow(), "java", 24, "import_java_project", () -> {
+			importJavaProject(ps.getWindow());
+		});
+
+		InputIconButton impJw = new InputIconButton(ps.getWindow(), "jwin", 24, "import_jwin_project", () -> {
+			importProject(ps.getWindow());
+		});
+
+		top = new HBox(10, icon, appName, imp, impJw, version, publisher, settings, run);
 		top.setAlignment(Pos.BOTTOM_CENTER);
 
 		logs = new ConsoleOutput(ps.getWindow());
@@ -107,7 +116,7 @@ public class JwinUi2 extends JwinUi implements Styleable {
 	@Override
 	public void postImport() {
 		top.setDisable(false);
-		logStd("your project is ready.");
+		logStd("project_ready");
 	}
 
 	@Override
@@ -161,6 +170,13 @@ public class JwinUi2 extends JwinUi implements Styleable {
 	public void logErr(String line) {
 		Platform.runLater(() -> {
 			logs.addError(line);
+		});
+	}
+
+	@Override
+	public void logStdOver(String line) {
+		Platform.runLater(() -> {
+			logs.overrideLast(line);
 		});
 	}
 

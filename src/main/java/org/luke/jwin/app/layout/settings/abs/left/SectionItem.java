@@ -29,6 +29,21 @@ public class SectionItem extends StackPane implements Styleable {
 	private static HashMap<Class<? extends SettingsContent>, SettingsContent> cache = new HashMap<>();
 	private static SectionItem selected;
 
+	private synchronized static SettingsContent getContent(Settings settings, Class<? extends SettingsContent> contentClass) {
+		SettingsContent found = cache.get(contentClass);
+		if (found == null) {
+			try {
+				found = contentClass.getConstructor(Settings.class).newInstance(settings);
+				cache.put(contentClass, found);
+			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException | NoSuchMethodException | SecurityException x) {
+				ErrorHandler.handle(x, "create settings content for " + contentClass.getSimpleName());
+				x.printStackTrace();
+			}
+		}
+		return found;
+	}
+
 	public static void clearCache() {
 		cache.clear();
 		selected = null;
@@ -54,13 +69,11 @@ public class SectionItem extends StackPane implements Styleable {
 		setFocusTraversable(true);
 
 		setOnMouseClicked(e -> {
-			if (action != null) {
-				action.run();
-			}
+			fire();
 		});
 		setOnKeyPressed(e -> {
-			if (e.getCode().equals(KeyCode.SPACE) && action != null) {
-				action.run();
+			if (e.getCode().equals(KeyCode.SPACE)) {
+				fire();
 			}
 		});
 
@@ -75,21 +88,13 @@ public class SectionItem extends StackPane implements Styleable {
 
 		setOnSelected(() -> {
 			if (contentClass != null) {
-				SettingsContent found = cache.get(contentClass);
-				if (found == null) {
-					try {
-						found = contentClass.getConstructor(Settings.class).newInstance(settings);
-						cache.put(contentClass, found);
-					} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
-							| InvocationTargetException | NoSuchMethodException | SecurityException x) {
-						ErrorHandler.handle(x, "create settings content for " + contentClass.getSimpleName());
-						x.printStackTrace();
-					}
-				}
-
-				settings.loadContent(found);
+				settings.loadContent(getContent(settings, contentClass));
 			}
 		});
+		
+		new Thread(() -> {
+			getContent(settings, contentClass);
+		}).start();
 	}
 
 	public SectionItem(Settings settings, String key, Runnable onAction) {
@@ -129,12 +134,21 @@ public class SectionItem extends StackPane implements Styleable {
 		return lab;
 	}
 
+	public String getKey() {
+		return lab.getKey();
+	}
+
 	private boolean isSelected() {
 		return selectedProperty.get();
 	}
 
 	private void setSelected(boolean selected) {
 		selectedProperty.set(selected);
+	}
+
+	public void fire() {
+		if (action != null)
+			action.run();
 	}
 
 	@Override

@@ -24,7 +24,7 @@
 --channels-default: #6a7480;
 --deprecated-text-input-bg: rgba(79,84,92,0.02);
 --deprecated-text-input-border: rgba(79,84,92,0.3);
---deprecated-text-input-border-hover: #b9bbbe;
+--deprecated-text-input-border-hover: rgba(79,84,92,0.5);
 --close-icon-active: #f6f6f7;
 --secondary-button-back: #747f8d;
 --link-button-text: #747f8d;

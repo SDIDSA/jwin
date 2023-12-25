@@ -16,7 +16,7 @@ public class IconParam extends Param {
 	
 	private FileChooser fc;
 	public IconParam(Window ps) {
-		super(ps, "Executable Icon");
+		super(ps, "executable_icon");
 
 		fc = new FileChooser();
 		fc.getExtensionFilters().add(new ExtensionFilter("icon", "*.ico"));

@@ -10,6 +10,8 @@ import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.layout.JwinUi;
 import org.luke.jwin.app.layout.JwinUi1;
+import org.luke.jwin.app.layout.ui2.JwinUi2;
+import org.luke.jwin.local.LocalStore;
 
 import javafx.beans.property.ObjectProperty;
 
@@ -20,10 +22,15 @@ public class JwinHome extends Page {
 	protected JwinHome(Window window) {
 		super(window, new Dimension(500 * 2 + 15 * 4 + 30, 600));
 
-		
+		setConfig(LocalStore.getUiLayout().equals("sim") ? JwinUi2.class : JwinUi1.class);
 	}
 	
-	public void setConfig(Class<? extends JwinUi> uiType) {
+	public void setUiLayout(String uiLayout) {
+		setConfig(uiLayout.equals("sim") ? JwinUi2.class : JwinUi1.class);
+		LocalStore.setUiLayout(uiLayout);
+	}
+	
+	private void setConfig(Class<? extends JwinUi> uiType) {
 		JwinUi old = config;
 		
 		try {
@@ -50,7 +57,7 @@ public class JwinHome extends Page {
 			getChildren().remove(old);
 			if (old.getFileInUse() != null)
 				config.importProject(old.getFileInUse());
-			else
+			else if(old.getClasspath().getRoot() != null)
 				config.loadProject(old.export());
 		}
 		

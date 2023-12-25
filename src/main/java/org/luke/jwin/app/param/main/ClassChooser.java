@@ -45,7 +45,7 @@ public class ClassChooser extends BasicOverlay {
 		this.classLister = classLister;
 		this.param = param;
 
-		head.setKey("Main class selection");
+		head.setKey("main_class_selection");
 
 		MainClassSearch search = new MainClassSearch(ps.getWindow());
 
@@ -110,7 +110,6 @@ public class ClassChooser extends BasicOverlay {
 	
 	public Map<String, File> listMainClasses() {
 		Map<String, File> classes = classLister.get();
-		System.out.println(classes);
 		HashMap<String, File> res = new HashMap<>();
 		
 		classes.forEach((e, file) -> {

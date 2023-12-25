@@ -36,7 +36,7 @@ public class FileUtils {
 				sb.append(line);
 			}
 		} catch (Exception x) {
-			ErrorHandler.handle(x, "reading file " + path);
+			ErrorHandler.handle(x, "read file " + path);
 		}
 
 		return sb.toString();
@@ -57,7 +57,7 @@ public class FileUtils {
 				sb.append(line);
 			}
 		} catch (Exception x) {
-			ErrorHandler.handle(x, "reading file " + file.getAbsolutePath());
+			ErrorHandler.handle(x, "read file " + file.getAbsolutePath());
 		}
 
 		return sb.toString();

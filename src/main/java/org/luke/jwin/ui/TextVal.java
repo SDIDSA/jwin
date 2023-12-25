@@ -35,6 +35,14 @@ public class TextVal extends VBox implements Styleable {
 		applyStyle(window.getStyl());
 	}
 
+	public void setPrompt(String prompt) {
+		field.setPrompt(prompt);
+	}
+	
+	public void setKeyedPrompt(String key) {
+		field.setKeyedPrompt(key);
+	}
+
 	public void setAction(Runnable r) {
 		field.setAction(r);
 	}
@@ -45,10 +53,6 @@ public class TextVal extends VBox implements Styleable {
 	
 	public void setEditable(boolean editable) {
 		field.setEditable(editable);
-	}
-
-	public void setPrompt(String prompt) {
-		field.setPrompt(prompt);
 	}
 
 	public void addToBottom(Node node) {

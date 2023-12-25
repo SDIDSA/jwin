@@ -1,9 +1,9 @@
 package org.luke.jwin.app.console;
 
-import org.luke.gui.controls.Font;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.popup.Direction;
-import org.luke.gui.controls.popup.tooltip.Tooltip;
+import org.luke.gui.controls.popup.tooltip.KeyedTooltip;
+import org.luke.gui.controls.popup.tooltip.TextTooltip;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.window.Window;
@@ -24,15 +24,13 @@ public class ConsoleToggleAction extends ColorIcon {
 		
 		enabled = new SimpleBooleanProperty(false);
 		
-		Tooltip tt = new Tooltip(win, tooltip, Direction.UP, 0, 10);
-		tt.setPadding(4);
-		tt.setFont(new Font(14));
+		TextTooltip tt = new KeyedTooltip(win, tooltip, Direction.UP, 15, 15);
 		
 		setCursor(Cursor.HAND);
 		
 		setAction(() -> enabled.set(!enabled.get()));
 		
-		Tooltip.install(this, tt);
+		TextTooltip.install(this, tt);
 		
 		applyStyle(win.getStyl());
 	}

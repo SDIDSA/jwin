@@ -1,5 +1,7 @@
 package org.luke.jwin.app.layout.settings.abs.left;
 
+import java.util.ArrayList;
+
 import org.luke.gui.NodeUtils;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.MultiText;
@@ -20,6 +22,8 @@ public class Section extends VBox implements Styleable {
 
 	private MultiText title;
 	private VBox items;
+	
+	private ArrayList<SectionItem> secItems;
 
 	public Section(Settings settings, String titleKey, boolean first) {
 
@@ -38,6 +42,7 @@ public class Section extends VBox implements Styleable {
 		}
 
 		getChildren().add(items);
+		secItems = new ArrayList<>();
 
 		applyStyle(settings.getWindow().getStyl());
 	}
@@ -52,6 +57,21 @@ public class Section extends VBox implements Styleable {
 
 	public void addItem(SectionItem item) {
 		items.getChildren().add(item);
+		secItems.add(item);
+	}
+	
+	public boolean fire(String match) {
+		for(SectionItem item : secItems) {
+			String k = item.getKey().toLowerCase().trim();
+			String m = match.toLowerCase().trim();
+			
+			if(m.contains(k) || k.contains(m)) {
+				item.fire();
+				return true;
+			}
+		}
+		
+		return false;
 	}
 
 	public Section(Settings settings, String titleKey) {

@@ -3,10 +3,13 @@ package org.luke.jwin.app.layout;
 import java.io.File;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.IntStream;
 
 import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.controls.check.KeyedCheck;
+import org.luke.gui.controls.space.ExpandingVSpace;
+import org.luke.gui.locale.Locale;
 import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.JwinActions;
@@ -28,7 +31,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -68,24 +70,24 @@ public abstract class JwinUi extends StackPane {
 	public JwinUi(Page ps) {
 		this.ps = ps.getWindow();
 
-		classpath = new ClasspathParam(ps.getWindow());
+		classpath = new ClasspathParam(ps.getWindow(), null);
 
 		mainClass = new MainClassParam(ps, classpath::listClasses);
 
 		jdk = new JdkParam(ps.getWindow());
 
-		dependencies = new DependenciesParam(ps.getWindow(), classpath::getPom, this);
+		dependencies = new DependenciesParam(ps.getWindow(), classpath::getRoot, this);
 
 		jre = new JreParam(ps.getWindow(), this);
 
 		icon = new IconParam(ps.getWindow());
 
-		appName = new TextVal(ps.getWindow(), "App name");
-		version = new TextVal(ps.getWindow(), "Version");
-		publisher = new TextVal(ps.getWindow(), "Publisher");
+		appName = new TextVal(ps.getWindow(), "app_name");
+		version = new TextVal(ps.getWindow(), "app_version");
+		publisher = new TextVal(ps.getWindow(), "app_publisher");
 
-		console = new KeyedCheck(ps.getWindow(), "Console", 16);
-		admin = new KeyedCheck(ps.getWindow(), "Admin", 16);
+		console = new KeyedCheck(ps.getWindow(), "console", 16);
+		admin = new KeyedCheck(ps.getWindow(), "admin", 16);
 
 		guid = new TextField(ps.getWindow());
 		guid.setEditable(false);
@@ -95,7 +97,7 @@ public abstract class JwinUi extends StackPane {
 
 		saver = new FileChooser();
 		saver.getExtensionFilters().add(new ExtensionFilter("jWin Project", "*.jwp"));
-		
+
 		dsaver = new DirectoryChooser();
 	}
 
@@ -154,7 +156,7 @@ public abstract class JwinUi extends StackPane {
 	public MoreSettings getMoreSettings() {
 		return moreSettings;
 	}
-	
+
 	public void importProject(Window win) {
 		File loadFrom = saver.showOpenDialog(win);
 		if (loadFrom != null) {
@@ -167,26 +169,27 @@ public abstract class JwinUi extends StackPane {
 		fileInUse = loadFrom;
 		loadProject(JWinProject.deserialize(FileDealer.read(loadFrom)));
 	}
-	
+
 	public void importJavaProject(Window win) {
 		File loadFrom = dsaver.showDialog(win);
 		if (loadFrom != null) {
 			importJavaProject(loadFrom);
 		}
 	}
-	
+
 	private void importJavaProject(File loadFrom) {
 		preImport();
+		fileInUse = null;
 		JWinProject proj = JWinProject.fromJavaProject(loadFrom);
-		System.out.println(proj.serialize());
 		loadProject(proj);
 	}
 
 	public void loadProject(JWinProject project) {
-		logStd("Loading project...");
+		logStd("loading_project");
 		new Thread(() -> {
 			runOnUiThread(Param::clearAll);
 			project.getClasspath().forEach(f -> runOnUiThread(() -> classpath.add(f)));
+			runOnUiThread(() -> classpath.setRoot(project.getRoot()));
 			mainClass.setAltMain(null);
 			runOnUiThread(() -> mainClass.set(project.getMainClass()));
 			runOnUiThread(() -> jdk.set(project.getJdk()));
@@ -195,7 +198,6 @@ public abstract class JwinUi extends StackPane {
 			runOnUiThread(() -> appName.setValue(project.getAppName()));
 			runOnUiThread(() -> version.setValue(project.getAppVersion()));
 			runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
-			System.out.println(project.isConsole());
 			runOnUiThread(() -> console.checkedProperty().set(project.isConsole() != null && project.isConsole()));
 			runOnUiThread(() -> admin.checkedProperty().set(project.isAdmin() != null && project.isAdmin()));
 			runOnUiThread(() -> guid.setValue(project.getGuid()));
@@ -205,9 +207,7 @@ public abstract class JwinUi extends StackPane {
 			runOnUiThread(() -> moreSettings.setUrlProtocolAssociation(project.getUrlProtocolAsso()));
 
 			runOnUiThread(() -> {
-				logStd("resolving dependencies...");
-				dependencies.resolve(classpath::getPom, this, false, () -> {
-					logStd("dependencies resolved.");
+				dependencies.resolve(classpath.getRoot(), (r) -> {
 					postImport();
 				});
 			});
@@ -219,7 +219,7 @@ public abstract class JwinUi extends StackPane {
 	private AtomicBoolean ran = new AtomicBoolean(false);
 
 	private boolean stopped = false;
-	
+
 	public void setStopped(boolean stopped) {
 		this.stopped = stopped;
 	}
@@ -234,9 +234,8 @@ public abstract class JwinUi extends StackPane {
 			if ((exit != 0 && !stopped) || !errBuilder.isEmpty()) {
 				ran.set(false);
 				Semaphore s = new Semaphore(0);
-				JwinActions.alert((exit != 0 ? "Non 0 exit code" : "Error Logs"),
-						"your project might not have executed correctly, "
-								+ (exit != 0 ? ("it exited with code " + exit) : "the error logs were not empty"),
+				JwinActions.alert((exit != 0 ? "non_0_exit_code_head" : "error_logs_head"),
+						exit != 0 ? Locale.key("non_0_exit_code_body", "code", exit) : "error_logs_body",
 						AlertType.INFO, res -> {
 							if (res == ButtonType.VIEW_LOG) {
 								showLog.run();
@@ -260,7 +259,7 @@ public abstract class JwinUi extends StackPane {
 		Platform.runLater(() -> {
 			postRun(ran.get());
 			setState("idle");
-			logStd("your app exited with code " + fe);
+			logStd(Locale.key("exited_with_code", "code", fe));
 		});
 	}
 
@@ -293,10 +292,10 @@ public abstract class JwinUi extends StackPane {
 		}
 		return false;
 	}
-	
+
 	public void save() {
 		JWinProject project = export();
-		if(fileInUse != null) {
+		if (fileInUse != null) {
 			FileDealer.write(project.serialize(), fileInUse);
 			projectInUse = project;
 		}
@@ -317,9 +316,7 @@ public abstract class JwinUi extends StackPane {
 	}
 
 	public static Pane vSpace() {
-		Pane space = new Pane();
-		VBox.setVgrow(space, Priority.ALWAYS);
-		return space;
+		return new ExpandingVSpace();
 	}
 
 	public void setOnCompile(Runnable onCompile) {
@@ -334,6 +331,12 @@ public abstract class JwinUi extends StackPane {
 		disable(false, false);
 		setState("Failed to run :(");
 		setProgress(-1);
+	}
+	
+	public void separate() {
+		StringBuilder sb = new StringBuilder();
+		IntStream.range(0, 30).forEach(i -> sb.append("-"));
+		logStd(sb.toString());
 	}
 
 	public abstract void preImport();
@@ -351,8 +354,10 @@ public abstract class JwinUi extends StackPane {
 	public abstract void setState(String val);
 
 	public abstract void incrementProgress(double max);
-	
+
 	public abstract void logStd(String line);
-	
+
+	public abstract void logStdOver(String line);
+
 	public abstract void logErr(String line);
 }

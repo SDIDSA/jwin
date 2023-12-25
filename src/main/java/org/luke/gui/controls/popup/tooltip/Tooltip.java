@@ -2,7 +2,6 @@ package org.luke.gui.controls.popup.tooltip;
 
 import java.util.HashMap;
 
-import org.luke.gui.controls.Font;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.shape.Triangle;
 import org.luke.gui.factory.Backgrounds;
@@ -14,13 +13,11 @@ import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.PopupControl;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
@@ -28,7 +25,6 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Text;
 import javafx.util.Duration;
 
 public class Tooltip extends PopupControl implements Styleable {
@@ -37,35 +33,37 @@ public class Tooltip extends PopupControl implements Styleable {
 	public static final Direction DOWN = Direction.DOWN;
 	public static final Direction LEFT = Direction.LEFT;
 
-	private static DropShadow ds = new DropShadow(15, Color.gray(0, .25));
-	private static DropShadow outline = new DropShadow(BlurType.GAUSSIAN, Color.gray(.5, .3), 1, 1, 0, 0);
+	protected static DropShadow ds = new DropShadow(10, Color.gray(0, .25));
+	protected static DropShadow outline = new DropShadow(BlurType.GAUSSIAN, Color.gray(.5, .3), 1, 1, 0, 0);
 	static {
 		ds.setInput(outline);
 	}
 
 	protected Window owner;
-	private Pane root;
-	private Text text;
+	protected Pane root;
 
-	private Direction direction;
+	protected Direction direction;
 
-	private StackPane content;
-	private Triangle arr;
+	protected StackPane content;
+	protected Triangle arr;
 
-	private Timeline fadeIn;
-	private Timeline fadeOut;
+	protected Timeline fadeIn;
+	protected Timeline fadeOut;
 
-	private double offsetX;
-	private double offsetY;
+	protected double offsetX;
+	protected double offsetY;
 
-	public Tooltip(Window window, String val, Direction direction, double offsetX, double offsetY) {
+	protected double radius;
+
+	public Tooltip(Window window, Direction direction, double offsetX, double offsetY, double radius) {
 		this.owner = window;
 		this.direction = direction;
 		this.offsetX = offsetX;
 		this.offsetY = offsetY;
+		this.radius = radius;
 
 		StackPane preroot = new StackPane();
-		preroot.setPadding(new Insets(15));
+		preroot.setPadding(new Insets(10));
 
 		root = direction.toPane();
 		root.setEffect(ds);
@@ -74,10 +72,7 @@ public class Tooltip extends PopupControl implements Styleable {
 		root.setScaleY(.7);
 
 		content = new StackPane();
-		content.setPadding(new Insets(8, 12, 8, 12));
-
-		text = new Text(val);
-		text.setFont(new Font(14).getFont());
+		content.setPadding(new Insets(15));
 
 		arr = new Triangle(10);
 		switch (direction) {
@@ -86,17 +81,13 @@ public class Tooltip extends PopupControl implements Styleable {
 			break;
 		case UP:
 			arr.setRotate(-90);
-			arr.setTranslateY(-2.5);
 			break;
 		case DOWN:
 			arr.setRotate(90);
-			arr.setTranslateY(2.5);
 			break;
 		default:
 			break;
 		}
-
-		content.getChildren().add(text);
 
 		if (direction.isArrowFirst()) {
 			root.getChildren().addAll(arr, content);
@@ -123,12 +114,20 @@ public class Tooltip extends PopupControl implements Styleable {
 		applyStyle(window.getStyl());
 	}
 
-	public void setPadding(int pad) {
-		content.setPadding(new Insets(8 + pad, 12 + pad, 8 + pad, 12 + pad));
+	public Tooltip(Window window, Direction direction, double offsetX, double offsetY) {
+		this(window, direction, offsetX, offsetY, 5.0);
 	}
 
-	public void setFont(Font font) {
-		text.setFont(font.getFont());
+	public Tooltip(Window window, Direction direction, double offset) {
+		this(window, direction, offset, offset, 5.0);
+	}
+
+	public void add(Node... nodes) {
+		content.getChildren().addAll(nodes);
+	}
+
+	public void setPadding(int pad) {
+		content.setPadding(new Insets(8 + pad, 12 + pad, 8 + pad, 12 + pad));
 	}
 
 	public void setOffsetX(double offsetX) {
@@ -139,15 +138,12 @@ public class Tooltip extends PopupControl implements Styleable {
 		this.offsetY = offsetY;
 	}
 
-	public Tooltip(Window window, String val, Direction direction) {
-		this(window, val, direction, 0, 0);
-	}
-
-	public void setText(String txt) {
-		text.setText(txt);
+	public Tooltip(Window window, Direction direction) {
+		this(window, direction, 0, 0);
 	}
 
 	private void position(Node node) {
+
 		double[] pos = direction.calcPos(this, node, offsetX, offsetY);
 
 		double px = pos[0];
@@ -160,8 +156,24 @@ public class Tooltip extends PopupControl implements Styleable {
 	public void showPop(Node node) {
 		fadeOut.stop();
 		Runnable adjust = () -> {
-			position(node);
-			fadeIn.playFromStart();
+			int size = 6 + (int) (content.getHeight() / 30);
+			size /= 2;
+			size *= 2;
+			arr.setSize(size);
+
+			new Thread(() -> {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException x) {
+					x.printStackTrace();
+					Thread.currentThread().interrupt();
+				}
+				
+				Platform.runLater(() -> {
+					position(node);
+					fadeIn.playFromStart();
+				});
+			}).start();
 		};
 		if (isShowing()) {
 			adjust.run();
@@ -200,44 +212,6 @@ public class Tooltip extends PopupControl implements Styleable {
 		registered.clear();
 	}
 
-	public static void install(Node node, Direction dir, String value, double offsetX, double offsetY, boolean key) {
-		if (node.getScene() == null) {
-			node.sceneProperty().addListener(new ChangeListener<Scene>() {
-				@Override
-				public void changed(ObservableValue<? extends Scene> observable, Scene oldValue, Scene newValue) {
-					if (newValue != null) {
-						Window w = (Window) newValue.getWindow();
-						Tooltip tip = key ? new KeyedTooltip(w, value, dir, offsetX, offsetY)
-								: new Tooltip(w, value, dir, offsetX, offsetY);
-						install(node, tip);
-						node.sceneProperty().removeListener(this);
-					}
-				}
-			});
-		} else {
-			Window w = (Window) node.getScene().getWindow();
-			Tooltip tip = key ? new KeyedTooltip(w, value, dir, offsetX, offsetY)
-					: new Tooltip(w, value, dir, offsetX, offsetY);
-			install(node, tip);
-		}
-	}
-
-	public static void install(Node node, Direction dir, String value, boolean key) {
-		install(node, dir, value, 0, 0, key);
-	}
-
-	public static void install(Node node, Direction dir, String value, double offsetX, double offsetY) {
-		install(node, dir, value, offsetX, offsetY, false);
-	}
-
-	public static void install(Node node, Direction dir, String value, double offset) {
-		install(node, dir, value, offset, offset);
-	}
-
-	public static void install(Node node, Direction dir, String value) {
-		install(node, dir, value, 0, 0, false);
-	}
-
 	static class Installation {
 		EventHandler<MouseEvent> onEnter;
 		EventHandler<MouseEvent> onExit;
@@ -264,8 +238,7 @@ public class Tooltip extends PopupControl implements Styleable {
 
 	@Override
 	public void applyStyle(Style style) {
-		content.setBackground(Backgrounds.make(style.getBackgroundFloatingOr(), 5.0));
-		text.setFill(style.getTextNormal());
+		content.setBackground(Backgrounds.make(style.getBackgroundFloatingOr(), radius));
 		arr.setFill(style.getBackgroundFloatingOr());
 	}
 

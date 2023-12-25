@@ -7,6 +7,7 @@ import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.controls.space.FixedHSpace;
 import org.luke.gui.controls.space.FixedVSpace;
 import org.luke.gui.factory.Backgrounds;
+import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
@@ -19,6 +20,7 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -144,6 +146,7 @@ public class Settings extends StackPane implements Styleable {
 		mainSb.setTrackFill(style.getBackgroundPrimary());
 
 		content.setBackground(rightBack.getBackground());
+		content.setBorder(Borders.make(style.getBackgroundModifierSelected(), new BorderWidths(0, 0, 0, 1)));
 		
 		esc.setFill(style.getTextMuted());
 	}
