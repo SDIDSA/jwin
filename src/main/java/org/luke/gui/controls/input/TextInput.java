@@ -35,6 +35,14 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.paint.Color;
 
+
+/**
+ * Represents a text input control with additional functionality. Provides
+ * features like copying, cutting, pasting, context menu, etc. Extends {@link Input} and
+ * implements {@link Styleable}, {@link Localized}.
+ * 
+ * @author SDIDSA
+ */
 public class TextInput extends Input implements Styleable, Localized {
 	private Window window;
 	private TextInputControl field;
@@ -100,7 +108,7 @@ public class TextInput extends Input implements Styleable, Localized {
 		prepareMenu(window);
 
 		setFont(font);
-		
+
 		applyLocale(window.getLocale());
 	}
 
@@ -192,11 +200,11 @@ public class TextInput extends Input implements Styleable, Localized {
 			field.setPromptText(key);
 		}
 	}
-	
+
 	public void setPrompt(String key) {
 		setPrompt(key, false);
 	}
-	
+
 	public void setKeyedPrompt(String key) {
 		setPrompt(key, true);
 	}

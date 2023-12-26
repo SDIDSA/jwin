@@ -185,5 +185,8 @@
 	"gradle_jdk_ver": "Your project uses <gradleVersion> which only supports jdk <maxJavaVersion> and bellow",
 	"jdk_unfound": "jwin couldn't find a supported jdk installation on your system",
 	"resolve_fail_head": "Operation Failed",
-	"resolve_fail_body": "Failed to resolve dependencies, make sure the jdk you selected is valid"
+	"resolve_fail_body": "Failed to resolve dependencies, make sure the jdk you selected is valid",
+	"building_installer": "building installer...",
+	"generating_launcher": "Generating launcher",
+	"generating_installer": "Generating installer"
 }

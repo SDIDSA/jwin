@@ -14,7 +14,7 @@ import javafx.beans.value.ObservableValue;
  * by {@link mesa.gui.window.Window#setLocale(Locale) Window.setLocale(Locale)}
  * calls.
  * 
- * @author Lukas Owen
+ * @author SDIDSA
  * 
  */
 public interface Localized {

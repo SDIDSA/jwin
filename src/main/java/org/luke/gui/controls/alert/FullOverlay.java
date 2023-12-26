@@ -10,9 +10,21 @@ import javafx.geometry.Pos;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
+/**
+ * specialized overlay that covers the entire area of its
+ * owner, providing a full-screen overlay effect. It inherits from the Overlay
+ * class and implements the Styleable interface for consistent styling.
+ *
+ * @author SDIDSA
+ */
 public class FullOverlay extends Overlay implements Styleable {
 	protected StackPane preRoot;
 
+	/**
+	 * Constructs a FullOverlay instance with the specified owner Page.
+	 *
+	 * @param session The Page instance representing the owner of the overlay.
+	 */
 	public FullOverlay(Page session) {
 		super(session);
 
@@ -20,15 +32,21 @@ public class FullOverlay extends Overlay implements Styleable {
 		preRoot.setAlignment(Pos.TOP_RIGHT);
 		preRoot.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		preRoot.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-		
+
 		preRoot.prefWidthProperty().bind(session.widthProperty().subtract(15));
 		preRoot.prefHeightProperty().bind(session.heightProperty().subtract(15));
 
 		setContent(preRoot);
-		
+
 		applyStyle(session.getWindow().getStyl());
 	}
-	
+
+	/**
+	 * Sets the owner of the FullOverlay, updating its size to cover the entire area
+	 * of the new owner.
+	 *
+	 * @param owner The Pane representing the new owner of the FullOverlay.
+	 */
 	@Override
 	public void setOwner(Pane owner) {
 		preRoot.prefWidthProperty().unbind();

@@ -23,6 +23,14 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 
+/**
+ * Custom implementation of a vertical scrollbar for scrolling content within a
+ * specified region. The scrollbar consists of a track and a draggable thumb for
+ * adjusting the scroll position. Supports mouse interaction to drag the thumb
+ * and scroll the content.
+ *
+ * @author SDIDSA
+ */
 public class ScrollBar extends StackPane {
 	private Rectangle track;
 	private Rectangle thumb;
@@ -32,6 +40,12 @@ public class ScrollBar extends StackPane {
 	private double initPos;
 	private double initY;
 
+	/**
+	 * Constructs a vertical scrollbar with the specified width and padding.
+	 *
+	 * @param width   The width of the scrollbar.
+	 * @param padding The padding applied to the scrollbar.
+	 */
 	public ScrollBar(double width, double padding) {
 		setAlignment(Pos.TOP_CENTER);
 		double effectiveWidth = width - padding * 2;
@@ -75,6 +89,13 @@ public class ScrollBar extends StackPane {
 		setCursor(Cursor.DEFAULT);
 	}
 
+	/**
+	 * Installs the scrollbar within a parent region and binds it to a child region.
+	 *
+	 * @param parent The parent region.
+	 * @param child  The child region to bind the scrollbar to.
+	 * @param sb     The scrollbar to install.
+	 */
 	private static void install(Region parent, Region child, ScrollBar sb) {
 		sb.thumb.heightProperty().bind(Bindings.max(40,
 				parent.heightProperty().divide(child.heightProperty()).multiply(sb.track.heightProperty())));
@@ -116,7 +137,8 @@ public class ScrollBar extends StackPane {
 							if (weakChild.get() == null || weakParent.get() == null || weakThis.get() == null) {
 								scene.focusOwnerProperty().removeListener(this);
 							} else {
-								if (weakThis.get().getScene() != null && NodeUtils.isChildOf(focused, weakChild.get())) {
+								if (weakThis.get().getScene() != null
+										&& NodeUtils.isChildOf(focused, weakChild.get())) {
 									onFocus.accept(focused);
 								}
 							}
@@ -126,38 +148,78 @@ public class ScrollBar extends StackPane {
 			}
 		});
 	}
-	
+
+	/**
+	 * Installs the scrollbar within a parent region and binds it to a child region.
+	 *
+	 * @param parent The parent region.
+	 * @param child  The child region to bind the scrollbar to.
+	 */
 	public void install(Region parent, Region child) {
 		install(parent, child, this);
 	}
 
+	/**
+	 * Scrolls the content by a specified number of pixels.
+	 *
+	 * @param pixels     The number of pixels to scroll.
+	 * @param relativeTo The relative dimension for calculating the scroll.
+	 */
 	public void scrollByPixels(double pixels, double relativeTo) {
 		double newPos = position.get() - (pixels / relativeTo);
 		setPos(newPos);
 	}
 
+	/**
+	 * Binds the scrollbar's opacity to the hover state of a specified node.
+	 *
+	 * @param node The node whose hover state determines the scrollbar's opacity.
+	 */
 	public void bindOpacityToHover(Node node) {
 		opacityProperty().unbind();
 		opacityProperty().bind(Bindings.when(node.hoverProperty().or(this.hoverProperty()).or(this.pressedProperty()))
 				.then(1).otherwise(0));
 	}
 
+	/**
+	 * Sets the position of the scrollbar.
+	 *
+	 * @param val The new position value (between 0 and 1).
+	 */
 	private void setPos(double val) {
 		position.set(Math.max(0, Math.min(1, val)));
 	}
 
+	/**
+	 * Gets the position property of the scrollbar.
+	 *
+	 * @return The position property of the scrollbar.
+	 */
 	public DoubleProperty positionProperty() {
 		return position;
 	}
 
+	/**
+	 * Sets the fill color of the thumb.
+	 *
+	 * @param fill The fill color to set.
+	 */
 	public void setThumbFill(Paint fill) {
 		thumb.setFill(fill);
 	}
 
+	/**
+	 * Sets the fill color of the track.
+	 *
+	 * @param fill The fill color to set.
+	 */
 	public void setTrackFill(Paint fill) {
 		track.setFill(fill);
 	}
 
+	/**
+	 * Sets the scrollbar position to the top.
+	 */
 	public void top() {
 		setPos(0);
 	}

@@ -16,12 +16,23 @@ import javafx.scene.layout.BorderWidths;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 
+/**
+ * custom checkbox with a stylized check mark.
+ *
+ * @author SDIDSA
+ */
 public class Check extends StackPane implements Styleable {
 	private BooleanProperty checked;
 	private BooleanProperty inverted;
-	
+
 	private Pane tick;
 
+	/**
+	 * Constructs a Check instance with the specified window and size.
+	 *
+	 * @param window The associated Window for styling.
+	 * @param size   The size of the check mark.
+	 */
 	public Check(Window window, double size) {
 		setMinSize(size, size);
 		setMaxSize(size, size);
@@ -46,12 +57,16 @@ public class Check extends StackPane implements Styleable {
 
 		applyStyle(window.getStyl());
 	}
-	
+
+	/**
+	 * Flips the check status, toggling between checked and unchecked.
+	 */
 	public void flip() {
 		checked.set(!checked.get());
 	}
 
 	private ChangeListener<Boolean> listener;
+
 	@Override
 	public void applyStyle(Style style) {
 		Runnable restyle = () -> {
@@ -79,31 +94,46 @@ public class Check extends StackPane implements Styleable {
 		};
 
 		restyle.run();
-		
-		if(listener != null) {
+
+		if (listener != null) {
 			checked.removeListener(listener);
 			inverted.removeListener(listener);
 		}
-		
-		listener = (obs, ov, nv)-> restyle.run();
-		
+
+		listener = (obs, ov, nv) -> restyle.run();
+
 		checked.addListener(listener);
 		inverted.addListener(listener);
 	}
-	
+
+	/**
+	 * Gets the BooleanProperty for the inverted property.
+	 *
+	 * @return The BooleanProperty for the inverted property.
+	 */
 	public BooleanProperty invertedProperty() {
 		return inverted;
 	}
-	
+
 	@Override
 	public void applyStyle(ObjectProperty<Style> style) {
 		Styleable.bindStyle(this, style);
 	}
 
+	/**
+	 * Gets the BooleanProperty for the checked property.
+	 *
+	 * @return The BooleanProperty for the checked property.
+	 */
 	public BooleanProperty checkedProperty() {
 		return checked;
 	}
-	
+
+	/**
+	 * Sets the checked status of the check mark.
+	 *
+	 * @param checked true for checked, false for unchecked.
+	 */
 	public void setChecked(boolean checked) {
 		this.checked.set(checked);
 	}

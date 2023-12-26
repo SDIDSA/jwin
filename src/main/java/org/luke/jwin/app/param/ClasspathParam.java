@@ -13,7 +13,6 @@ import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.unkeyed.Link;
@@ -281,7 +280,6 @@ public class ClasspathParam extends Param {
 					increment.accept(.6);
 			}).waitFor();
 
-			int count = 0;
 			while (!classPaths.isEmpty()) {
 				StringBuilder com = new StringBuilder(
 						"javac -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\"");
@@ -311,7 +309,6 @@ public class ClasspathParam extends Param {
 							x.add(line);
 						}
 					}, "cmd.exe", "/C", com.toString());
-					count++;
 
 					compileCommand.execute(binDir, () -> {
 						if (increment != null)

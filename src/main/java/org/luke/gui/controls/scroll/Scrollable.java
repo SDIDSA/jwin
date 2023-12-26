@@ -7,47 +7,71 @@ import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
+/**
+ * A {@code Scrollable} is a container that allows its content to be scrolled vertically.
+ * It includes a vertical scrollbar on the right side.
+ * <p>
+ * Author: SDIDSA
+ */
 public class Scrollable extends StackPane {
-	private StackPane contentCont;
+    private StackPane contentCont;
 
-	private ScrollBar sb;
-	
-	public Scrollable() {
-		setAlignment(Pos.TOP_LEFT);
-		setMinHeight(0);
+    private ScrollBar sb;
 
-		contentCont = new StackPane();
-		StackPane scrollBarCont = new StackPane();
-		scrollBarCont.setAlignment(Pos.CENTER_RIGHT);
+    /**
+     * Constructs a new {@code Scrollable} with default settings.
+     */
+    public Scrollable() {
+        setAlignment(Pos.TOP_LEFT);
+        setMinHeight(0);
 
-		sb = new ScrollBar(15, 5);
-		scrollBarCont.setPickOnBounds(false);
-		scrollBarCont.getChildren().add(sb);
-		sb.install(this, contentCont);
+        contentCont = new StackPane();
+        StackPane scrollBarCont = new StackPane();
+        scrollBarCont.setAlignment(Pos.CENTER_RIGHT);
 
-		sb.opacityProperty().bind(Bindings.when(hoverProperty().or(sb.pressedProperty())).then(1).otherwise(.4));
+        sb = new ScrollBar(15, 5);
+        scrollBarCont.setPickOnBounds(false);
+        scrollBarCont.getChildren().add(sb);
+        sb.install(this, contentCont);
 
-		contentCont.translateYProperty().bind(
-				sb.positionProperty().multiply(contentCont.heightProperty().subtract(heightProperty())).multiply(-1));
+        sb.opacityProperty().bind(Bindings.when(hoverProperty().or(sb.pressedProperty())).then(1).otherwise(.4));
 
-		Rectangle clip = new Rectangle();
-		clip.widthProperty().bind(widthProperty());
-		clip.heightProperty().bind(heightProperty());
-		clip.yProperty().bind(contentCont.translateYProperty().negate());
+        contentCont.translateYProperty().bind(
+                sb.positionProperty().multiply(contentCont.heightProperty().subtract(heightProperty())).multiply(-1));
 
-		contentCont.setClip(clip);
-		getChildren().addAll(contentCont, scrollBarCont);
-	}
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(widthProperty());
+        clip.heightProperty().bind(heightProperty());
+        clip.yProperty().bind(contentCont.translateYProperty().negate());
 
-	public ScrollBar getScrollBar() {
-		return sb;
-	}
+        contentCont.setClip(clip);
+        getChildren().addAll(contentCont, scrollBarCont);
+    }
 
-	public void setContent(Parent content) {
-		contentCont.getChildren().setAll(content);
-	}
+    /**
+     * Gets the scrollbar associated with this {@code Scrollable}.
+     *
+     * @return the scrollbar
+     */
+    public ScrollBar getScrollBar() {
+        return sb;
+    }
 
-	public ReadOnlyDoubleProperty contentHeightProperty() {
-		return contentCont.heightProperty();
-	}
+    /**
+     * Sets the content of this {@code Scrollable}.
+     *
+     * @param content the content to be displayed
+     */
+    public void setContent(Parent content) {
+        contentCont.getChildren().setAll(content);
+    }
+
+    /**
+     * Gets the read-only property representing the height of the content in this {@code Scrollable}.
+     *
+     * @return the content height property
+     */
+    public ReadOnlyDoubleProperty contentHeightProperty() {
+        return contentCont.heightProperty();
+    }
 }

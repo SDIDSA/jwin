@@ -19,6 +19,13 @@ import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.shape.StrokeLineJoin;
 import javafx.scene.shape.StrokeType;
 
+/**
+ * The {@code Back} class represents a customizable background pane with
+ * optional border. It provides properties for setting the width, height, fill
+ * color, stroke color, corner radius, stroke width, and stroke type.
+ * <p>
+ * Author: SDIDSA
+ */
 public class Back extends Pane {
 
 	private DoubleProperty width, height;
@@ -28,6 +35,9 @@ public class Back extends Pane {
 	private ObjectProperty<BorderWidths> strokeWidth;
 	private ObjectProperty<StrokeType> strokeType;
 
+	/**
+	 * Constructs a new {@code Back} with default settings.
+	 */
 	public Back() {
 		width = new SimpleDoubleProperty(0, "width");
 		height = new SimpleDoubleProperty(0, "height");
@@ -57,19 +67,19 @@ public class Back extends Pane {
 					radius.get(), strokeWidth.get()));
 		}, stroke, radius, strokeWidth, strokeType));
 	}
-	
+
 	public DoubleProperty wProp() {
 		return width;
 	}
-	
+
 	public DoubleProperty hProp() {
 		return height;
 	}
-	
+
 	public ObjectProperty<CornerRadii> radiusProperty() {
 		return radius;
 	}
-	
+
 	public ObjectProperty<Paint> fillProperty() {
 		return fill;
 	}
@@ -101,13 +111,13 @@ public class Back extends Pane {
 	public void setFill(Paint fill) {
 		this.fill.set(fill);
 	}
-	
+
 	public void setStroke(Paint stroke) {
 		this.stroke.set(stroke);
 	}
-	
+
 	public void setStrokeType(StrokeType type) {
 		strokeType.set(type);
 	}
-	
+
 }

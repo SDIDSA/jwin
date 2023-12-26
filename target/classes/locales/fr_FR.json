@@ -185,5 +185,8 @@
 	"gradle_jdk_ver": "Votre projet utilise <gradleVersion> qui ne prend en charge que jdk <maxJavaVersion> et inférieur",
 	"jdk_unfound": "jwin n'a pas trouvé d'installation jdk prise en charge sur votre système",
 	"resolve_fail_head": "Échec de l'opération",
-	"resolve_fail_body": "Échec de la résolution des dépendances, assurez-vous que le JDK que vous avez sélectionné est valide"
+	"resolve_fail_body": "Échec de la résolution des dépendances, assurez-vous que le JDK que vous avez sélectionné est valide",
+	"building_installer": "Construction du programme d'installation...",
+	"generating_launcher": "Génération du launcher",
+	"generating_installer": "Génération du programme d'installation"
 }

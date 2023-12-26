@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Semaphore;
 
 import org.luke.gui.controls.alert.AlertType;
@@ -27,6 +28,13 @@ import org.luke.jwin.local.managers.JdkManager;
 import org.luke.jwin.local.managers.LocalInstall;
 
 public class GradleResolver {
+	/**
+	 * Resolves project dependencies by simulating the execution of a Gradle task to print dependencies.
+	 * Utilizes a specified or downloaded Gradle version and JDK based on project requirements.
+	 *
+	 * @param grad The build.gradle or build.gradle.kts file.
+	 * @return A List of resolved dependency JAR files, or null if resolution fails.
+	 */
 	public static List<File> resolve(File grad) {
 		try {
 			ArrayList<File> jars = new ArrayList<File>();
@@ -56,8 +64,8 @@ public class GradleResolver {
 						for (File sf : gradleDists.listFiles()) {
 							LocalInstall inst = GradleManager.versionFromDir(sf);
 							if (inst != null && inst.getVersion().equals(version)) {
-								Jwin.instance.getConfig().logStd(Locale.key("ver_found_in", "version", version,
-										"path", sf.getAbsolutePath()));
+								Jwin.instance.getConfig().logStd(
+										Locale.key("ver_found_in", "version", version, "path", sf.getAbsolutePath()));
 								JwinActions.copyDirCont(inst.getRoot(), groot, null);
 								projectGradle = groot;
 								break;
@@ -69,11 +77,11 @@ public class GradleResolver {
 						// download if not found
 						Jwin.instance.getConfig().logStd(Locale.key("down_vers", "version", version));
 						Downloader.downloadZipInto(url, (dp) -> {
-							Jwin.instance.getConfig().logStdOver(Locale.key("down_prog", "version", version,
-									"progress", displayProgressBar(((int) (dp * 100)))));
+							Jwin.instance.getConfig().logStdOver(Locale.key("down_prog", "version", version, "progress",
+									displayProgressBar(((int) (dp * 100)))));
 						}, (cp) -> {
-							Jwin.instance.getConfig().logStdOver(Locale.key("ext_prog", "version", version,
-									"progress", displayProgressBar(((int) (cp * 100)))));
+							Jwin.instance.getConfig().logStdOver(Locale.key("ext_prog", "version", version, "progress",
+									displayProgressBar(((int) (cp * 100)))));
 						}, groot, f -> GradleManager.versionFromDir(f).getRoot());
 
 						Jwin.instance.getConfig().logStdOver(Locale.key("vers_ready", "version", version));
@@ -226,13 +234,55 @@ public class GradleResolver {
 
 		Exception x) {
 			ErrorHandler.handle(x, "resolve dependencies");
-			JwinActions.error("resolve_fail_head",
-					"resolve_fail_body");
+			JwinActions.error("resolve_fail_head", "resolve_fail_body");
 			return null;
 		}
 	}
+	
+	/**
+	 * Retrieves the Gradle distribution URL from a Gradle project directory.
+	 *
+	 * @param root The root directory of the Gradle project.
+	 * @return The Gradle distribution URL, or null if the gradle-wrapper.properties file is not found or cannot be read.
+	 */
+	public static String getDistributionUrl(File root) {
+		try {
+			File gwp = new File(root.getAbsolutePath() + "\\gradle\\wrapper\\gradle-wrapper.properties");
+			if (gwp.exists()) {
+				String url = parseInputStream(new FileInputStream(gwp)).get("distributionUrl").replace("https\\://",
+						"https://");
+				return url;
+			}
+		} catch (Exception x) {
+			ErrorHandler.handle(x, "getting gradle version");
+		}
+		return null;
+	}
+	
+	/**
+	 * Retrieves the Gradle version from a Gradle project directory.
+	 * Parses the distribution URL to extract the version information.
+	 *
+	 * @param root The root directory of the Gradle project.
+	 * @return The Gradle version, or null if the distribution URL is not available.
+	 */
+	public static String getGradleVersion(File root) {
+		String url = getDistributionUrl(root);
+		if(url != null) {
+			String version = "gradle_" + url.split("-")[1];
+			return version;
+		}
+		return null;
+	}
 
-	private static HashMap<String, String> parseInputStream(InputStream is) throws IOException {
+	/**
+	 * Parses key-value pairs from a properties file.
+	 *
+	 * @param is The InputStream to parse.
+	 * @return A Map containing key-value pairs parsed from the InputStream.
+	 * @throws IOException If an I/O error occurs while reading the InputStream.
+	 */
+	public static Map<String, String> parseInputStream(InputStream is) throws IOException {
 		HashMap<String, String> data = new HashMap<>();
 
 		BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -251,6 +301,13 @@ public class GradleResolver {
 		return data;
 	}
 
+	/**
+	 * Generates a textual progress bar representation based on a given percentage.
+	 *
+	 * @param percentage The completion percentage for the progress bar.
+	 * @return A string representing a progress bar with visual indicators and
+	 *         percentage information.
+	 */
 	private static String displayProgressBar(int percentage) {
 		int width = 20;
 		int progress = (int) (width * percentage / 100.0);

@@ -7,6 +7,13 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Polygon;
 
+/**
+ * The {@code Triangle} class represents a triangle shape with customizable size
+ * and fill color. It implements the {@code ColorItem} interface for setting the
+ * fill color.
+ * <p>
+ * Author: SDIDSA
+ */
 public class Triangle extends StackPane implements ColorItem {
 
 	private Polygon poly;

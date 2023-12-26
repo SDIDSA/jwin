@@ -5,14 +5,27 @@ import java.util.ArrayList;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
+/**
+ * a utility class for grouping Radio controls. It provides a way to manage a
+ * group of Radio controls where only one radio button within the group can be
+ * selected at a time. It can be initialized with either Radio or KeyedRadio
+ * controls.
+ *
+ * @author SDIDSA
+ */
 public class RadioGroup {
 	private ArrayList<Radio> radios;
 
 	private ObjectProperty<Radio> value;
-	
+
+	/**
+	 * Constructs a RadioGroup with the specified Radio controls.
+	 *
+	 * @param items The Radio controls to include in the group.
+	 */
 	public RadioGroup(Radio... items) {
 		radios = new ArrayList<>();
-		
+
 		value = new SimpleObjectProperty<>();
 
 		for (Radio radio : items) {
@@ -20,9 +33,14 @@ public class RadioGroup {
 		}
 	}
 
-	public RadioGroup(KeyedRadio...items) {
+	/**
+	 * Constructs a RadioGroup with the specified KeyedRadio controls.
+	 *
+	 * @param items The KeyedRadio controls to include in the group.
+	 */
+	public RadioGroup(KeyedRadio... items) {
 		radios = new ArrayList<>();
-		
+
 		value = new SimpleObjectProperty<>();
 
 		for (KeyedRadio radio : items) {
@@ -30,6 +48,11 @@ public class RadioGroup {
 		}
 	}
 
+	/**
+	 * Adds a Radio control to the group.
+	 *
+	 * @param radio The Radio control to add.
+	 */
 	public void add(Radio radio) {
 		radio.checkedProperty().addListener((obs, ov, nv) -> {
 			if (nv.booleanValue()) {
@@ -44,11 +67,21 @@ public class RadioGroup {
 
 		radios.add(radio);
 	}
-	
+
+	/**
+	 * Gets the currently selected Radio control in the group.
+	 *
+	 * @return The currently selected Radio control.
+	 */
 	public Radio getValue() {
 		return value.get();
 	}
-	
+
+	/**
+	 * Gets the ObjectProperty for the currently selected Radio control.
+	 *
+	 * @return The ObjectProperty for the currently selected Radio control.
+	 */
 	public ObjectProperty<Radio> valueProperty() {
 		return value;
 	}

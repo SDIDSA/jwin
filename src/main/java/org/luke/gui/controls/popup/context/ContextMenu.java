@@ -37,6 +37,14 @@ import javafx.scene.transform.Scale;
 import javafx.stage.Screen;
 import javafx.util.Duration;
 
+/**
+ * Custom implementation of a context menu, extending {@link PopupControl} and
+ * implementing {@link Styleable}. Represents a popup menu that can be displayed
+ * in response to a user interaction. Manages menu items, separators, and
+ * handling events related to showing and hiding the context menu.
+ *
+ * @author SDIDSA
+ */
 public class ContextMenu extends PopupControl implements Styleable {
 	protected Window owner;
 	protected Scrollable sroll;
@@ -86,7 +94,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 		clipped.setEffect(ds);
 
 		sroll = new Scrollable();
-		
+
 		Rectangle clip = new Rectangle();
 		clip.setArcHeight(4);
 		clip.setArcWidth(4);
@@ -95,7 +103,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 		sroll.setClip(clip);
 		clipped.getChildren().add(sroll);
-		
+
 		sroll.setContent(root);
 
 		preroot.getChildren().add(clipped);
@@ -139,12 +147,12 @@ public class ContextMenu extends PopupControl implements Styleable {
 				focused = 0;
 			}
 		});
-		
+
 		setVScrollable(500);
 
 		applyStyle(window.getStyl());
 	}
-	
+
 	public void setVScrollable(double maxHeight) {
 		sroll.setMaxHeight(maxHeight);
 	}
@@ -298,14 +306,14 @@ public class ContextMenu extends PopupControl implements Styleable {
 		addMenuItem(item, null, null);
 	}
 
-	public void addMenuItems(MenuItem...is) {
-		for(MenuItem i : is) {
+	public void addMenuItems(MenuItem... is) {
+		for (MenuItem i : is) {
 			addMenuItem(i);
 		}
 	}
 
 	public void addMenuItems(Collection<? extends MenuItem> is) {
-		for(MenuItem i : is) {
+		for (MenuItem i : is) {
 			addMenuItem(i);
 		}
 	}
@@ -443,7 +451,8 @@ public class ContextMenu extends PopupControl implements Styleable {
 					: direction.isSecondFirst() ? 0
 							: direction.isSecondLast() ? sroll.getHeight() : sroll.getHeight() / 2);
 			scale.setPivotX(direction.isHorizontal() ? direction.isArrowFirst() ? 0 : sroll.getWidth() - 15
-					: direction.isSecondFirst() ? 0 : direction.isSecondLast() ? sroll.getWidth() : sroll.getWidth() / 2);
+					: direction.isSecondFirst() ? 0
+							: direction.isSecondLast() ? sroll.getWidth() : sroll.getWidth() / 2);
 
 			sroll.setCache(true);
 			sroll.setCacheHint(CacheHint.SPEED);

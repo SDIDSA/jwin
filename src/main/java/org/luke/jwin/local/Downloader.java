@@ -21,7 +21,17 @@ import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.local.managers.JdkManager;
 
 public class Downloader {
-	public static File downloadZipInto(String urlString, Consumer<Double> onDownload, Consumer<Double> onCopy,
+	/**
+	 * Downloads a ZIP file from the specified URL, extracts its contents, and copies them to a target directory.
+	 * Provides progress updates during download and copy operations.
+	 *
+	 * @param urlString   The URL of the ZIP file to download.
+	 * @param onDownload  Consumer to receive download progress updates.
+	 * @param onCopy      Consumer to receive copy progress updates.
+	 * @param targetDir   The target directory where the extracted contents will be copied.
+	 * @param rootSupplier Function to determine the root directory of the extracted contents.
+	 */
+	public static void downloadZipInto(String urlString, Consumer<Double> onDownload, Consumer<Double> onCopy,
 			File targetDir, Function<File, File> rootSupplier) {
 		try {
 			URL url = URI.create(urlString).toURL();
@@ -54,6 +64,8 @@ public class Downloader {
 			}
 			os.flush();
 			os.close();
+			
+			onDownload.accept(1.0);
 
 			File temp = File.createTempFile(name, "");
 			temp.delete();
@@ -80,20 +92,23 @@ public class Downloader {
 		} catch (IOException | InterruptedException e) {
 			ErrorHandler.handle(e, "download file " + urlString);
 		}
-		return null;
 	}
 
 	private static JSONObject compMat = null;
-
+	
+	/**
+	 * Retrieves the maximum Java version supported by a given Gradle version or lower.
+	 * Uses a compatibility mapping stored in "/versions.json".
+	 *
+	 * @param ver The Gradle version to find compatibility for.
+	 * @return The maximum compatible Java version, or -1 if no compatible version is found.
+	 */
 	public synchronized static int maxGradleVer(String ver) {
-
 		if (compMat == null) {
 			String versions = FileDealer.read("/versions.json");
 			JSONObject all = new JSONObject(versions);
-
 			compMat = all.getJSONObject("gradle_jdk_map");
 		}
-
 		int max = -1;
 		for (String over : compMat.keySet()) {
 			if (JdkManager.compareVersions(ver, over) <= 0) {
@@ -103,33 +118,33 @@ public class Downloader {
 				}
 			}
 		}
-
 		return max;
 	}
 
-	public static File downloadJava(int major, Consumer<Double> onDownload, Consumer<Double> onCopy, File targetDir) {
+	/**
+	 * Downloads the latest version of Java with the specified major version from Azul Zulu,
+	 * and extracts the contents to a target directory. Provides progress updates during download and copy operations.
+	 *
+	 * @param major       The major version of Java to download.
+	 * @param onDownload  Consumer to receive download progress updates.
+	 * @param onCopy      Consumer to receive copy progress updates.
+	 * @param targetDir   The target directory where the Java contents will be extracted.
+	 */
+	public static void downloadJava(int major, Consumer<Double> onDownload, Consumer<Double> onCopy, File targetDir) {
 		String urlString = "https://api.azul.com/metadata/v1/zulu/packages/?java_version=" + major
 				+ "&os=windows&arch=x64&archive_type=zip&java_package_type=jdk&javafx_bundled=false&latest=true&release_status=ga&certifications=tck&page=1&page_size=100";
 
 		try {
 			URL url = new URI(urlString).toURL();
 			InputStream is = url.openStream();
-
 			String cont = FileDealer.read(is);
-
 			JSONArray arr = new JSONArray(cont);
-
 			JSONObject obj = arr.getJSONObject(0);
-
 			String downloadUrl = obj.getString("download_url");
-
-			return downloadZipInto(downloadUrl, onDownload, onCopy, targetDir,
+			downloadZipInto(downloadUrl, onDownload, onCopy, targetDir,
 					f -> JdkManager.versionFromDir(f).getRoot());
-
 		} catch (Exception x) {
 			ErrorHandler.handle(x, "download file " + urlString);
-
-			return null;
 		}
 	}
 }

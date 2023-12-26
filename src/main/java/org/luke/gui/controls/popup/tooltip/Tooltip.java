@@ -27,6 +27,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+/**
+ * A custom tooltip implementation that extends PopupControl and implements
+ * Styleable. It provides features such as specifying the direction, offset, and
+ * radius of the tooltip, as well as methods for adding content and
+ * showing/hiding the tooltip based on mouse events.
+ * 
+ * @author SDIDSA
+ */
 public class Tooltip extends PopupControl implements Styleable {
 	public static final Direction UP = Direction.UP;
 	public static final Direction RIGHT = Direction.RIGHT;
@@ -55,6 +63,16 @@ public class Tooltip extends PopupControl implements Styleable {
 
 	protected double radius;
 
+	/**
+	 * Constructs a tooltip with the specified window, direction, offset, and
+	 * radius.
+	 * 
+	 * @param window    The window associated with the tooltip.
+	 * @param direction The direction of the tooltip.
+	 * @param offsetX   The horizontal offset of the tooltip.
+	 * @param offsetY   The vertical offset of the tooltip.
+	 * @param radius    The radius of the tooltip corners.
+	 */
 	public Tooltip(Window window, Direction direction, double offsetX, double offsetY, double radius) {
 		this.owner = window;
 		this.direction = direction;
@@ -153,6 +171,12 @@ public class Tooltip extends PopupControl implements Styleable {
 		setY(py);
 	}
 
+	/**
+	 * Shows the tooltip relative to the provided node. If the tooltip is already
+	 * showing, adjusts its position.
+	 * 
+	 * @param node The node relative to which the tooltip is shown.
+	 */
 	public void showPop(Node node) {
 		fadeOut.stop();
 		Runnable adjust = () -> {
@@ -168,7 +192,7 @@ public class Tooltip extends PopupControl implements Styleable {
 					x.printStackTrace();
 					Thread.currentThread().interrupt();
 				}
-				
+
 				Platform.runLater(() -> {
 					position(node);
 					fadeIn.playFromStart();

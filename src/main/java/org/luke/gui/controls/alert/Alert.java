@@ -28,6 +28,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
+/**
+ * represents a customizable overlay dialog for displaying informative messages
+ * and interacting with the user. It extends the Overlay class and implements
+ * the Styleable interface for consistent styling. Alerts can have a header,
+ * body with text or links, customizable buttons, and an optional loading state.
+ *
+ * @author SDIDSA
+ */
 public class Alert extends Overlay implements Styleable {
 	private StackPane preRoot;
 	private HBox bottom;
@@ -117,7 +125,7 @@ public class Alert extends Overlay implements Styleable {
 			bottom.getChildren().add(button);
 			buttons.put(buttonType, button);
 		}
-		
+
 		applyStyle(getWindow().getStyl());
 	}
 

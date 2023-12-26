@@ -24,6 +24,12 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+/**
+ * StackPane-based class representing a flexible overlay that can be shown or
+ * hidden with customizable animations.
+ *
+ * @author SDIDSA
+ */
 public class Overlay extends StackPane {
 	private Pane owner;
 	private Window window;
@@ -41,6 +47,12 @@ public class Overlay extends StackPane {
 
 	private boolean autoHide = true;
 
+	/**
+	 * Constructs an Overlay instance with the specified owner Pane and Window.
+	 *
+	 * @param owner  The owner Pane of the overlay.
+	 * @param window The Window associated with the overlay.
+	 */
 	public Overlay(Pane owner, Window window) {
 		this.owner = owner;
 		this.window = window;
@@ -56,7 +68,7 @@ public class Overlay extends StackPane {
 		content = new VBox();
 		content.setAlignment(Pos.CENTER);
 		content.setPickOnBounds(false);
-		
+
 		content.maxWidthProperty().bind(owner.widthProperty());
 		content.maxHeightProperty().bind(owner.heightProperty());
 
@@ -76,11 +88,11 @@ public class Overlay extends StackPane {
 			content.setCacheHint(CacheHint.SPEED);
 		});
 
-		show = new Timeline(new KeyFrame(Duration.seconds(.2),
-				new KeyValue(back.opacityProperty(), 1, SplineInterpolator.EASE_OUT),
-				new KeyValue(content.opacityProperty(), 1, SplineInterpolator.EASE_OUT),
-				new KeyValue(content.scaleXProperty(), 1, SplineInterpolator.EASE_OUT),
-				new KeyValue(content.scaleYProperty(), 1, SplineInterpolator.EASE_OUT)));
+		show = new Timeline(
+				new KeyFrame(Duration.seconds(.2), new KeyValue(back.opacityProperty(), 1, SplineInterpolator.EASE_OUT),
+						new KeyValue(content.opacityProperty(), 1, SplineInterpolator.EASE_OUT),
+						new KeyValue(content.scaleXProperty(), 1, SplineInterpolator.EASE_OUT),
+						new KeyValue(content.scaleYProperty(), 1, SplineInterpolator.EASE_OUT)));
 
 		show.setOnFinished(e -> {
 			onShown.forEach(Runnable::run);
@@ -95,11 +107,10 @@ public class Overlay extends StackPane {
 						new KeyValue(content.scaleXProperty(), .8, SplineInterpolator.EASE_IN),
 						new KeyValue(content.scaleYProperty(), .8, SplineInterpolator.EASE_IN)));
 
-
 		back.setOpacity(0);
 		content.setScaleX(.8);
 		content.setScaleY(.8);
-		
+
 		back.setOnMouseClicked(e -> {
 			if (autoHide)
 				hide();
@@ -116,6 +127,11 @@ public class Overlay extends StackPane {
 		getChildren().addAll(back, content);
 	}
 
+	/**
+	 * Constructs an Overlay instance with the specified owner Page.
+	 *
+	 * @param owner The owner Page of the overlay.
+	 */
 	public Overlay(Page owner) {
 		this(owner, owner.getWindow());
 	}
@@ -123,10 +139,9 @@ public class Overlay extends StackPane {
 	public void setOwner(Pane owner) {
 		this.owner = owner;
 
-		
 		content.maxWidthProperty().unbind();
 		content.maxHeightProperty().unbind();
-		
+
 		content.maxWidthProperty().bind(owner.widthProperty());
 		content.maxHeightProperty().bind(owner.heightProperty());
 	}
@@ -167,6 +182,10 @@ public class Overlay extends StackPane {
 		this.content.getChildren().removeAll(cont);
 	}
 
+	/**
+	 * Shows the overlay with customizable animations and triggers associated
+	 * actions.
+	 */
 	public void show() {
 		if (getScene() != null && hide.getStatus() != Status.RUNNING) {
 			hide();
@@ -182,6 +201,10 @@ public class Overlay extends StackPane {
 		requestFocus();
 	}
 
+	/**
+	 * Hides the overlay with customizable animations and triggers associated
+	 * actions.
+	 */
 	public void hide() {
 		if (getScene() == null) {
 			show();
@@ -191,9 +214,9 @@ public class Overlay extends StackPane {
 		hide.setOnFinished(e -> {
 			boolean hidingLast = this == last();
 			owner.getChildren().remove(this);
-			if(hidingLast) {
+			if (hidingLast) {
 				last().setDisable(false);
-			}else {
+			} else {
 				this.setDisable(false);
 			}
 
@@ -205,6 +228,9 @@ public class Overlay extends StackPane {
 		onHiding.forEach(Runnable::run);
 	}
 
+	/**
+	 * Shows the overlay and enters a nested event loop until it is hidden.
+	 */
 	public void showAndWait() {
 		show();
 		Integer key = new Random().nextInt();

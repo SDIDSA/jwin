@@ -5,40 +5,49 @@ import org.luke.gui.style.Style;
 
 import javafx.scene.paint.Color;
 
+/**
+ * A simple implementation of the {@link InputStyle} for modern input controls.
+ *
+ * @author SDIDSA
+ */
 public class ModernInputStyle extends InputStyle {
-
+	/**
+	 * Constructs a {@code ModernInputStyle} for the specified input control.
+	 *
+	 * @param input The input control to style.
+	 */
 	public ModernInputStyle(Input input) {
 		super(input);
 	}
 
 	@Override
 	public void focus(boolean focus) {
-		//DO NOTHING
+		// DO NOTHING
 	}
 
 	@Override
 	public void hover() {
-		//DO NOTHING
+		// DO NOTHING
 	}
 
 	@Override
 	public void unhover() {
-		//DO NOTHING		
+		// DO NOTHING
 	}
 
 	@Override
 	public void focus() {
-		//DO NOTHING
+		// DO NOTHING
 	}
 
 	@Override
 	public void unfocus() {
-		//DO NOTHING
+		// DO NOTHING
 	}
 
 	@Override
 	public void setBorder(Color border, Color hover, Color foc) {
-		//DO NOTHING
+		// DO NOTHING
 	}
 
 	@Override

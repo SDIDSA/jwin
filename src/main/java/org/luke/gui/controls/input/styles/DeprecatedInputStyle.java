@@ -12,6 +12,13 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 
+/**
+ * an implementation of the {@link InputStyle} for older input
+ * controls. This style includes animations for focus, hover, and unfocus
+ * transitions.
+ *
+ * @author SDIDSA
+ */
 public class DeprecatedInputStyle extends InputStyle {
 	private ObjectProperty<Color> borderProperty;
 

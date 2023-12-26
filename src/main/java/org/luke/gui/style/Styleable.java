@@ -14,7 +14,7 @@ import javafx.scene.paint.Color;
  * {@link Styleable#applyStyle(Style) applyStyle} method and will be affected by
  * {@link mesa.gui.window.Window#setStyle(Style) Window.setStyle(Style)} calls.
  * 
- * @author Lukas Owen
+ * @author SDIDSA
  * 
  */
 public interface Styleable {

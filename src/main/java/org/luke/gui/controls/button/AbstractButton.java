@@ -32,6 +32,13 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 
+/**
+ * customizable JavaFX StackPane-based button with styling and loading animation
+ * support. It provides features such as configurable appearance, loading state,
+ * and actions on mouse click or key press.
+ *
+ * @author SDIDSA
+ */
 public class AbstractButton extends StackPane implements Styleable {
 	protected static final double DEFAULT_WIDTH = 100;
 	protected static final double DEFAULT_HEIGHT = 32;
@@ -60,6 +67,15 @@ public class AbstractButton extends StackPane implements Styleable {
 	public AbstractButton(Window window, CornerRadii radius, double height) {
 		this(window, radius, height, DEFAULT_WIDTH);
 	}
+
+	/**
+	 * Constructs an AbstractButton instance with the specified window, radius, and
+	 * height.
+	 *
+	 * @param window The associated Window for styling.
+	 * @param radius The corner radius of the button.
+	 * @param height The preferred height of the button.
+	 */
 
 	public AbstractButton(Window window, CornerRadii radius, double height, double width) {
 		this.radius = radius;
@@ -186,15 +202,30 @@ public class AbstractButton extends StackPane implements Styleable {
 		fire(keyAction);
 	}
 
+	/**
+	 * Sets the action to be performed on mouse click and key press.
+	 *
+	 * @param action The Runnable action to be executed.
+	 */
 	public void setAction(Runnable action) {
 		this.mouseAction = action;
 		this.keyAction = action;
 	}
 
+	/**
+	 * Sets the action to be performed on mouse click.
+	 *
+	 * @param mouseAction The Runnable action to be executed on mouse click.
+	 */
 	public void setMouseAction(Runnable mouseAction) {
 		this.mouseAction = mouseAction;
 	}
 
+	/**
+	 * Sets the action to be performed on key press.
+	 *
+	 * @param keyAction The Runnable action to be executed on key press.
+	 */
 	public void setKeyAction(Runnable keyAction) {
 		this.keyAction = keyAction;
 	}
@@ -207,6 +238,11 @@ public class AbstractButton extends StackPane implements Styleable {
 		return radius;
 	}
 
+	/**
+	 * Sets the fill color of the button.
+	 *
+	 * @param fill The fill color of the button.
+	 */
 	public void setFill(Color fill) {
 		back.setFill(fill);
 		enter = new Timeline(new KeyFrame(Duration.seconds(.15),
@@ -216,10 +252,20 @@ public class AbstractButton extends StackPane implements Styleable {
 				new KeyFrame(Duration.seconds(.15), new KeyValue(back.fillProperty(), fill, Interpolator.EASE_BOTH)));
 	}
 
+	/**
+	 * Sets the stroke color of the button.
+	 *
+	 * @param fill The stroke color of the button.
+	 */
 	public void setStroke(Color fill) {
 		back.setStroke(fill);
 	}
 
+	/**
+	 * Sets the corner radius of the button.
+	 *
+	 * @param radius The corner radius of the button.
+	 */
 	public void setRadius(CornerRadii radius) {
 		this.radius = radius;
 		radiusProperty.set(radius);
