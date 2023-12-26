@@ -1,3 +1,4 @@
+
 package org.luke.gui.locale;
 
 import java.lang.ref.WeakReference;
@@ -7,37 +8,57 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 
 /**
- * Represents a Localized Node. <br>
+ * interface that represents a Localized Node and offers methods for
+ * weak-binding a localized node to a Locale Observable.<br>
  * <br>
+ *
  * Classes implementing this interface have to define the
- * {@link Localized#applyLocale(Locale) applyLocale} method and will be affected
- * by {@link mesa.gui.window.Window#setLocale(Locale) Window.setLocale(Locale)}
- * calls.
- * 
+ * {@code applyLocale(Locale)} method and will be affected by
+ * {@link org.luke.gui.window.Window#setLocale(Locale) Window.setLocale(Locale)}
+ * calls in the Window class.
+ *
  * @author SDIDSA
- * 
  */
 public interface Localized {
 
 	/**
-	 * Applies the passed {@link Locale} on this Node, The behavior of this method
-	 * is defined by subclasses. <br>
-	 * <br>
-	 * <b>Note :</b> do not manually call this, use {@link mesa.gui.window.Window
-	 * Window}<span style= "color:
-	 * #0066cc;">.</span>{@link mesa.gui.window.Window#setLocale(Locale)
-	 * setLocale(Locale)} in to apply a {@link Locale} on the whole scene graph.
+	 * Applies the passed Locale on this Node. The behavior of this method is
+	 * defined by subclasses.
 	 *
-	 * @param locale - the {@link Locale} to be applied on this Node
+	 * Note: Do not manually call this method; use
+	 * {@link org.luke.gui.window.Window#setLocale(Locale) Window.setLocale(Locale)}
+	 * to apply a Locale on the whole scene graph.
+	 *
+	 * @param locale - the Locale to be applied on this Node
 	 */
-	public void applyLocale(Locale locale);
+	void applyLocale(Locale locale);
 
-	public void applyLocale(ObjectProperty<Locale> locale);
+	/**
+	 * Applies the Locale from the provided ObjectProperty on this Node.
+	 *
+	 * @param locale - the ObjectProperty holding the Locale to be applied on this
+	 *               Node
+	 */
+	void applyLocale(ObjectProperty<Locale> locale);
 
-	public static void bindLocale(Localized node, ObjectProperty<Locale> locale) {
+	/**
+	 * Binds the Locale of the provided Localized node to the given ObjectProperty.
+	 *
+	 * @param node   - the Localized node to bind the Locale
+	 * 
+	 * @param locale - the ObjectProperty holding the Locale
+	 */
+	static void bindLocale(Localized node, ObjectProperty<Locale> locale) {
 		bindLocaleWeak(node, locale);
 	}
 
+	/**
+	 * Binds the Locale weakly to the provided Localized node and ObjectProperty.
+	 *
+	 * @param node   - the Localized node to bind the Locale
+	 * 
+	 * @param locale - the ObjectProperty holding the Locale
+	 */
 	private static void bindLocaleWeak(Localized node, ObjectProperty<Locale> locale) {
 		node.applyLocale(locale.get());
 

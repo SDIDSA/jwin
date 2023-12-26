@@ -10,8 +10,28 @@ import org.luke.gui.exception.ErrorHandler;
 import javafx.scene.text.FontPosture;
 import javafx.scene.text.FontWeight;
 
+/**
+ * provides a convenient way to manage and use fonts in JavaFX applications. It
+ * supports various font properties such as family, size, weight, and posture.
+ * <p>
+ * It includes default font settings and a cache to efficiently manage loaded
+ * fonts.
+ * </p>
+ * <p>
+ * Fonts are loaded from the "fonts" directory in the classpath based on the
+ * specified font family.
+ * </p>
+ * <p>
+ * Implements the equals method to check for font equality.
+ * </p>
+ * <p>
+ * The static initializer initializes the default fonts.
+ * </p>
+ *
+ * @author SDIDSA
+ */
 public class Font {
-	
+
 	public static final String DEFAULT_MONO_FAMILY = "Ubuntu Mono";
 	public static final String DEFAULT_FAMILY = "Ubuntu";// Ubuntu Roboto
 	public static final String DEFAULT_FAMILY_MEDIUM = DEFAULT_FAMILY + " Medium";
@@ -88,10 +108,8 @@ public class Font {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Font otherFont) {
-			return family.equals(otherFont.family) 	&&
-					size == otherFont.size			&&
-					weight.equals(otherFont.weight)	&&
-					posture.equals(otherFont.posture);
+			return family.equals(otherFont.family) && size == otherFont.size && weight.equals(otherFont.weight)
+					&& posture.equals(otherFont.posture);
 		} else {
 			return false;
 		}
@@ -109,6 +127,7 @@ public class Font {
 
 		return found;
 	}
+
 	static {
 		init();
 	}
@@ -121,8 +140,9 @@ public class Font {
 	private static void loadFont(String name) {
 		try {
 			File parent = new File(URLDecoder.decode(Font.class
-					.getResource(String.join("/", "/fonts", name.replace(" ", ""), name.replace(" ", "") + "-Regular.ttf")).getFile(),
-					"utf-8")).getParentFile();
+					.getResource(
+							String.join("/", "/fonts", name.replace(" ", ""), name.replace(" ", "") + "-Regular.ttf"))
+					.getFile(), "utf-8")).getParentFile();
 			for (File font : parent.listFiles()) {
 				javafx.scene.text.Font.loadFont(new FileInputStream(font), 14);
 			}

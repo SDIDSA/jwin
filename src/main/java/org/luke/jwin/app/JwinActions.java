@@ -126,9 +126,9 @@ public class JwinActions {
 
 		if (rt == null) {
 			config.separate();
-			config.logStd("jre was not set, using the selected jdk to run");
-			config.logStd("\tconsider generating a minimal jre with jlink before building the installer");
-			config.logStd("\tas packing a jdk with the installer tremendously increases the package size");
+			config.logStd("no_jre_using_jdk");
+			config.logStd("jdk_consider_1");
+			config.logStd("jdk_consider_2");
 			config.separate();
 
 			List<File> jars = config.getDependencies().getJars();

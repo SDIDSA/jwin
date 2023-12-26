@@ -20,6 +20,11 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
+/**
+ * Utility class for working with JavaFX nodes.
+ * 
+ * @author SDIDSA
+ */
 
 public class NodeUtils {
 	private NodeUtils() {

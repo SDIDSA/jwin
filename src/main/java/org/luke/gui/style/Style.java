@@ -10,6 +10,12 @@ import org.luke.gui.file.FileUtils;
 
 import javafx.scene.paint.Color;
 
+/**
+ * Represents a style configuration with accent color, theme name, and brightness modifier.
+ * Provides methods for determining the theme type (dark, gray, light) and adjusting brightness.
+ * 
+ * @author SDIDSA
+ */
 public class Style {
 	public static final Style DARK_1 = new Style("dark", Color.web("#666666"), 0.5);
 	public static final Style DARK_2 = new Style("dark", Color.web("#367640"), 0.5);

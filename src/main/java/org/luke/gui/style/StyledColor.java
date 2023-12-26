@@ -4,6 +4,12 @@ import java.util.function.Function;
 
 import javafx.scene.paint.Color;
 
-public interface StyledColor extends Function<Style, Color>{
+/**
+ * 
+ * functional interface that maps a Style to a Color.
+ * 
+ * @author zinou SDIDSA
+ */
+public interface StyledColor extends Function<Style, Color> {
 
 }

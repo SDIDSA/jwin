@@ -2,13 +2,55 @@ package org.luke.gui.controls;
 
 import javafx.animation.Interpolator;
 
+/**
+ * Custom cubic Bezier spline interpolator for animations.
+ * 
+ * @author SDIDSA
+ */
 public class SplineInterpolator extends Interpolator {
 
+	/**
+	 * An interpolator that initiates by moving away from the target, then
+	 * anticipates with an overshooting motion before returning, creating a dynamic
+	 * and exaggerated effect. Ideal for animations requiring a playful and bouncy
+	 * motion.
+	 */
 	public static final SplineInterpolator ANTICIPATEOVERSHOOT = new SplineInterpolator(0.68, -0.6, 0.32, 1.6);
+
+	/**
+	 * An interpolator that starts by moving away from the target, creating
+	 * anticipation, and then returns to the target value, producing a subtle yet
+	 * dynamic effect. Suitable for animations that benefit from a gentle start
+	 * followed by a lively motion.
+	 */
 	public static final SplineInterpolator ANTICIPATE = new SplineInterpolator(0.36, 0, 0.66, -0.56);
+
+	/**
+	 * An interpolator that starts by moving towards the target value and then
+	 * overshoots, creating a dynamic and slightly exaggerated motion. Useful for
+	 * animations that need a lively and impactful transition.
+	 */
 	public static final SplineInterpolator OVERSHOOT = new SplineInterpolator(0.34, 1.56, 0.64, 1);
+
+	/**
+	 * An interpolator that starts quickly and gradually slows down towards the
+	 * target value, resulting in a smooth deceleration effect. Commonly used for
+	 * animations where a graceful and smooth finish is desired.
+	 */
 	public static final SplineInterpolator EASE_OUT = new SplineInterpolator(0, 0, 0.16, 0.99);
+
+	/**
+	 * An interpolator that starts slowly and then accelerates towards the target
+	 * value, creating a gentle acceleration effect. Suitable for animations that
+	 * require a smooth and gradual build-up.
+	 */
 	public static final SplineInterpolator EASE_IN = new SplineInterpolator(0.82, 0.01, 1, 1);
+
+	/**
+	 * An interpolator that combines ease-in and ease-out effects for a balanced and
+	 * natural transition between values. Useful for animations that demand a
+	 * harmonious and well-balanced motion.
+	 */
 	public static final SplineInterpolator EASE_BOTH = new SplineInterpolator(0.5, 0, 0.5, 1);
 
 	private final double x1;
