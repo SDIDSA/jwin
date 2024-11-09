@@ -7,6 +7,7 @@ import org.luke.gui.controls.space.Separator;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Page;
+import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.UrlProtocolAssociation;
@@ -43,7 +44,8 @@ public class MoreSettings extends BasicOverlay {
 			clearTemp.startLoading();
 
 			new Thread(() -> {
-				FileDealer.clearTemp();
+				long size = FileDealer.clearTemp();
+				Jwin.instance.getConfig().logStd("cleared " + FileDealer.formatSize(size) + " of cache files");
 				Platform.runLater(clearTemp::stopLoading);
 			}).start();
 		});

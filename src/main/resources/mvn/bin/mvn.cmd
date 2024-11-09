@@ -21,6 +21,7 @@
 @REM Environment Variable Prerequisites
 @REM
 @REM   JAVA_HOME          Must point at your Java Development Kit installation.
+@REM   MAVEN_ARGS        (Optional) Arguments passed to Maven before CLI arguments.
 @REM   MAVEN_BATCH_ECHO  (Optional) Set to 'on' to enable the echoing of the batch commands.
 @REM   MAVEN_BATCH_PAUSE (Optional) set to 'on' to wait for a key stroke before ending.
 @REM   MAVEN_OPTS        (Optional) Java runtime options used when Maven is executed.
@@ -136,8 +137,9 @@ exit /b
 
 :findBaseDir
 cd /d "%WDIR%"
+set "WDIR=%CD%"
 :findBaseDirLoop
-if exist "%WDIR%\.mvn" goto baseDirFound
+if exist ".mvn" goto baseDirFound
 cd ..
 IF "%WDIR%"=="%CD%" goto baseDirNotFound
 set "WDIR=%CD%"
@@ -176,7 +178,7 @@ set CLASSWORLDS_LAUNCHER=org.codehaus.plexus.classworlds.launcher.Launcher
   "-Dmaven.home=%MAVEN_HOME%" ^
   "-Dlibrary.jansi.path=%MAVEN_HOME%\lib\jansi-native" ^
   "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" ^
-  %CLASSWORLDS_LAUNCHER% %MAVEN_CMD_LINE_ARGS%
+  %CLASSWORLDS_LAUNCHER% %MAVEN_ARGS% %MAVEN_CMD_LINE_ARGS%
 if ERRORLEVEL 1 goto error
 goto end
 
@@ -197,4 +199,4 @@ if "%MAVEN_BATCH_PAUSE%"=="on" pause
 
 if "%MAVEN_TERMINATE_CMD%"=="on" exit %ERROR_CODE%
 
-cmd /C exit /B %ERROR_CODE%
+exit /b %ERROR_CODE%

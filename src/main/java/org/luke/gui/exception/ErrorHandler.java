@@ -17,7 +17,7 @@ public class ErrorHandler {
      * @param x The exception to handle.
      * @param task A description of the task or operation being performed when the exception occurred.
      */
-    public static void handle(Exception x, String task) {
+    public static void handle(Throwable x, String task) {
         System.err.println(x.getClass().getSimpleName() + " occurred while trying to " + task + "\ncause: " + x.getMessage());
         x.printStackTrace();
     }

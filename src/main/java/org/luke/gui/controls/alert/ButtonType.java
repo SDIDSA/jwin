@@ -24,7 +24,8 @@ import javafx.scene.paint.Color;
 public enum ButtonType {
 	CLOSE("close"), DONE("done"), CANCEL("cancel", true), DELETE("delete"), USE_DEFAULT("use_default", true),
 	SELECT_NOW("select_now", true), YES("yes"), NO("no"), OK("ok", true), VIEW_LOG("view_full_error_log"),
-	IGNORE("ignore", true);
+	IGNORE("ignore", true),
+	SKIP("skip", true);
 
 	private String key;
 	private boolean filled;

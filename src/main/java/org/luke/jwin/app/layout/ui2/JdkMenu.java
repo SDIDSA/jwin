@@ -2,8 +2,10 @@ package org.luke.jwin.app.layout.ui2;
 
 import java.io.File;
 import org.luke.gui.controls.popup.context.ContextMenu;
+import org.luke.gui.controls.popup.context.items.KeyedMenuItem;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
+import org.luke.gui.locale.Locale;
 import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.layout.JwinUi;
 import org.luke.jwin.local.managers.JdkManager;
@@ -15,23 +17,23 @@ public class JdkMenu extends MenuMenuItem {
 	public JdkMenu(ContextMenu menu, JwinUi config) {
 		super(menu, "jdk_compile");
 
-		MenuItem valItem = new MenuItem(getSubMenu(), "", true);
+		KeyedMenuItem valItem = new KeyedMenuItem(getSubMenu(), "");
 		valItem.setDisable(true);
 
 		MenuItem configureJdks = new MenuItem(getSubMenu(), "configure_jdk_versions", true);
 
 		configureJdks.setAction(() -> {
 			menu.hide();
-			Jwin.instance.openSettings("jdk versions");
+			Jwin.instance.openSettings("jdk_versions");
 		});
 
 		getSubMenu().addOnShowing(() -> {
 			File val = config.getJdk().getValue();
-			String valDisp = "(not selected)";
 			if (val != null) {
-				valDisp = "jdk " + config.getJdk().getVersion();
+				valItem.setText("jdk " + config.getJdk().getVersion());
+			}else {
+				valItem.setKey("not_selected");
 			}
-			valItem.setText(valDisp);
 
 			getSubMenu().clear();
 
@@ -50,7 +52,7 @@ public class JdkMenu extends MenuMenuItem {
 					detIt.setAction(() -> {
 						menu.hide();
 						config.getJdk().set(jdk.getRoot());
-						config.logStd("The project JDK was set to " + disp);
+						config.logStd(Locale.key("jdk_set", "version", disp));
 					});
 					Platform.runLater(() -> addMenuItem(detIt));
 				});

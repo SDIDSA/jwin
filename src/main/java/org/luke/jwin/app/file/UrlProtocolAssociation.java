@@ -5,7 +5,7 @@ import org.json.JSONObject;
 public class UrlProtocolAssociation {
 	private static final String PROTOCOL = "protocol";
 
-	private String protocol;
+	private final String protocol;
 
 	public UrlProtocolAssociation(String protocol) {
 		this.protocol = protocol;

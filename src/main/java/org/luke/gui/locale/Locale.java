@@ -15,17 +15,23 @@ import org.luke.gui.file.FileUtils;
  * @author SDIDSA
  */
 public class Locale {
+	private static final HashMap<String, Locale> cache = new HashMap<>();
 	/**
 	 * the English (United States) locale.
 	 */
-	public static final Locale EN_US = new Locale("en_US");
+	public static final Locale EN_US = new Locale("en_US", false);
 	/**
 	 * Represents the French (France) locale.
 	 */
-	public static final Locale FR_FR = new Locale("fr_FR");
+	public static final Locale FR_FR = new Locale("fr_FR", false);
+	/**
+	 * Represents the Arabic (Algeria) locale.
+	 */
+	public static final Locale AR_DZ = new Locale("ar_DZ", true);
 
-	private String name;
-	private HashMap<String, String> values;
+	private final String name;
+	private final boolean rtl;
+	private final HashMap<String, String> values;
 
 	/**
 	 * Private constructor to create a locale instance with the specified name.
@@ -33,15 +39,17 @@ public class Locale {
 	 *
 	 * @param name The name of the locale.
 	 */
-	private Locale(String name) {
+	private Locale(String name, boolean rtl) {
 		this.name = name;
 		values = new HashMap<>();
+		this.rtl = rtl;
 		String file = FileUtils.readFile("/locales/" + name + ".json");
 		JSONObject obj = new JSONObject(file);
 
 		for (String key : obj.keySet()) {
 			values.put(key, obj.getString(key));
 		}
+		cache.put(name.toLowerCase(), this);
 	}
 
 	private static final String BIG_SEPARATOR = "-key-";
@@ -127,5 +135,17 @@ public class Locale {
 	 */
 	public static String key(String base, String k1, String v1, String k2, int v2) {
 		return key(base, k1, v1, k2, String.valueOf(v2));
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public boolean isRtl() {
+		return rtl;
+	}
+
+	public static Locale byName(String name){
+		return cache.get(name.toLowerCase());
 	}
 }

@@ -18,9 +18,9 @@ import javafx.scene.text.FontWeight;
  * @author SDIDSA
  */
 public class AlertButton extends Button implements Styleable {
-	private ButtonType type;
+	private final ButtonType type;
 
-	public AlertButton(Alert alert, ButtonType type) {
+	public AlertButton(Overlay alert, ButtonType type) {
 		super(alert.getWindow(), type.getKey(), 5.0, 16, 38);
 		this.type = type;
 

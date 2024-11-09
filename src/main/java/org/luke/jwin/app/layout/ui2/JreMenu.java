@@ -3,6 +3,7 @@ package org.luke.jwin.app.layout.ui2;
 import java.io.File;
 
 import org.luke.gui.controls.popup.context.ContextMenu;
+import org.luke.gui.controls.popup.context.items.KeyedMenuItem;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
 import org.luke.jwin.app.layout.JwinUi;
@@ -12,15 +13,15 @@ public class JreMenu extends MenuMenuItem {
 	public JreMenu(ContextMenu menu, JwinUi config) {
 		super(menu, "jre_pack");
 		
-		MenuItem valItem = new MenuItem(getSubMenu(), "");
+		KeyedMenuItem valItem = new KeyedMenuItem(getSubMenu(), "");
 		valItem.setDisable(true);
 		getSubMenu().addOnShowing(() -> {
 			File val = config.getJre().getValue();
-			String valDisp = "(not selected)";
 			if (val != null) {
-				valDisp = "jre " + config.getJre().getVersion();
+				valItem.setText("jre " + config.getJdk().getVersion());
+			}else {
+				valItem.setKey("not_selected");
 			}
-			valItem.setText(valDisp);
 		});
 		
 		addMenuItem(valItem);

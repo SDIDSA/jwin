@@ -38,6 +38,10 @@ public class MainClassSearch extends StackPane implements Styleable {
 		return field.valueProperty();
 	}
 
+	public String getValue() {
+		return field.getValue();
+	}
+
 	public void clear() {
 		field.clear();
 	}

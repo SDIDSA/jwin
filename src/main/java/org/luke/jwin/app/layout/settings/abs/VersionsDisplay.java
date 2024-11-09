@@ -2,7 +2,7 @@ package org.luke.jwin.app.layout.settings.abs;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.keyed.Label;
-import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.controls.scroll.VerticalScrollable;
 import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.factory.Borders;
@@ -20,7 +20,7 @@ import javafx.scene.layout.VBox;
 
 public class VersionsDisplay extends VBox implements Styleable {
 
-	private Scrollable preVDisp;
+	private VerticalScrollable preVDisp;
 	private VBox vDisp;
 
 	private Label empty;
@@ -36,7 +36,7 @@ public class VersionsDisplay extends VBox implements Styleable {
 
 		empty = new Label(win, "nothing_to_show_here", new Font(14));
 
-		preVDisp = new Scrollable();
+		preVDisp = new VerticalScrollable();
 		preVDisp.setContent(vDisp);
 
 		preVDisp.setMinHeight(250);

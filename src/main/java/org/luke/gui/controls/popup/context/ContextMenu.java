@@ -3,11 +3,12 @@ package org.luke.gui.controls.popup.context;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import javafx.geometry.NodeOrientation;
 import org.luke.gui.controls.SplineInterpolator;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
-import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.controls.scroll.VerticalScrollable;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -47,23 +48,23 @@ import javafx.util.Duration;
  */
 public class ContextMenu extends PopupControl implements Styleable {
 	protected Window owner;
-	protected Scrollable sroll;
+	protected VerticalScrollable sroll;
 	protected VBox root;
 	protected ArrayList<MenuItem> items;
 
-	private ArrayList<StackPane> separators;
+	private final ArrayList<StackPane> separators;
 
-	private Timeline show;
+	private final Timeline show;
 
-	private Scale scale;
+	private final Scale scale;
 
 	protected MenuItem selected;
 
-	private ArrayList<Runnable> onShowing;
+	private final ArrayList<Runnable> onShowing;
 
-	private ArrayList<Runnable> onHiding;
+	private final ArrayList<Runnable> onHiding;
 
-	private static ArrayList<ContextMenu> open;
+	private static final ArrayList<ContextMenu> open;
 	private static int focused = 0;
 
 	static {
@@ -93,7 +94,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 		StackPane clipped = new StackPane();
 		clipped.setEffect(ds);
 
-		sroll = new Scrollable();
+		sroll = new VerticalScrollable();
 
 		Rectangle clip = new Rectangle();
 		clip.setArcHeight(4);
@@ -112,7 +113,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 		getScene().setOnKeyPressed(this::handlePress);
 		getScene().setOnKeyReleased(this::handleRelease);
 
-		setOnHiding(e -> {
+		setOnHiding(_ -> {
 			onHiding.forEach(Runnable::run);
 			if (selected != null) {
 				selected.setActive(false);
@@ -129,7 +130,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 				new KeyValue(scale.xProperty(), 1, SplineInterpolator.OVERSHOOT),
 				new KeyValue(scale.yProperty(), 1, SplineInterpolator.OVERSHOOT)));
 
-		show.setOnFinished(e -> {
+		show.setOnFinished(_ -> {
 			sroll.setCache(false);
 			sroll.setCacheHint(CacheHint.DEFAULT);
 		});
@@ -143,7 +144,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 		addOnHiding(() -> {
 			open.remove(this);
-			if (open.size() == 0) {
+			if (open.isEmpty()) {
 				focused = 0;
 			}
 		});
@@ -258,6 +259,9 @@ public class ContextMenu extends PopupControl implements Styleable {
 	@Override
 	public void show(javafx.stage.Window owner) {
 		onShowing.forEach(Runnable::run);
+		root.setNodeOrientation(this.owner.getLocale().get().isRtl() ?
+				NodeOrientation.RIGHT_TO_LEFT :
+				NodeOrientation.LEFT_TO_RIGHT);
 		super.show(owner);
 	}
 
@@ -269,7 +273,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 
 	public void showPop(MouseEvent ev) {
 		if (ev.getButton() == MouseButton.SECONDARY) {
-			setOnShown(e -> {
+			setOnShown(_ -> {
 				scale.setPivotY(0);
 				scale.setPivotX(0);
 				sroll.setOpacity(0);
@@ -319,8 +323,8 @@ public class ContextMenu extends PopupControl implements Styleable {
 	}
 
 	public void addMenuItem(MenuItem i) {
-		i.setOnMouseClicked(e -> i.fire());
-		i.setOnMouseEntered(e -> select(i));
+		i.setOnMouseClicked(_ -> i.fire());
+		i.setOnMouseEntered(_ -> select(i));
 		root.getChildren().add(i);
 		items.add(i);
 	}
@@ -360,7 +364,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 			return;
 		}
 		item.setDisable(false);
-		root.getChildren().add(0, item);
+		root.getChildren().addFirst(item);
 	}
 
 	public void enableLast(MenuItem item) {
@@ -403,7 +407,11 @@ public class ContextMenu extends PopupControl implements Styleable {
 		if (node.getScene() == null) {
 			return;
 		}
-		setOnShown(e -> {
+		if(getOwner().getLocale().get().isRtl()) {
+			preD = preD.flipHorizontal();
+		}
+		Direction finalPreD = preD;
+		setOnShown(_ -> {
 			Bounds bounds = node.getBoundsInLocal();
 			Bounds screenBounds = node.localToScreen(bounds);
 			double px = 0;
@@ -412,8 +420,8 @@ public class ContextMenu extends PopupControl implements Styleable {
 			double scrW = Screen.getPrimary().getVisualBounds().getWidth();
 			double scrH = Screen.getPrimary().getVisualBounds().getHeight();
 
-			Direction direction = preD;
-			if (preD == null) {
+			Direction direction = finalPreD;
+			if (finalPreD == null) {
 				px = screenBounds.getMaxX() - 15 + offsetX;
 				py = screenBounds.getMinY() - 15;
 			} else {
@@ -447,7 +455,8 @@ public class ContextMenu extends PopupControl implements Styleable {
 				}
 			}
 
-			scale.setPivotY(direction.isVertical() ? direction.isArrowFirst() ? 0 : sroll.getHeight() - 15
+            assert direction != null;
+            scale.setPivotY(direction.isVertical() ? direction.isArrowFirst() ? 0 : sroll.getHeight() - 15
 					: direction.isSecondFirst() ? 0
 							: direction.isSecondLast() ? sroll.getHeight() : sroll.getHeight() / 2);
 			scale.setPivotX(direction.isHorizontal() ? direction.isArrowFirst() ? 0 : sroll.getWidth() - 15
@@ -485,7 +494,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 	}
 
 	public void showPop(Node node, ContextMenuEvent event) {
-		setOnShown(e -> {
+		setOnShown(_ -> {
 			node.getScene().getRoot().requestFocus();
 
 			sroll.setCache(true);
@@ -501,7 +510,7 @@ public class ContextMenu extends PopupControl implements Styleable {
 			show.playFromStart();
 		});
 
-		setOnHidden(e -> node.requestFocus());
+		setOnHidden(_ -> node.requestFocus());
 
 		if (event.isKeyboardTrigger()) {
 			Bounds bounds = node.getBoundsInLocal();

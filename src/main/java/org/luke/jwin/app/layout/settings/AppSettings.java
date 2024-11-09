@@ -21,6 +21,8 @@ public class AppSettings extends Settings {
 
 		sideBar.addSection(appSettings);
 		sideBar.separate(win);
+
+		fire("display");
 	}
 	
 	public boolean fire(String match) {

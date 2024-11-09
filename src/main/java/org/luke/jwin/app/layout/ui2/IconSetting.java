@@ -2,6 +2,7 @@ package org.luke.jwin.app.layout.ui2;
 
 import java.io.File;
 
+import javafx.geometry.NodeOrientation;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.input.Input;
@@ -18,10 +19,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 
 public class IconSetting extends Input implements Styleable {	
-	private ColorIcon empty;
+	private final ColorIcon empty;
 	
 	public IconSetting(Window win, Runnable fire) {
 		super("app_icon");
+
+		setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 		
 		setMinWidth(USE_PREF_SIZE);
 		setMaxWidth(USE_PREF_SIZE);
@@ -68,6 +71,10 @@ public class IconSetting extends Input implements Styleable {
 		disp.setImage(i);
 	}
 
+	public void unset() {
+		getChildren().setAll(empty);
+	}
+
 	@Override
 	public boolean isFocus() {
 		return isFocused();
@@ -82,7 +89,7 @@ public class IconSetting extends Input implements Styleable {
 	@Override
 	public void setValue(String value) {
 		File f = new File(value);
-		if(f != null) set(f);
+        set(f);
 	}
 
 	@Override

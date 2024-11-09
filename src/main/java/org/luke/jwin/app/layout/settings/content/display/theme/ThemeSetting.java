@@ -35,7 +35,7 @@ public class ThemeSetting extends VBox implements Styleable {
 		few.setPadding(new Insets(20));
 		few.setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		few.setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
-		few.setPrefSize(52 * 4 + 20 * 5, 52 * 1 + 20 * 2);
+		few.setPrefSize(52 * 4 + 20 * 5, 52 + 20 * 2);
 		few.setAlignment(Pos.CENTER_LEFT);
 
 		for (Style s : Style.FEW_STYLES) {

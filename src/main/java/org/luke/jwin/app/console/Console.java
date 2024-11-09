@@ -17,20 +17,20 @@ import javafx.scene.layout.HBox;
 
 public class Console extends BasicOverlay {
 	
-	private ColorIcon send;
-	private HBox preInput;
-	private ConsoleOutput output;
+	private final ColorIcon send;
+	private final HBox preInput;
+	private final ConsoleOutput output;
 	
 	public Console(Page ps, Command c) {
 		super(ps, 550);
 		removeTop();
 		removeSubHead();
 		
-		head.setKey("Application Console");
+		head.setKey("application_io");
 
 		output = new ConsoleOutput(ps.getWindow());
 		
-		TextVal input = new TextVal(getWindow(), "Input");
+		TextVal input = new TextVal(getWindow(), "application_input");
 		input.setInputFont(new Font(Font.DEFAULT_MONO_FAMILY, 16));
 
 		send = new ColorIcon("send", 96, 24);
@@ -40,7 +40,7 @@ public class Console extends BasicOverlay {
 		
 		send.setAction(() -> {
 			String line = input.getValue();
-			output.addInput(line);
+			output.addInput(line, false);
 			c.write(line);
 			input.setValue("");
 		});
@@ -49,14 +49,18 @@ public class Console extends BasicOverlay {
 
 		
 		c.addInputHandler(line -> {
+			if(line.endsWith("com.sun.javafx.application.PlatformImpl startup")) return;
+			if(line.startsWith("WARNING: Unsupported JavaFX configuration: classes were loaded from 'unnamed module")) return;
 			Platform.runLater(() -> {
-				output.addOutput(line);
+				output.addOutput(line, false);
 			});
 		});
 		
 		c.addErrorHandler(line -> {
+			if(line.endsWith("com.sun.javafx.application.PlatformImpl startup")) return;
+			if(line.startsWith("WARNING: Unsupported JavaFX configuration: classes were loaded from 'unnamed module")) return;
 			Platform.runLater(() -> {
-				output.addError(line);
+				output.addError(line, false);
 			});
 		});
 

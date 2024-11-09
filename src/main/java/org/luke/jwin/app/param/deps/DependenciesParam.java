@@ -110,13 +110,18 @@ public class DependenciesParam extends Param {
 		}
 
 		File pom = pom(root);
+		File grad = grad(root);
 		if (pom.exists()) {
 			Jwin.instance.getConfig().logStd(Locale.key("detected_file", "file", "pom.xml"));
 			resolveMaven(root, pom, onFinish);
-		} else {
-			File grad = grad(root);
+		} else if(grad.exists()){
 			Jwin.instance.getConfig().logStd(Locale.key("detected_file", "file", grad.getName()));
 			resolveGradle(root, grad, onFinish);
+		}else {
+			Jwin.instance.getConfig().logErr("no_build_tool");
+			defOnFin.accept(false);
+			if (onFinish != null)
+				onFinish.accept(false);
 		}
 	}
 

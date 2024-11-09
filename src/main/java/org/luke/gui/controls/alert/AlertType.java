@@ -7,7 +7,7 @@ import java.util.List;
  * The AlertType enum represents different types of alerts that can be
  * displayed. Each alert type is associated with specific button types, defining
  * the available user actions for that alert.
- *
+ * <p>
  * Supported AlertTypes:<br>
  * - INFO: Informational alert with a close button.<br>
  * - DELETE: Alert for deletion with cancel and delete buttons.<br>
@@ -20,7 +20,7 @@ public enum AlertType {
 	INFO(ButtonType.CLOSE), DELETE(ButtonType.CANCEL, ButtonType.DELETE), ERROR(ButtonType.CLOSE),
 	CONFIRM(ButtonType.CANCEL, ButtonType.NO, ButtonType.YES);
 
-	private List<ButtonType> buttons;
+	private final List<ButtonType> buttons;
 
 	/**
 	 * Constructs an AlertType with the specified button types.

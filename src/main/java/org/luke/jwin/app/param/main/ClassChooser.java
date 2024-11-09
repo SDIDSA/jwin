@@ -1,18 +1,20 @@
 package org.luke.jwin.app.param.main;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import javafx.collections.ListChangeListener;
+import javafx.scene.Node;
 import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.alert.ButtonType;
+import org.luke.gui.controls.check.KeyedCheck;
 import org.luke.gui.controls.label.unkeyed.Link;
-import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.controls.scroll.VerticalScrollable;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.file.FileUtils;
 import org.luke.gui.style.Style;
@@ -27,20 +29,22 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class ClassChooser extends BasicOverlay {
-	private Param param;
+	private final Param param;
 	Supplier<Map<String, File>> classLister;
 
 	private Entry<String, File> value;
 	private Map<String, File> classNames;
 	private Thread searcher;
 
-	private Scrollable preResults;
-	private VBox results;
+	private final VerticalScrollable preResults;
+	private final VBox results;
+	private final KeyedCheck onlyMainClasses;
 
 	public ClassChooser(Page ps, Supplier<Map<String, File>> classLister, Param param) {
 		super(ps);
 		removeTop();
 		removeSubHead();
+		removeDone();
 
 		this.classLister = classLister;
 		this.param = param;
@@ -49,9 +53,12 @@ public class ClassChooser extends BasicOverlay {
 
 		MainClassSearch search = new MainClassSearch(ps.getWindow());
 
+		onlyMainClasses = new KeyedCheck(ps.getWindow(), "only_main", 16);
+		onlyMainClasses.checkedProperty().set(true);
+
 		results = new VBox();
 		results.setPadding(new Insets(10));
-		preResults = new Scrollable();
+		preResults = new VerticalScrollable();
 		VBox.setVgrow(preResults, Priority.ALWAYS);
 
 		preResults.setMinHeight(250);
@@ -62,26 +69,28 @@ public class ClassChooser extends BasicOverlay {
 
 		preResults.setContent(results);
 
-		Consumer<String> searchFor = this::searchFor;
+		BiConsumer<String, Boolean> searchFor = this::searchFor;
 
-		search.valueProperty().addListener((obs, ov, nv) -> searchFor.accept(nv));
+		search.valueProperty().addListener((_, _, nv) -> searchFor.accept(nv.trim(), onlyMainClasses.checkedProperty().get()));
 
 		center.setAlignment(Pos.CENTER);
-		center.getChildren().addAll(search, preResults);
+		center.getChildren().addAll(search, onlyMainClasses, preResults);
 
 		addOnShown(() -> {
 			search.requestFocus();
 			results.getChildren().clear();
 			search.clear();
 			classNames = classLister.get();
-			searchFor.accept("");
+			searchFor.accept("", onlyMainClasses.checkedProperty().get());
 		});
+
+		onlyMainClasses.checkedProperty().addListener((_,_,_) ->
+				searchFor.accept(search.getValue().trim(), onlyMainClasses.checkedProperty().get()));
 
 		applyStyle(ps.getWindow().getStyl());
 	}
 
-	private void searchFor(String nv) {
-		preResults.getScrollBar();
+	private void searchFor(String nv, boolean onlyMain) {
 		if (searcher != null) {
 			searcher.interrupt();
 		}
@@ -89,24 +98,22 @@ public class ClassChooser extends BasicOverlay {
 		preResults.getScrollBar().positionProperty().set(0);
 
 		results.getChildren().clear();
+		preResults.clearContent();
+        searcher = new Thread(() -> {
+            ArrayList<String> found = new ArrayList<>(classNames.keySet().stream()
+					.filter(item -> {
+						File itemFile = classNames.get(item);
+						File f = new File(itemFile.getAbsolutePath().concat("/").concat(item));
+						return item.toLowerCase().contains(nv.toLowerCase()) && (!onlyMain || isMainClass(f));
+					}).toList());
 
-		if (nv.length() >= 0) {
-			searcher = new Thread(() -> {
-				List<String> found = classNames.keySet().stream()
-						.filter(item -> item.toLowerCase().contains(nv.toLowerCase())).toList();
+			found.sort(Comparator.naturalOrder());
 
-				found.forEach(e -> {
-					treatFound(e);
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e1) {
-						Thread.currentThread().interrupt();
-					}
-				});
-			});
-			searcher.start();
-		}
-	}
+            found.forEach(e -> results.getChildren().add(treatFound(e)));
+			Platform.runLater(() -> preResults.setContent(results));
+        });
+        searcher.start();
+    }
 	
 	public Map<String, File> listMainClasses() {
 		Map<String, File> classes = classLister.get();
@@ -115,19 +122,9 @@ public class ClassChooser extends BasicOverlay {
 		classes.forEach((e, file) -> {
 			File f = new File(file.getAbsolutePath().concat("/").concat(e));
 			if(isMainClass(f)) {
-				String name = e.replace(".java", "").replace("/", ".").replace("\\", ".");
-				StringBuilder displayName = new StringBuilder();
-				String[] parts = name.split("\\.");
-				for (int i = parts.length - 1; i >= 0 && i >= parts.length - 3; i--) {
-					if (!displayName.isEmpty()) {
-						displayName.insert(0, '.');
-					}
-					displayName.insert(0, parts[i]);
-				}
-				if (parts.length > 3) {
-					displayName.insert(0, "... .");
-				}
-				
+				String name = e.replace(".java", "")
+						.replace("/", ".")
+						.replace("\\", ".");
 				res.put(name, f);
 			};
 		});
@@ -141,10 +138,10 @@ public class ClassChooser extends BasicOverlay {
 
 		String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
 
-		return formattedSource.contains("publicstaticvoidmain(String");
+		return formattedSource.contains("publicstati" + "cvoidmain(String");
 	}
 
-	private void treatFound(String e) {
+	private Link treatFound(String e) {
 		String name = e.replace(".java", "").replace("/", ".").replace("\\", ".");
 		StringBuilder displayName = new StringBuilder();
 		String[] parts = name.split("\\.");
@@ -160,17 +157,14 @@ public class ClassChooser extends BasicOverlay {
 		Link className = new Link(getWindow(), displayName.toString());
 		className.setAction(() -> {
 			File file = new File(classNames.get(e).getAbsolutePath().concat("/").concat(e));
-			String content = FileUtils.readFile(file);
 
-			String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
-
-			if (formattedSource.contains("publicstaticvoidmain(String")) {
+			if (isMainClass(file)) {
 				Entry<String, File> preVal = Map.entry(name, file);
 				hide();
 				set(preVal);
 			} else {
-				JwinActions.alert("Probably not a main class",
-						"The class you have selected doesn't seem to define a main method, do you want to use it anyway ?",
+				JwinActions.alert("no_main_head",
+						"no_main_body",
 						AlertType.INFO, res -> {
 							if (res == ButtonType.YES) {
 								Entry<String, File> preVal = Map.entry(name, file);
@@ -181,7 +175,7 @@ public class ClassChooser extends BasicOverlay {
 			}
 
 		});
-		Platform.runLater(() -> results.getChildren().add(className));
+		return className;
 	}
 
 	public void set(Entry<String, File> value) {
@@ -189,8 +183,10 @@ public class ClassChooser extends BasicOverlay {
 			return;
 		}
 		this.value = value;
-		param.clearList();
-		param.addFile(getWindow(), value.getValue(), value.getKey());
+		Platform.runLater(() -> {
+			param.clearList();
+			param.addFile(getWindow(), value.getValue(), value.getKey());
+		});
 	}
 
 	public Entry<String, File> getValue() {

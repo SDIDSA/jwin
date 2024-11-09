@@ -9,8 +9,8 @@ public class FileTypeAssociation {
 	private static final String TYPE_EXTENSION = "typeExtension";
 	private static final String TYPE_ICON = "typeIcon";
 
-	private String typeName;
-	private String typeExtension;
+	private final String typeName;
+	private final String typeExtension;
 	private File icon;
 
 	public FileTypeAssociation(String typeName, String typeExtension, File icon) {

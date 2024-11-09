@@ -39,19 +39,17 @@ import javafx.scene.text.TextAlignment;
 import javafx.util.Duration;
 
 public class Credits extends BasicOverlay {
-	private Text version;
+	private final Text version;
 
-	private Text copyRighted;
-	private MultiText license1;
-	private MultiText license2;
+	private final Text copyRighted;
+	private final MultiText license1;
+	private final MultiText license2;
 
-	private MultiText thirdParties;
+	private final MultiText thirdParties;
 
-	private MultiText madeBy;
+	private final MultiText madeBy;
 
-	private Back back;
-
-	public Credits(Page ps) {
+    public Credits(Page ps) {
 		super(ps);
 		removeTop();
 		removeSubHead();
@@ -59,7 +57,7 @@ public class Credits extends BasicOverlay {
 
 		head.setKey("about_jwin");
 
-		version = new Text("1.2.2", new Font("monospace", 16));
+		version = new Text("1.3.0", new Font("monospace", 16));
 
 		copyRighted = new Label(ps.getWindow(), "copyright", new Font(12));
 		copyRighted.setLineSpacing(5);
@@ -83,7 +81,7 @@ public class Credits extends BasicOverlay {
 				license2, new Separator(ps.getWindow(), Orientation.HORIZONTAL), thirdParties,
 				new Separator(ps.getWindow(), Orientation.HORIZONTAL), madeBy, new Me(ps.getWindow()));
 
-		back = new Back(ps.getWindow());
+        Back back = new Back(ps.getWindow());
 
 		VBox projects = new VBox(15, back,
 				new Project(ps.getWindow(), "Apache Maven", "maven", "https://maven.apache.org/", "apache_lic_2",
@@ -101,7 +99,7 @@ public class Credits extends BasicOverlay {
 		StackPane preCenter = new StackPane(about, projects);
 
 		Runnable showProjects = () -> {
-			Timeline animation = new Timeline(new KeyFrame(Duration.seconds(.5),
+			Timeline animation = new Timeline(new KeyFrame(Duration.seconds(.4),
 					new KeyValue(projects.translateXProperty(), 0, SplineInterpolator.EASE_BOTH),
 					new KeyValue(about.translateXProperty(), -root.getWidth(), SplineInterpolator.EASE_BOTH)));
 
@@ -110,7 +108,7 @@ public class Credits extends BasicOverlay {
 			projects.setMouseTransparent(false);
 			projects.setDisable(false);
 
-			animation.setOnFinished(e -> {
+			animation.setOnFinished(_ -> {
 				about.setMouseTransparent(true);
 				about.setDisable(true);
 			});
@@ -121,14 +119,14 @@ public class Credits extends BasicOverlay {
 		};
 
 		Runnable hideProjects = () -> {
-			Timeline animation = new Timeline(new KeyFrame(Duration.seconds(.5),
+			Timeline animation = new Timeline(new KeyFrame(Duration.seconds(.4),
 					new KeyValue(projects.translateXProperty(), root.getWidth(), SplineInterpolator.EASE_BOTH),
 					new KeyValue(about.translateXProperty(), 0, SplineInterpolator.EASE_BOTH)));
 
 			about.setMouseTransparent(false);
 			about.setDisable(false);
 
-			animation.setOnFinished(e -> {
+			animation.setOnFinished(_ -> {
 				projects.setMouseTransparent(true);
 				projects.setDisable(true);
 			});
@@ -156,10 +154,10 @@ public class Credits extends BasicOverlay {
 
 	private static class Back extends HBox implements Styleable {
 
-		private ColorIcon backIcon;
-		private Label backLab;
+		private final ColorIcon backIcon;
+		private final Label backLab;
 
-		private Label thirdParties;
+		private final Label thirdParties;
 
 		private Runnable action;
 
@@ -226,8 +224,8 @@ public class Credits extends BasicOverlay {
 	}
 
 	private static class Project extends VBox implements Styleable {
-		private Text name;
-		private MultiText license;
+		private final Text name;
+		private final MultiText license;
 
 		public Project(Window window, String nameString, String iconString, String websiteString, String licenseName,
 				String licenselink) {
@@ -281,26 +279,24 @@ public class Credits extends BasicOverlay {
 
 	private static class Me extends HBox implements Styleable {
 
-		private ImageView picture;
-		private VBox info;
-		private Text name;
-		private Text username;
+        private final Text name;
+		private final Text username;
 
-		private ColorIcon external;
+		private final ColorIcon external;
 
 		public Me(Window window) {
 			super(15);
 			setAlignment(Pos.CENTER_LEFT);
 			setPadding(new Insets(10, 15, 10, 10));
 			setCursor(Cursor.HAND);
-			setOnMouseClicked(e -> window.openLink("https://github.com/SDIDSA"));
+			setOnMouseClicked(_ -> window.openLink("https://github.com/SDIDSA"));
 
 			name = new Text("Zinelabidine Teyar", new Font(Font.DEFAULT_FAMILY_MEDIUM, 16));
 			username = new Text("SDIDSA", new Font(14));
-			info = new VBox(5, name, username);
+            VBox info = new VBox(5, name, username);
 			info.setAlignment(Pos.CENTER_LEFT);
 
-			picture = new ImageView(ImageProxy.loadResize("pfp", 460, 48));
+            ImageView picture = new ImageView(ImageProxy.loadResize("pfp", 460, 48));
 			picture.setFitWidth(48);
 			picture.setFitHeight(48);
 

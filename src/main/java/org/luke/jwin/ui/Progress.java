@@ -19,10 +19,10 @@ import jna.TaskbarPeer;
 
 public class Progress extends StackPane implements Styleable {
 	
-	private BooleanProperty indeterminate;
-	private DoubleProperty val;
-	private Rectangle track;
-	private Rectangle thumb;
+	private final BooleanProperty indeterminate;
+	private final DoubleProperty val;
+	private final Rectangle track;
+	private final Rectangle thumb;
 	
 	
 	public Progress(Window win) {
@@ -67,7 +67,6 @@ public class Progress extends StackPane implements Styleable {
 				TaskbarPeer.setProgress(win, nv.doubleValue());
 			}else {
 				thumb.setWidth(getWidth() / 2);
-				
 				TaskbarPeer.setProgressState(win, ITaskbarList3.TBPF_NOPROGRESS);
 			}
 		};

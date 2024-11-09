@@ -1,5 +1,6 @@
 package org.luke.gui.window.content.app_bar;
 
+import javafx.geometry.NodeOrientation;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.style.Style;
@@ -19,6 +20,7 @@ public class AppBar extends HBox implements Styleable {
 	private HBox buttons;
 	
 	public AppBar(Window window, MoveResizeHelper helper) {
+		setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 		setPadding(new Insets(0, 15, 0, 15));
 		setMinHeight(40);
 		setAlignment(Pos.CENTER);

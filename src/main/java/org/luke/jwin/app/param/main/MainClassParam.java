@@ -11,12 +11,12 @@ import org.luke.jwin.app.param.Param;
 public class MainClassParam extends Param {
 	private String altMain = null;
 
-	private ClassChooser mclassChooser;
+	private final ClassChooser mclassChooser;
 
 	public MainClassParam(Page ps, Supplier<Map<String, File>> classLister) {
 		super(ps.getWindow(), "main_class");
 		mclassChooser = new ClassChooser(ps, classLister, this);
-		addButton(ps.getWindow(), "select", () -> showChooser());
+		addButton(ps.getWindow(), "select", this::showChooser);
 	}
 	
 	public String showChooser() {

@@ -37,7 +37,7 @@ public class LocalInstallUi extends VBox implements Styleable {
 
 		StackPane preVer = new StackPane(verLab);
 		preVer.setAlignment(Pos.CENTER_LEFT);
-		preVer.setMinWidth(100);
+		preVer.setMinWidth(80);
 
 		root.getChildren().addAll(preVer ,stateLabl);
 

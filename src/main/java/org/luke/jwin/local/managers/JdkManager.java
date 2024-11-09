@@ -180,13 +180,15 @@ public class JdkManager {
 		ArrayList<LocalInstall> inst = new ArrayList<LocalInstall>();
 
 		managedInstalls().forEach(f -> inst.add(versionFromDir(f)));
-		localInstalls().forEach(inst::add);
+        inst.addAll(localInstalls());
 
-		inst.sort((i1, i2) -> {
-			return compareVersions(i1.getVersion(), i2.getVersion());
-		});
+		inst.sort((i1, i2) -> compareVersions(i1.getVersion(), i2.getVersion()));
 
 		return inst;
+	}
+
+	public static LocalInstall maxVersion() {
+		return allInstalls().getFirst();
 	}
 
 	public static LocalInstall versionFromDir(File file) {
@@ -240,18 +242,15 @@ public class JdkManager {
 		return tokenize(ver)[0];
 	}
 
-	public static final Comparator<String> COMPARATOR = (v1, v2) -> {
-		return compareVersions(v1, v2);
-	};
+	public static final Comparator<String> COMPARATOR = JdkManager::compareVersions;
 
 	public static int compareVersions(String v1, String v2) {
 		return -compare(tokenize(v1), tokenize(v2));
 	}
 
 	private static int[] tokenize(String ver) {
-		int[] tokens = Arrays.stream(ver.split("_")[1].split(" ")[0].split("\\.")).mapToInt(Integer::parseInt)
-				.toArray();
-		return tokens;
+        return Arrays.stream(ver.split("_")[1].split(" ")[0].split("\\.")).mapToInt(Integer::parseInt)
+                .toArray();
 	}
 
 	private static int compare(int[] v1, int[] v2) {

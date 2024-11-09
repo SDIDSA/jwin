@@ -27,17 +27,18 @@ import javafx.scene.layout.VBox;
 public enum Direction {
 	UP, RIGHT, DOWN, LEFT, DOWN_RIGHT, DOWN_LEFT, RIGHT_DOWN, RIGHT_UP, UP_RIGHT, UP_LEFT, LEFT_DOWN, LEFT_UP;
 
-	private static ArrayList<Direction> horizontal = new ArrayList<>();
-	private static ArrayList<Direction> arrowFirst = new ArrayList<>();
-	private static ArrayList<Direction> secondFirst = new ArrayList<>();
-	private static ArrayList<Direction> secondLast = new ArrayList<>();
+	private static final ArrayList<Direction> horizontal = new ArrayList<>();
+	private static final ArrayList<Direction> arrowFirst = new ArrayList<>();
+	private static final ArrayList<Direction> secondFirst = new ArrayList<>();
+	private static final ArrayList<Direction> secondLast = new ArrayList<>();
 
-	private static HashMap<Direction, Direction> flipsToRight = new HashMap<>();
-	private static HashMap<Direction, Direction> flipsToLeft = new HashMap<>();
-	private static HashMap<Direction, Direction> flipsToTop = new HashMap<>();
-	private static HashMap<Direction, Direction> flipsToBottom = new HashMap<>();
+	private static final HashMap<Direction, Direction> flipsToRight = new HashMap<>();
+	private static final HashMap<Direction, Direction> flipHorizontal = new HashMap<>();
+	private static final HashMap<Direction, Direction> flipsToLeft = new HashMap<>();
+	private static final HashMap<Direction, Direction> flipsToTop = new HashMap<>();
+	private static final HashMap<Direction, Direction> flipsToBottom = new HashMap<>();
 
-	private static HashMap<Direction, HashMap<Direction, Direction>> flipsTo = new HashMap<>();
+	private static final HashMap<Direction, HashMap<Direction, Direction>> flipsTo = new HashMap<>();
 
 	// Static initialization block
 	static {
@@ -111,6 +112,21 @@ public enum Direction {
 		flipsTo.put(UP, flipsToTop);
 		flipsTo.put(RIGHT, flipsToRight);
 		flipsTo.put(LEFT, flipsToLeft);
+
+		flipHorizontal.put(Direction.RIGHT, Direction.LEFT);
+		flipHorizontal.put(Direction.LEFT, Direction.RIGHT);
+		flipHorizontal.put(Direction.UP, Direction.UP);
+		flipHorizontal.put(Direction.DOWN, Direction.DOWN);
+
+		flipHorizontal.put(Direction.UP_RIGHT, Direction.UP_LEFT);
+		flipHorizontal.put(Direction.UP_LEFT, Direction.UP_RIGHT);
+		flipHorizontal.put(Direction.DOWN_RIGHT, Direction.DOWN_LEFT);
+		flipHorizontal.put(Direction.DOWN_LEFT, Direction.DOWN_RIGHT);
+
+		flipHorizontal.put(Direction.RIGHT_UP, Direction.LEFT_UP);
+		flipHorizontal.put(Direction.LEFT_UP, Direction.RIGHT_UP);
+		flipHorizontal.put(Direction.RIGHT_DOWN, Direction.LEFT_DOWN);
+		flipHorizontal.put(Direction.LEFT_DOWN, Direction.RIGHT_DOWN);
 	}
 
 	/**
@@ -157,6 +173,10 @@ public enum Direction {
 	 */
 	private Direction flipTo(Direction to) {
 		return flipsTo.get(to).get(this);
+	}
+
+	public Direction flipHorizontal() {
+		return flipHorizontal.get(this);
 	}
 
 	/**
@@ -251,20 +271,14 @@ public enum Direction {
 	 * @return The calculated X-coordinate.
 	 */
 	public double calcX(PopupControl popup, Bounds node, double offset) {
-		switch (this) {
-		case DOWN, UP:
-			return node.getCenterX() - popup.getWidth() / 2;
-		case LEFT, LEFT_DOWN, LEFT_UP:
-			return node.getMinX() - popup.getWidth() + 15 - offset;
-		case RIGHT, RIGHT_DOWN, RIGHT_UP:
-			return node.getMaxX() - 15 + offset;
-		case UP_LEFT, DOWN_LEFT:
-			return node.getMaxX() - popup.getWidth() + 15;
-		case UP_RIGHT, DOWN_RIGHT:
-			return node.getMinX() - 15;
-		}
-		return 0;
-	}
+        return switch (this) {
+            case DOWN, UP -> node.getCenterX() - popup.getWidth() / 2;
+            case LEFT, LEFT_DOWN, LEFT_UP -> node.getMinX() - popup.getWidth() + 15 - offset;
+            case RIGHT, RIGHT_DOWN, RIGHT_UP -> node.getMaxX() - 15 + offset;
+            case UP_LEFT, DOWN_LEFT -> node.getMaxX() - popup.getWidth() + 15;
+            case UP_RIGHT, DOWN_RIGHT -> node.getMinX() - 15;
+        };
+    }
 
 	/**
 	 * Calculates the Y-coordinate for a {@code PopupControl} relative to a
@@ -276,18 +290,12 @@ public enum Direction {
 	 * @return The calculated Y-coordinate.
 	 */
 	public double calcY(PopupControl popup, Bounds node, double offset) {
-		switch (this) {
-		case LEFT, RIGHT:
-			return node.getCenterY() - popup.getHeight() / 2;
-		case UP, UP_LEFT, UP_RIGHT:
-			return node.getMinY() - popup.getHeight() + 15 - offset;
-		case DOWN, DOWN_LEFT, DOWN_RIGHT:
-			return node.getMaxY() - 15 + offset;
-		case LEFT_UP, RIGHT_UP:
-			return node.getMaxY() - popup.getHeight() + 15;
-		case LEFT_DOWN, RIGHT_DOWN:
-			return node.getMinY() - 15;
-		}
-		return 0;
-	}
+        return switch (this) {
+            case LEFT, RIGHT -> node.getCenterY() - popup.getHeight() / 2;
+            case UP, UP_LEFT, UP_RIGHT -> node.getMinY() - popup.getHeight() + 15 - offset;
+            case DOWN, DOWN_LEFT, DOWN_RIGHT -> node.getMaxY() - 15 + offset;
+            case LEFT_UP, RIGHT_UP -> node.getMaxY() - popup.getHeight() + 15;
+            case LEFT_DOWN, RIGHT_DOWN -> node.getMinY() - 15;
+        };
+    }
 }

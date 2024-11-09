@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.jwin.app.layout.JwinUi;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
@@ -16,6 +17,8 @@ import javax.xml.parsers.*;
 public class JWinProject {
 	private static final String PROJECT_ROOT = "root";
 	private static final String CLASSPATH = "classpath";
+	private static final String ROOT_FILES = "rootFiles";
+	private static final String ROOT_FILES_EXCLUDE = "rootFilesExclude";
 	private static final String MAIN_CLASS = "mainClass";
 	private static final String JDK = "jdk";
 	private static final String JRE = "jre";
@@ -35,33 +38,39 @@ public class JWinProject {
 
 	private File root;
 
-	private ArrayList<File> classpath;
-	private Entry<String, File> mainClass;
+	private final ArrayList<File> classpath;
 
-	private File jdk;
-	private File jre;
+	private final ArrayList<File> rootFiles;
+	private final ArrayList<File> rootFilesExclude;
 
-	private File icon;
+	private final Entry<String, File> mainClass;
 
-	private ArrayList<File> manualJars;
+	private final File jdk;
+	private final File jre;
 
-	private String appName;
-	private String appVersion;
-	private String appPublisher;
+	private final File icon;
 
-	private Boolean console;
-	private Boolean admin;
+	private final ArrayList<File> manualJars;
 
-	private String guid;
+	private final String appName;
+	private final String appVersion;
+	private final String appPublisher;
 
-	private FileTypeAssociation fileTypeAsso;
-	private UrlProtocolAssociation urlProtocolAsso;
+	private final Boolean console;
+	private final Boolean admin;
 
-	private JWinProject(File root, List<File> classpath, Entry<String, File> mainClass, File jdk, File jre, File icon,
+	private final String guid;
+
+	private final FileTypeAssociation fileTypeAsso;
+	private final UrlProtocolAssociation urlProtocolAsso;
+
+	private JWinProject(File root, List<File> classpath, List<File> rootFiles, List<File> rootFilesExclude, Entry<String, File> mainClass, File jdk, File jre, File icon,
 			List<File> manualJars, String appName, String appVersion, String appPublisher, Boolean console,
 			Boolean admin, String guid, FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
 		this.root = root;
 		this.classpath = new ArrayList<>(classpath);
+		this.rootFiles = new ArrayList<>(rootFiles);
+		this.rootFilesExclude = new ArrayList<>(rootFilesExclude);
 		this.mainClass = mainClass;
 		this.jdk = jdk;
 		this.jre = jre;
@@ -80,6 +89,8 @@ public class JWinProject {
 	public JWinProject(JwinUi config) {
 		this.root = config.getClasspath().getRoot();
 		this.classpath = new ArrayList<>(config.getClasspath().getFiles());
+		this.rootFiles = new ArrayList<>(config.getRootFiles().getFiles());
+		this.rootFilesExclude = new ArrayList<>(config.getRootFiles().getExclude());
 		this.mainClass = config.getMainClass().getValue();
 		this.jdk = config.getJdk().getValue();
 		this.jre = config.getJre().getValue();
@@ -103,16 +114,8 @@ public class JWinProject {
 		this.root = root;
 	}
 
-	public void setUrlProtocolAsso(UrlProtocolAssociation urlProtocolAsso) {
-		this.urlProtocolAsso = urlProtocolAsso;
-	}
-
 	public UrlProtocolAssociation getUrlProtocolAsso() {
 		return urlProtocolAsso;
-	}
-
-	public void setFileTypeAsso(FileTypeAssociation fileTypeAsso) {
-		this.fileTypeAsso = fileTypeAsso;
 	}
 
 	public FileTypeAssociation getFileTypeAsso() {
@@ -121,6 +124,14 @@ public class JWinProject {
 
 	public List<File> getClasspath() {
 		return classpath;
+	}
+
+	public List<File> getRootFiles() {
+		return rootFiles;
+	}
+
+	public List<File> getRootFilesExclude() {
+		return rootFilesExclude;
 	}
 
 	public Entry<String, File> getMainClass() {
@@ -179,7 +190,7 @@ public class JWinProject {
 					res.add(field.getName());
 				}
 			} catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
-				e.printStackTrace();
+				ErrorHandler.handle(e, "compare projects for diffs");
 			}
 		}
 
@@ -200,6 +211,8 @@ public class JWinProject {
 		mc.put(FILE_PATH, mainClass == null ? "" : mainClass.getValue());
 		data.put(PROJECT_ROOT, root);
 		data.put(CLASSPATH, serializeFileList(classpath));
+		data.put(ROOT_FILES, serializeFileList(rootFiles));
+		data.put(ROOT_FILES_EXCLUDE, serializeFileList(rootFilesExclude));
 		data.put(MAIN_CLASS, mc);
 		data.put(JDK, jdk == null ? "" : jdk.getAbsolutePath());
 		data.put(JRE, jre == null ? "" : jre.getAbsolutePath());
@@ -229,12 +242,21 @@ public class JWinProject {
 
 		String root = obj.isNull(PROJECT_ROOT) ? null : obj.getString(PROJECT_ROOT);
 
-		return new JWinProject(root == null ? null : new File(root), deserializeFileList(obj.getJSONArray(CLASSPATH)),
-				Map.entry(mc.getString(CLASS_NAME), new File(mc.getString(FILE_PATH))), new File(obj.getString(JDK)),
-				new File(obj.getString(JRE)), new File(obj.getString(ICON)),
-				deserializeFileList(obj.getJSONArray(MANUAL_JARS)), obj.getString(APP_NAME), obj.getString(APP_VERSION),
-				obj.getString(APP_PUBLISHER), obj.getBoolean(CONSOLE), obj.has(ADMIN) ? obj.getBoolean(ADMIN) : false,
-				obj.getString(GUID),
+		return new JWinProject(root == null ? null : new File(root),
+				deserializeFileList(obj.getJSONArray(CLASSPATH)),
+				deserializeFileList(obj.getJSONArray(ROOT_FILES)),
+				deserializeFileList(obj.getJSONArray(ROOT_FILES_EXCLUDE)),
+				Map.entry(mc.getString(CLASS_NAME), new File(mc.getString(FILE_PATH))),
+				new File(obj.getString(JDK)),
+				new File(obj.getString(JRE)),
+				new File(obj.getString(ICON)),
+				deserializeFileList(obj.getJSONArray(MANUAL_JARS)),
+				obj.getString(APP_NAME),
+				obj.getString(APP_VERSION),
+				obj.getString(APP_PUBLISHER),
+				obj.getBoolean(CONSOLE),
+                obj.has(ADMIN) && obj.getBoolean(ADMIN),
+				obj.optString(GUID, ""),
 				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null,
 				obj.has(URL_PROTOCOL_ASSO) ? UrlProtocolAssociation.deserialize(obj.getJSONObject(URL_PROTOCOL_ASSO))
 						: null);
@@ -265,102 +287,27 @@ public class JWinProject {
 
 		File cpFile = new File(root + "\\.classpath");
 		if (cpFile.exists()) {
-			try {
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder builder = factory.newDocumentBuilder();
-
-				Document doc = builder.parse(cpFile);
-
-				Element cpDoc = doc.getDocumentElement();
-
-				NodeList entries = cpDoc.getElementsByTagName("classpathentry");
-
-				for (int i = 0; i < entries.getLength(); i++) {
-					Element entry = (Element) entries.item(i);
-
-					if (entry.getAttribute("kind").equals("src") && !entry.getAttribute("output").contains("test")) {
-						String path = entry.getAttribute("path");
-						File pathFile = new File(root + "\\" + path);
-						if (pathFile.exists()) {
-							classpath.add(pathFile);
-						}
-					}
-				}
-			} catch (Exception x) {
-				x.printStackTrace();
-			}
+			classpath.addAll(loadEclipseClasspath(root, cpFile));
 		}
 
 		File dProject = new File(root + "\\.project");
 		if (dProject.exists()) {
-			try {
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder builder = factory.newDocumentBuilder();
-
-				Document doc = builder.parse(dProject);
-
-				Element cpDoc = doc.getDocumentElement();
-
-				Element nameEl = (Element) cpDoc.getElementsByTagName("name").item(0);
-
-				appName = nameEl.getTextContent();
-			} catch (Exception x) {
-				x.printStackTrace();
+			String ln = loadEclipseProjectName(dProject);
+			if(ln != null) {
+				appName = ln;
 			}
 		}
 
 		File pom = new File(root + "\\pom.xml");
 		if (pom.exists()) {
+			loadMavenClasspath(root, classpath);
 
-			File jav = new File(root + "\\src\\main\\java");
-			File res = new File(root + "\\src\\main\\resources");
-
-			if (jav.exists() && jav.isDirectory() && !classpath.contains(jav)) {
-				classpath.add(jav);
-			}
-			if (res.exists() && res.isDirectory() && !classpath.contains(res)) {
-				classpath.add(res);
-			}
-
-			try {
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-				DocumentBuilder builder = factory.newDocumentBuilder();
-
-				Document doc = builder.parse(pom);
-
-				Element proj = ((Element) doc.getElementsByTagName("project").item(0));
-
-				NodeList artifactIds = proj.getElementsByTagName("artifactId");
-				for(int i = 0; i < artifactIds.getLength(); i++) {
-					Node n = artifactIds.item(i);
-					Node p = n.getParentNode();
-					if(p instanceof Element e && e.getTagName().equals("project")) {
-						appName = n.getTextContent();
-					}
-				}
-
-				NodeList versions = proj.getElementsByTagName("version");
-				for(int i = 0; i < versions.getLength(); i++) {
-					Node n = versions.item(i);
-					Node p = n.getParentNode();
-					if(p instanceof Element e && e.getTagName().equals("project")) {
-						appVersion = n.getTextContent();
-					}
-				}
-
-				NodeList groupIds = proj.getElementsByTagName("groupId");
-				for(int i = 0; i < groupIds.getLength(); i++) {
-					Node n = groupIds.item(i);
-					Node p = n.getParentNode();
-					if(p instanceof Element e && e.getTagName().equals("project")) {
-						appPublisher = n.getTextContent();
-					}
-				}
-
-			} catch (Exception x) {
-				x.printStackTrace();
-			}
+			String[] mavenProps = loadMavenProps(pom);
+			appName = mavenProps[0] != null ? mavenProps[0] : appName;
+			appVersion = mavenProps[1] != null ? mavenProps[1] : appVersion;
+			appPublisher = mavenProps[2] != null ? mavenProps[2] : appPublisher;
 		}
+
 		File grad1 = new File(root + "\\build.gradle");
 		File grad2 = new File(root + "\\build.gradle.kts");
 		
@@ -378,8 +325,109 @@ public class JWinProject {
 			appName = root.getName();
 		}
 
-		return new JWinProject(root, classpath, mainClass, jdk, jre, icon, manualJars, appName, appVersion,
+		return new JWinProject(root, classpath, new ArrayList<>(), new ArrayList<>(), mainClass, jdk, jre, icon, manualJars, appName, appVersion,
 				appPublisher, console, admin, guid, fileTypeAsso, urlProtocolAsso);
+	}
+
+	private static List<File> loadEclipseClasspath(File root, File cpFile) {
+		ArrayList<File> res = new ArrayList<>();
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			Document doc = builder.parse(cpFile);
+
+			Element cpDoc = doc.getDocumentElement();
+
+			NodeList entries = cpDoc.getElementsByTagName("classpathentry");
+
+			for (int i = 0; i < entries.getLength(); i++) {
+				Element entry = (Element) entries.item(i);
+
+				if (entry.getAttribute("kind").equals("src") && !entry.getAttribute("output").contains("test")) {
+					String path = entry.getAttribute("path");
+					File pathFile = new File(root + "\\" + path);
+					if (pathFile.exists()) {
+						res.add(pathFile);
+					}
+				}
+			}
+		} catch (Exception x) {
+			ErrorHandler.handle(x, "parse project for class path");
+		}
+		return res;
+	}
+
+	private static String loadEclipseProjectName(File dProject) {
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			Document doc = builder.parse(dProject);
+
+			Element cpDoc = doc.getDocumentElement();
+
+			Element nameEl = (Element) cpDoc.getElementsByTagName("name").item(0);
+
+			return nameEl.getTextContent();
+		} catch (Exception x) {
+			ErrorHandler.handle(x, "parse project for app name");
+		}
+		return null;
+	}
+
+	private static void loadMavenClasspath(File root, List<File> classpath) {
+		File jav = new File(root + "\\src\\main\\java");
+		File res = new File(root + "\\src\\main\\resources");
+		if (jav.exists() && jav.isDirectory() && !classpath.contains(jav)) {
+			classpath.add(jav);
+		}
+		if (res.exists() && res.isDirectory() && !classpath.contains(res)) {
+			classpath.add(res);
+		}
+	}
+
+	private static String[] loadMavenProps(File pom) {
+		String[] res = new String[] {null, null, null};
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+
+			Document doc = builder.parse(pom);
+
+			Element proj = ((Element) doc.getElementsByTagName("project").item(0));
+
+			NodeList artifactIds = proj.getElementsByTagName("artifactId");
+			for(int i = 0; i < artifactIds.getLength(); i++) {
+				Node n = artifactIds.item(i);
+				Node p = n.getParentNode();
+				if(p instanceof Element e && e.getTagName().equals("project")) {
+					res[0] = n.getTextContent();
+				}
+			}
+
+			NodeList versions = proj.getElementsByTagName("version");
+			for(int i = 0; i < versions.getLength(); i++) {
+				Node n = versions.item(i);
+				Node p = n.getParentNode();
+				if(p instanceof Element e && e.getTagName().equals("project")) {
+					res[1] = n.getTextContent();
+				}
+			}
+
+			NodeList groupIds = proj.getElementsByTagName("groupId");
+			for(int i = 0; i < groupIds.getLength(); i++) {
+				Node n = groupIds.item(i);
+				Node p = n.getParentNode();
+				if(p instanceof Element e && e.getTagName().equals("project")) {
+					res[2] = n.getTextContent();
+				}
+			}
+
+		} catch (Exception x) {
+			ErrorHandler.handle(x, "parsing project for classpath, version and group id");
+		}
+		return res;
 	}
 
 	private static JSONArray serializeFileList(List<File> list) {

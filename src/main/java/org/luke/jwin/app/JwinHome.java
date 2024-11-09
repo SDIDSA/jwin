@@ -4,6 +4,7 @@ import java.awt.Dimension;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Page;
@@ -37,7 +38,7 @@ public class JwinHome extends Page {
 			config = uiType.getConstructor(Page.class).newInstance(this);
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
 				| NoSuchMethodException | SecurityException e) {
-			e.printStackTrace();
+			ErrorHandler.handle(e, "create config object");
 			config = new JwinUi1(this);
 		}
 		JwinActions actions = new JwinActions(window, config);
@@ -50,7 +51,6 @@ public class JwinHome extends Page {
 				String ext = param.substring(param.lastIndexOf(".") + 1);
 				if (ext.equalsIgnoreCase("jwp")) {
 					config.importProject(new File(param));
-					return;
 				}
 			}
 		}else {
@@ -61,7 +61,7 @@ public class JwinHome extends Page {
 				config.loadProject(old.export());
 		}
 		
-		getChildren().add(0, config);
+		getChildren().addFirst(config);
 	}
 	
 	public JwinUi getConfig() {

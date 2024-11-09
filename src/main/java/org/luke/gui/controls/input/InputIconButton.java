@@ -1,5 +1,6 @@
 package org.luke.gui.controls.input;
 
+import javafx.geometry.NodeOrientation;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.input.styles.DeprecatedInputStyle;
@@ -20,7 +21,7 @@ import javafx.scene.input.KeyCode;
  * @author SDIDSA
  */
 public class InputIconButton extends Input implements Styleable {
-	private ColorIcon icon;
+	private final ColorIcon icon;
 
 	/**
 	 * Creates a new instance of {@code InputIconButton}.
@@ -34,6 +35,8 @@ public class InputIconButton extends Input implements Styleable {
 	 */
 	public InputIconButton(Window win, String name, double size, String tooltip, Runnable fire) {
 		super("app_icon");
+
+		setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 
 		setMinSize(USE_PREF_SIZE, USE_PREF_SIZE);
 		setMaxSize(USE_PREF_SIZE, USE_PREF_SIZE);
@@ -49,7 +52,7 @@ public class InputIconButton extends Input implements Styleable {
 			fire.run();
 		});
 
-		focusedProperty().addListener((obs, ov, nv) -> {
+		focusedProperty().addListener((_, _, nv) -> {
 			inputStyle.focus(nv);
 		});
 

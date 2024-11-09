@@ -1,5 +1,6 @@
 package org.luke.gui.controls.popup.tooltip;
 
+import org.luke.gui.controls.Font;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -32,11 +33,12 @@ public class TextTooltip extends Tooltip {
 	 * @param offsetX   The horizontal offset from the target node.
 	 * @param offsetY   The vertical offset from the target node.
 	 */
-	TextTooltip(Window window, String val, Direction direction, double offsetX, double offsetY) {
+	TextTooltip(Window window, String textValue, Direction direction, double offsetX, double offsetY) {
 		super(window, direction, offsetX, offsetY);
 		content.setPadding(new Insets(8, 12, 8, 12));
 
-		text = new Text(val);
+		text = new Text(textValue);
+		text.setFont(new Font(Font.DEFAULT_FAMILY, 12).getFont());
 
 		content.getChildren().add(text);
 
@@ -51,8 +53,8 @@ public class TextTooltip extends Tooltip {
 	 * @param textValue The text content to be displayed in the tooltip.
 	 * @param direction The direction in which the tooltip is oriented.
 	 */
-	TextTooltip(Window window, String val, Direction direction) {
-		this(window, val, direction, 0, 0);
+	TextTooltip(Window window, String textValue, Direction direction) {
+		this(window, textValue, direction, 0, 0);
 	}
 
 	/**

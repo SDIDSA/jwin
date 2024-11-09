@@ -151,7 +151,7 @@ public class JavaParam extends Param {
 				Platform.runLater(() -> {
 					list.getChildren().clear();
 					addFile(getWindow(), file, file.getName() + additional,
-							new Label(getWindow(), this.version, new Font(12)));
+							new Text(this.version, new Font(12)));
 				});
 			}
 			Platform.runLater(this::stopLoading);

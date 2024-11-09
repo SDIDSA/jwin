@@ -37,14 +37,14 @@ import javafx.scene.paint.Color;
  * @author SDIDSA
  */
 public class Alert extends Overlay implements Styleable {
-	private StackPane preRoot;
-	private HBox bottom;
+	private final StackPane preRoot;
+	private final HBox bottom;
 
 	protected ColorIcon closeIcon;
 	protected VBox root;
 
-	private MultiText head;
-	private MultiText body;
+	private final MultiText head;
+	private final MultiText body;
 
 	private Function<Style, Color> bodyFill;
 

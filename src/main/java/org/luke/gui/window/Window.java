@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import javafx.geometry.NodeOrientation;
 import org.json.JSONObject;
 import org.luke.gui.controls.image.ImageProxy;
 import org.luke.gui.exception.ErrorHandler;
@@ -64,10 +65,11 @@ public class Window extends Stage {
 		borderWidth = new SimpleDoubleProperty(0);
 
 		initStyle(StageStyle.TRANSPARENT);
-		setStyle(style);
-		setLocale(locale);
 
 		root = new AppPreRoot(this);
+
+		setStyle(style);
+		setLocale(locale);
 
 		TransparentScene scene = new TransparentScene(root, 500, 500);
 
@@ -205,6 +207,9 @@ public class Window extends Stage {
 	// Set the locale of the window
 	public void setLocale(Locale locale) {
 		this.locale.set(locale);
+		root.setNodeOrientation(locale.isRtl() ?
+				NodeOrientation.RIGHT_TO_LEFT :
+				NodeOrientation.LEFT_TO_RIGHT);
 	}
 
 	// Get the root content of the window

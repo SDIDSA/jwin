@@ -11,7 +11,7 @@ import org.luke.gui.window.Window;
  * @author SDIDSA
  */
 public class ColoredIcon extends ColorIcon implements Styleable {
-    private StyledColor fill;
+    private final StyledColor fill;
 
     /**
      * Constructs a ColoredIcon with the specified window, image name, size, and styled fill color.
@@ -23,6 +23,12 @@ public class ColoredIcon extends ColorIcon implements Styleable {
      */
     public ColoredIcon(Window window, String name, double size, StyledColor fill) {
         super(name, size);
+        this.fill = fill;
+        applyStyle(window.getStyl());
+    }
+
+    public ColoredIcon(Window window, String name, double readSize, double displaySize, StyledColor fill) {
+        super(name, readSize, displaySize);
         this.fill = fill;
         applyStyle(window.getStyl());
     }

@@ -63,6 +63,8 @@ public class Tooltip extends PopupControl implements Styleable {
 
 	protected double radius;
 
+	private final StackPane preroot;
+
 	/**
 	 * Constructs a tooltip with the specified window, direction, offset, and
 	 * radius.
@@ -80,9 +82,10 @@ public class Tooltip extends PopupControl implements Styleable {
 		this.offsetY = offsetY;
 		this.radius = radius;
 
-		StackPane preroot = new StackPane();
+		preroot = new StackPane();
 		preroot.setPadding(new Insets(10));
 
+		preroot.getChildren().clear();
 		root = direction.toPane();
 		root.setEffect(ds);
 		root.setOpacity(0);
@@ -94,17 +97,17 @@ public class Tooltip extends PopupControl implements Styleable {
 
 		arr = new Triangle(10);
 		switch (direction) {
-		case LEFT:
-			arr.setRotate(180);
-			break;
-		case UP:
-			arr.setRotate(-90);
-			break;
-		case DOWN:
-			arr.setRotate(90);
-			break;
-		default:
-			break;
+			case LEFT:
+				arr.setRotate(180);
+				break;
+			case UP:
+				arr.setRotate(-90);
+				break;
+			case DOWN:
+				arr.setRotate(90);
+				break;
+			default:
+				break;
 		}
 
 		if (direction.isArrowFirst()) {
@@ -123,7 +126,7 @@ public class Tooltip extends PopupControl implements Styleable {
 						new KeyValue(root.scaleXProperty(), .7, Interpolator.EASE_BOTH),
 						new KeyValue(root.scaleYProperty(), .7, Interpolator.EASE_BOTH)));
 
-		fadeOut.setOnFinished(e -> hide());
+		fadeOut.setOnFinished(_ -> hide());
 
 		preroot.getChildren().add(root);
 
@@ -160,9 +163,9 @@ public class Tooltip extends PopupControl implements Styleable {
 		this(window, direction, 0, 0);
 	}
 
-	private void position(Node node) {
+	private void position(Node node, Direction finalToUse) {
 
-		double[] pos = direction.calcPos(this, node, offsetX, offsetY);
+		double[] pos = finalToUse.calcPos(this, node, offsetX, offsetY);
 
 		double px = pos[0];
 		double py = pos[1];
@@ -178,7 +181,34 @@ public class Tooltip extends PopupControl implements Styleable {
 	 * @param node The node relative to which the tooltip is shown.
 	 */
 	public void showPop(Node node) {
+		Direction toUse = direction;
+		if(direction.isHorizontal() && owner.getLocale().get().isRtl()) {
+			toUse = direction.flipHorizontal();
+		}
+
+		switch (toUse) {
+			case LEFT:
+				arr.setRotate(180);
+				break;
+			case RIGHT:
+				arr.setRotate(0);
+				break;
+			case UP:
+				arr.setRotate(-90);
+				break;
+			case DOWN:
+				arr.setRotate(90);
+				break;
+			default:
+				break;
+		}
+		if (toUse.isArrowFirst()) {
+			root.getChildren().setAll(arr, content);
+		} else {
+			root.getChildren().setAll(content, arr);
+		}
 		fadeOut.stop();
+		Direction finalToUse = toUse;
 		Runnable adjust = () -> {
 			int size = 6 + (int) (content.getHeight() / 30);
 			size /= 2;
@@ -194,7 +224,7 @@ public class Tooltip extends PopupControl implements Styleable {
 				}
 
 				Platform.runLater(() -> {
-					position(node);
+					position(node, finalToUse);
 					fadeIn.playFromStart();
 				});
 			}).start();
@@ -243,8 +273,8 @@ public class Tooltip extends PopupControl implements Styleable {
 
 		public Installation(Node node, Tooltip tip) {
 			this.node = node;
-			this.onEnter = e -> tip.showPop(node);
-			this.onExit = e -> tip.fadeOut();
+			this.onEnter = _ -> tip.showPop(node);
+			this.onExit = _ -> tip.fadeOut();
 		}
 
 		public void install() {

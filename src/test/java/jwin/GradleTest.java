@@ -56,7 +56,7 @@ public class GradleTest {
 			if (dp >= 1.0) {
 				s.release();
 			}
-		}, dp -> {
+		}, _ -> {
 
 		}, temp, f -> GradleManager.versionFromDir(f).getRoot());
 		s.acquireUninterruptibly();

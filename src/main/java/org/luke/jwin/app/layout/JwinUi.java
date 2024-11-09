@@ -3,26 +3,26 @@ package org.luke.jwin.app.layout;
 import java.io.File;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.IntStream;
 
+import javafx.scene.Node;
 import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.ButtonType;
+import org.luke.gui.controls.alert.Overlay;
 import org.luke.gui.controls.check.KeyedCheck;
 import org.luke.gui.controls.space.ExpandingVSpace;
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.locale.Locale;
 import org.luke.gui.window.Page;
 import org.luke.gui.window.Window;
+import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.JWinProject;
 import org.luke.jwin.app.more.MoreSettings;
-import org.luke.jwin.app.param.ClasspathParam;
-import org.luke.jwin.app.param.IconParam;
-import org.luke.jwin.app.param.JdkParam;
-import org.luke.jwin.app.param.JreParam;
-import org.luke.jwin.app.param.Param;
+import org.luke.jwin.app.param.*;
 import org.luke.jwin.app.param.deps.DependenciesParam;
 import org.luke.jwin.app.param.main.MainClassParam;
+import org.luke.jwin.app.param.rootFiles.RootFilesParam;
 import org.luke.jwin.ui.TextField;
 import org.luke.jwin.ui.TextVal;
 
@@ -44,6 +44,7 @@ public abstract class JwinUi extends StackPane {
 
 	// Project Params
 	protected ClasspathParam classpath;
+	protected RootFilesParam rootFiles;
 	protected MainClassParam mainClass;
 	protected JdkParam jdk;
 	protected DependenciesParam dependencies;
@@ -71,6 +72,7 @@ public abstract class JwinUi extends StackPane {
 		this.ps = ps.getWindow();
 
 		classpath = new ClasspathParam(ps.getWindow(), null);
+		rootFiles = new RootFilesParam(ps.getWindow(), this);
 
 		mainClass = new MainClassParam(ps, classpath::listClasses);
 
@@ -107,6 +109,10 @@ public abstract class JwinUi extends StackPane {
 
 	public ClasspathParam getClasspath() {
 		return classpath;
+	}
+
+	public RootFilesParam getRootFiles() {
+		return rootFiles;
 	}
 
 	public MainClassParam getMainClass() {
@@ -160,6 +166,7 @@ public abstract class JwinUi extends StackPane {
 	public void importProject(Window win) {
 		File loadFrom = saver.showOpenDialog(win);
 		if (loadFrom != null) {
+			getConsole().unset();
 			importProject(loadFrom);
 		}
 	}
@@ -173,11 +180,12 @@ public abstract class JwinUi extends StackPane {
 	public void importJavaProject(Window win) {
 		File loadFrom = dsaver.showDialog(win);
 		if (loadFrom != null) {
+			getConsole().unset();
 			importJavaProject(loadFrom);
 		}
 	}
 
-	private void importJavaProject(File loadFrom) {
+	public void importJavaProject(File loadFrom) {
 		preImport();
 		fileInUse = null;
 		JWinProject proj = JWinProject.fromJavaProject(loadFrom);
@@ -185,11 +193,24 @@ public abstract class JwinUi extends StackPane {
 	}
 
 	public void loadProject(JWinProject project) {
+		Page p = Jwin.winstance.getLoadedPage();
+		if(p != null) {
+			for(Node node : p.getChildren()) {
+				if(node instanceof Overlay ov) ov.hide();
+			}
+		}
+		clearLogs();
 		logStd("loading_project");
+		setState("loading_project");
+		rootFiles.getFiles().clear();
+		rootFiles.getExclude().clear();
+		console.unset();
 		new Thread(() -> {
 			runOnUiThread(Param::clearAll);
 			project.getClasspath().forEach(f -> runOnUiThread(() -> classpath.add(f)));
 			runOnUiThread(() -> classpath.setRoot(project.getRoot()));
+			runOnUiThread(() -> rootFiles.getFiles().addAll(project.getRootFiles()));
+			runOnUiThread(() -> rootFiles.getExclude().addAll(project.getRootFilesExclude()));
 			mainClass.setAltMain(null);
 			runOnUiThread(() -> mainClass.set(project.getMainClass()));
 			runOnUiThread(() -> jdk.set(project.getJdk()));
@@ -207,8 +228,10 @@ public abstract class JwinUi extends StackPane {
 			runOnUiThread(() -> moreSettings.setUrlProtocolAssociation(project.getUrlProtocolAsso()));
 
 			runOnUiThread(() -> {
+				setState("resolving_dependencies");
 				dependencies.resolve(classpath.getRoot(), (r) -> {
-					postImport();
+					postImport(r);
+					setState("idle");
 				});
 			});
 
@@ -216,13 +239,9 @@ public abstract class JwinUi extends StackPane {
 		}).start();
 	}
 
-	private AtomicBoolean ran = new AtomicBoolean(false);
+	private final AtomicBoolean ran = new AtomicBoolean(false);
 
 	private boolean stopped = false;
-
-	public void setStopped(boolean stopped) {
-		this.stopped = stopped;
-	}
 
 	public void run(Process p, Runnable showLog, StringBuilder errBuilder) {
 		Platform.runLater(() -> {
@@ -243,14 +262,14 @@ public abstract class JwinUi extends StackPane {
 							if (res == ButtonType.IGNORE) {
 								ran.set(true);
 							}
-						}, () -> s.release(), ButtonType.VIEW_LOG, ButtonType.IGNORE);
+						}, s::release, ButtonType.VIEW_LOG, ButtonType.IGNORE);
 
 				s.acquireUninterruptibly();
 			} else {
 				ran.set(true);
 			}
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			ErrorHandler.handle(e, "run application");
 			Thread.currentThread().interrupt();
 		}
 
@@ -303,14 +322,14 @@ public abstract class JwinUi extends StackPane {
 
 	private static void runOnUiThread(Runnable r) {
 		Platform.runLater(r);
-		sleep(50);
+		sleep();
 	}
 
-	private static void sleep(long dur) {
+	private static void sleep() {
 		try {
-			Thread.sleep(dur);
+			Thread.sleep(50);
 		} catch (InterruptedException e1) {
-			e1.printStackTrace();
+			ErrorHandler.handle(e1, "delay operation");
 			Thread.currentThread().interrupt();
 		}
 	}
@@ -329,19 +348,17 @@ public abstract class JwinUi extends StackPane {
 
 	public void onErr() {
 		disable(false, false);
-		setState("Failed to run :(");
+		setState("failed_to_run");
 		setProgress(-1);
 	}
 	
 	public void separate() {
-		StringBuilder sb = new StringBuilder();
-		IntStream.range(0, 30).forEach(i -> sb.append("-"));
-		logStd(sb.toString());
+		logStd("console_hr");
 	}
 
 	public abstract void preImport();
 
-	public abstract void postImport();
+	public abstract void postImport(boolean success);
 
 	public abstract void preRun(Process p);
 
@@ -360,4 +377,6 @@ public abstract class JwinUi extends StackPane {
 	public abstract void logStdOver(String line);
 
 	public abstract void logErr(String line);
+
+	public abstract void clearLogs();
 }

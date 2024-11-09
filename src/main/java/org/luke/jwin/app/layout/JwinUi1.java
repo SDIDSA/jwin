@@ -26,21 +26,21 @@ import javafx.scene.text.TextAlignment;
 
 public class JwinUi1 extends JwinUi implements Styleable {
 	// Layouts
-	private HBox preBottom;
-	private HBox preConsole;
-	private VBox saveLoad;
-	private VBox buildRun;
-	private Button advanced;
-	private Button run;
-	private Button compile;
+	private final HBox preBottom;
+	private final HBox preConsole;
+	private final VBox saveLoad;
+	private final VBox buildRun;
+	private final Button advanced;
+	private final Button run;
+	private final Button compile;
 
 	// MultiThread
-	private ProgressBar progress;
-	private Label state;
-	private HBox preRoot;
-	private Loading loading;
+	private final ProgressBar progress;
+	private final Label state;
+	private final HBox preRoot;
+	private final Loading loading;
 
-	private Label guidLab;
+	private final Label guidLab;
 
 	public JwinUi1(Page ps) {
 		super(ps);
@@ -117,7 +117,7 @@ public class JwinUi1 extends JwinUi implements Styleable {
 		preConsole.setAlignment(Pos.CENTER);
 
 		guidLab = new Label(ps.getWindow(), "guid");
-		preConsole.getChildren().addAll(console, admin, new Separator(ps.getWindow(), Orientation.VERTICAL), guidLab,
+		preConsole.getChildren().addAll(new VBox(5, console, admin), new Separator(ps.getWindow(), Orientation.VERTICAL), guidLab,
 				guid, generate);
 
 		preBottom = new HBox(15, appName, version, publisher);
@@ -152,7 +152,7 @@ public class JwinUi1 extends JwinUi implements Styleable {
 		loading.play();
 	}
 	
-	public void postImport() {
+	public void postImport(boolean success) {
 		preRoot.setDisable(false);
 		loading.setVisible(false);
 		loading.stop();
@@ -169,15 +169,15 @@ public class JwinUi1 extends JwinUi implements Styleable {
 	
 	@Override
 	public void postRun(boolean ran) {
-		run.setKey("Run");
+		run.setKey("run");
 		progress.setProgress(-1);
-		state.setText("doing nothing");
+		state.setKey("idle");
 		disable(false, ran);
 		run.setAction(onRun);
 	}
 
 	public void setState(String s) {
-		Platform.runLater(() -> state.setText(s));
+		Platform.runLater(() -> state.setKey(s));
 	}
 
 	private long lastUpdate = 0;
@@ -233,6 +233,11 @@ public class JwinUi1 extends JwinUi implements Styleable {
 	@Override
 	public void logErr(String line) {
 		System.err.println(line);
+	}
+
+	@Override
+	public void clearLogs() {
+		//DO NOTHING
 	}
 
 	@Override

@@ -24,7 +24,7 @@ public interface Styleable {
 	/**
 	 * Applies the passed Style on this Node. The behavior of this method is defined
 	 * by subclasses.
-	 * 
+	 * <p>
 	 * Note: Do not manually call this method; use
 	 * {@link org.luke.gui.window.Window#setStyle(Style) Window.setStyle(Style)} to
 	 * apply a Style on the whole scene graph.

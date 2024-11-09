@@ -14,14 +14,9 @@ import org.luke.gui.controls.popup.context.ContextMenu;
 public class MenuMenuItem extends KeyedMenuItem {
 
     /**
-     * The arrow icon indicating the presence of a submenu.
-     */
-    private ColorIcon arrow;
-
-    /**
      * The submenu associated with this menu item.
      */
-    private ContextMenu subMenu;
+    private final ContextMenu subMenu;
 
     /**
      * Constructs a menu item with a submenu using the specified parent context menu and key.
@@ -32,14 +27,15 @@ public class MenuMenuItem extends KeyedMenuItem {
     public MenuMenuItem(ContextMenu menu, String key) {
         super(menu, key);
 
-        arrow = new ColorIcon("menu-right", 12, 8);
+        ColorIcon arrow = new ColorIcon("menu-right", 12, 8);
         arrow.fillProperty().bind(lab.fillProperty());
 
+        setSpacing(5);
         getChildren().add(arrow);
 
         subMenu = new ContextMenu(menu.getOwner());
-        active.addListener((obs, ov, nv) -> {
-            if (nv.booleanValue()) {
+        active.addListener((_, _, nv) -> {
+            if (nv) {
                 subMenu.showPop(this, Direction.RIGHT_DOWN, 15);
             } else {
                 subMenu.hide();

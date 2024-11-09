@@ -26,12 +26,11 @@ import javafx.scene.layout.VBox;
 
 public class JwinUi2 extends JwinUi implements Styleable {
 
-	private HBox top;
-	private Progress p;
-	private Label state;
-	private VBox root;
+	private final HBox top;
+	private final Progress p;
+	private final Label state;
 
-	private ConsoleOutput logs;
+    private final ConsoleOutput logs;
 
 	public JwinUi2(Page ps) {
 		super(ps);
@@ -39,7 +38,7 @@ public class JwinUi2 extends JwinUi implements Styleable {
 		MultiButton run = new MultiButton(ps.getWindow(), "run");
 		run.addAction("build_installer", () -> {
 			if (onCompile != null) {
-				logStd("building installer...");
+				logStd("building_installer");
 				onCompile.run();
 			}
 		});
@@ -64,6 +63,7 @@ public class JwinUi2 extends JwinUi implements Styleable {
 		TextTooltip.install(icon, Direction.UP, "select_app_icon", 15, 15, true);;
 
 		this.icon.setOnSet(icon::set);
+		this.icon.setOnUnSet(icon::unset);
 
 		InputIconButton imp = new InputIconButton(ps.getWindow(), "java", 24, "import_java_project", () -> {
 			importJavaProject(ps.getWindow());
@@ -92,7 +92,7 @@ public class JwinUi2 extends JwinUi implements Styleable {
 		HBox bottom = new HBox(15, p, new Separator(ps.getWindow(), Orientation.VERTICAL), preState);
 		bottom.setAlignment(Pos.CENTER);
 
-		root = new VBox(15, top, logs, new Separator(ps.getWindow(), Orientation.HORIZONTAL), bottom);
+        VBox root = new VBox(15, top, logs, new Separator(ps.getWindow(), Orientation.HORIZONTAL), bottom);
 		root.setPadding(new Insets(15));
 
 		logs.prefWidthProperty().bind(root.widthProperty());
@@ -114,9 +114,10 @@ public class JwinUi2 extends JwinUi implements Styleable {
 	}
 
 	@Override
-	public void postImport() {
+	public void postImport(boolean success) {
 		top.setDisable(false);
-		logStd("project_ready");
+		if(success)
+			logStd("project_ready");
 	}
 
 	@Override
@@ -171,6 +172,11 @@ public class JwinUi2 extends JwinUi implements Styleable {
 		Platform.runLater(() -> {
 			logs.addError(line);
 		});
+	}
+
+	@Override
+	public void clearLogs() {
+		logs.clear();
 	}
 
 	@Override
