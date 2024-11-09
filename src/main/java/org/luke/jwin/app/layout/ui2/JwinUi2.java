@@ -10,6 +10,7 @@ import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Page;
 import org.luke.jwin.app.console.ConsoleOutput;
 import org.luke.jwin.app.layout.JwinUi;
+import org.luke.jwin.app.layout.JwinUi1;
 import org.luke.jwin.ui.Button;
 import org.luke.jwin.ui.MultiButton;
 import org.luke.jwin.ui.Progress;
@@ -26,16 +27,34 @@ import javafx.scene.layout.VBox;
 
 public class JwinUi2 extends JwinUi implements Styleable {
 
-	private final HBox top;
-	private final Progress p;
-	private final Label state;
+	private HBox top;
+	private Progress p;
+	private Label state;
 
-    private final ConsoleOutput logs;
+    private ConsoleOutput logs;
 
 	public JwinUi2(Page ps) {
 		super(ps);
+		init();
+	}
 
-		MultiButton run = new MultiButton(ps.getWindow(), "run");
+	public JwinUi2(JwinUi source) {
+		super(source);
+		init();
+	}
+
+	public JwinUi2(JwinUi1 source) {
+		super(source);
+		init();
+	}
+
+	public JwinUi2(JwinUi2 source) {
+		super(source);
+		init();
+	}
+
+	private void init() {
+		MultiButton run = new MultiButton(ps, "run");
 		run.addAction("build_installer", () -> {
 			if (onCompile != null) {
 				logStd("building_installer");
@@ -49,50 +68,50 @@ public class JwinUi2 extends JwinUi implements Styleable {
 			}
 		});
 
-		Button settings = new Button(ps.getWindow(), "settings", 100, 40);
+		Button settings = new Button(ps, "settings", 100, 40);
 
-		SettingsMenu settingsMen = new SettingsMenu(ps.getWindow(), this);
+		SettingsMenu settingsMen = new SettingsMenu(ps, this);
 
 		settings.setAction(() -> settingsMen.showPop(settings, Direction.DOWN_LEFT, 0, 10));
 
 		HBox.setHgrow(version, Priority.SOMETIMES);
 		HBox.setHgrow(publisher, Priority.SOMETIMES);
 
-		IconSetting icon = new IconSetting(ps.getWindow(), this.icon::select);
+		IconSetting icon = new IconSetting(ps, this.icon::select);
 
 		TextTooltip.install(icon, Direction.UP, "select_app_icon", 15, 15, true);;
 
 		this.icon.setOnSet(icon::set);
 		this.icon.setOnUnSet(icon::unset);
 
-		InputIconButton imp = new InputIconButton(ps.getWindow(), "java", 24, "import_java_project", () -> {
-			importJavaProject(ps.getWindow());
+		InputIconButton imp = new InputIconButton(ps, "java", 24, "import_java_project", () -> {
+			importJavaProject(ps);
 		});
 
-		InputIconButton impJw = new InputIconButton(ps.getWindow(), "jwin", 24, "import_jwin_project", () -> {
-			importProject(ps.getWindow());
+		InputIconButton impJw = new InputIconButton(ps, "jwin", 24, "import_jwin_project", () -> {
+			importProject(ps);
 		});
 
 		top = new HBox(10, icon, appName, imp, impJw, version, publisher, settings, run);
 		top.setAlignment(Pos.BOTTOM_CENTER);
 
-		logs = new ConsoleOutput(ps.getWindow());
+		logs = new ConsoleOutput(ps);
 
 		VBox.setVgrow(logs, Priority.ALWAYS);
 
-		p = new Progress(ps.getWindow());
+		p = new Progress(ps);
 		p.setProgress(-1);
 
 		HBox.setHgrow(p, Priority.ALWAYS);
-		state = new Label(ps.getWindow(), "idle");
+		state = new Label(ps, "idle");
 
 		StackPane preState = new StackPane(state);
 		preState.setMinWidth(150);
 
-		HBox bottom = new HBox(15, p, new Separator(ps.getWindow(), Orientation.VERTICAL), preState);
+		HBox bottom = new HBox(15, p, new Separator(ps, Orientation.VERTICAL), preState);
 		bottom.setAlignment(Pos.CENTER);
 
-        VBox root = new VBox(15, top, logs, new Separator(ps.getWindow(), Orientation.HORIZONTAL), bottom);
+		VBox root = new VBox(15, top, logs, new Separator(ps, Orientation.HORIZONTAL), bottom);
 		root.setPadding(new Insets(15));
 
 		logs.prefWidthProperty().bind(root.widthProperty());
@@ -101,11 +120,11 @@ public class JwinUi2 extends JwinUi implements Styleable {
 		p.maxWidthProperty().bind(root.widthProperty());
 
 		root.setMinWidth(0);
-		root.maxWidthProperty().bind(ps.getWindow().widthProperty().subtract(31));
+		root.maxWidthProperty().bind(ps.widthProperty().subtract(31));
 
 		getChildren().add(root);
 
-		applyStyle(ps.getWindow().getStyl());
+		applyStyle(ps.getStyl());
 	}
 
 	@Override

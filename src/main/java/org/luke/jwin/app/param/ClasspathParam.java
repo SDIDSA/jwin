@@ -474,7 +474,7 @@ public class ClasspathParam extends Param {
 		try {
 			Files.copy(src.toPath(), dest.toPath());
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			ErrorHandler.handle(e1, "copy resource " + src.getName());
 		}
 	}
 

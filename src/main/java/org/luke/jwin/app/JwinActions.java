@@ -41,46 +41,44 @@ public class JwinActions {
 	private File preBuild;
 
 	private final Window ps;
-	static private JwinUi config;
 
 	private final DirectoryChooser fc;
 
-	public JwinActions(Window ps, JwinUi config) {
+	public JwinActions(Window ps) {
 		this.ps = ps;
 		window = ps;
-		JwinActions.config = config;
 
 		fc = new DirectoryChooser();
 	}
 
 	private boolean preRun() {
-		List<File> cp = config.getClasspath().getFiles();
+		List<File> cp = config().getClasspath().getFiles();
 
 		if (cp.isEmpty()) {
 			error("missing_cp_head", "missing_cp_body");
 			return false;
 		}
 
-		if (config.getMainClass().getValue() == null) {
-			config.separate();
-			config.logStd("mc_auto_attempt");
-			Map<String, File> mcs = config.getMainClass().listMainClasses();
+		if (config().getMainClass().getValue() == null) {
+			config().separate();
+			config().logStd("mc_auto_attempt");
+			Map<String, File> mcs = config().getMainClass().listMainClasses();
 
 			if (mcs.size() == 1) {
 				Map.Entry<String, File> mc = mcs.entrySet().iterator().next();
-				config.logStd(Locale.key("mc_set", "class", mc.getKey()));
-				config.getMainClass().set(mc);
+				config().logStd(Locale.key("mc_set", "class", mc.getKey()));
+				config().getMainClass().set(mc);
 			} else {
 				if(mcs.size() > 1) {
-					config.logStd("mutltipe_mains");
+					config().logStd("mutltipe_mains");
 				}
 				Semaphore wait = new Semaphore(0);
 				AtomicBoolean selected = new AtomicBoolean(false);
 				error("mc_required_head", "mc_required_body", (r) -> {
 					if(r == ButtonType.SELECT_NOW) {
-						String n = config.getMainClass().showChooser();
+						String n = config().getMainClass().showChooser();
 						if (n != null) {
-							config.logStd(Locale.key("mc_set", "class", n));
+							config().logStd(Locale.key("mc_set", "class", n));
 							selected.set(true);
 						}
 					}
@@ -92,22 +90,22 @@ public class JwinActions {
 			}
 		}
 
-		if (!config.getClasspath().isValidMainClass(config.getMainClass().getValue().getValue())) {
+		if (!config().getClasspath().isValidMainClass(config().getMainClass().getValue().getValue())) {
 			error("mc_invalid_head", "mc_invalid_body");
 			return false;
 		}
 
-		File dk = config.getJdk().getValue();
+		File dk = config().getJdk().getValue();
 
 		if (dk == null) {
-			config.separate();
-			config.logStd("missing_jdk_head");
+			config().separate();
+			config().logStd("missing_jdk_head");
 
 			File defJdk = new File(LocalStore.getDefaultJdk());
 			if (defJdk.exists()) {
 				Semaphore s = new Semaphore(0);
-				config.getJdk().set(defJdk, "", () -> {
-					config.logStd(Locale.key("using_default_jdk", "version", config.getJdk().getVersion()));
+				config().getJdk().set(defJdk, "", () -> {
+					config().logStd(Locale.key("using_default_jdk", "version", config().getJdk().getVersion()));
 					s.release();
 				});
 				s.acquireUninterruptibly();
@@ -116,8 +114,8 @@ public class JwinActions {
 				if (!fs.isEmpty()) {
 					File f = fs.getFirst();
 					Semaphore s = new Semaphore(0);
-					config.getJdk().set(f, " (found in your system)", () -> {
-						config.logStd("jdk " + config.getJdk().getVersion() + " was detected, using that...");
+					config().getJdk().set(f, " (found in your system)", () -> {
+						config().logStd("jdk " + config().getJdk().getVersion() + " was detected, using that...");
 						s.release();
 					});
 					s.acquireUninterruptibly();
@@ -126,25 +124,25 @@ public class JwinActions {
 					return false;
 				}
 			}
-			config.separate();
+			config().separate();
 		}
 
-		if (!config.getJdk().isJdk()) {
+		if (!config().getJdk().isJdk()) {
 			error("Invalid Jdk",
 					"The jdk directory you selected is unsupported and can not be used to compile your app");
 			return false;
 		}
 
-		File rt = config.getJre().getValue();
+		File rt = config().getJre().getValue();
 
 		if (rt == null) {
-			config.separate();
-			config.logStd("no_jre_using_jdk");
-			config.logStd("jdk_consider_1");
-			config.logStd("jdk_consider_2");
-			config.separate();
+			config().separate();
+			config().logStd("no_jre_using_jdk");
+			config().logStd("jdk_consider_1");
+			config().logStd("jdk_consider_2");
+			config().separate();
 
-			List<File> jars = config.getDependencies().getJars();
+			List<File> jars = config().getDependencies().getJars();
 			boolean rereso = jars.isEmpty();
 			for (File jar : jars) {
 				if (!jar.exists()) {
@@ -155,23 +153,23 @@ public class JwinActions {
 
 			if (rereso) {
 				Semaphore s = new Semaphore(0);
-				config.getDependencies().resolve(config.getClasspath().getRoot(), (_) -> s.release());
+				config().getDependencies().resolve(config().getClasspath().getRoot(), (_) -> s.release());
 				s.acquireUninterruptibly();
 			}
 
 			Semaphore s = new Semaphore(0);
-			config.getJre().set(config.getJdk().getValue(), s::release);
+			config().getJre().set(config().getJdk().getValue(), s::release);
 			s.acquireUninterruptibly();
 
-			rt = config.getJre().getValue();
+			rt = config().getJre().getValue();
 			if (rt == null) {
 				error("missing_jre_head", "missing_jre_body");
 				return false;
 			}
 		}
 
-		String jreVersionString = config.getJre().getVersion().split("_")[0];
-		String jdkVersionString = config.getJdk().getVersion().split("_")[0];
+		String jreVersionString = config().getJre().getVersion().split("_")[0];
+		String jdkVersionString = config().getJdk().getVersion().split("_")[0];
 
 		Version jreVersion = Version.parse(jreVersionString);
 		Version jdkVersion = Version.parse(jdkVersionString);
@@ -183,53 +181,53 @@ public class JwinActions {
 			return false;
 		}
 
-		if (config.getDependencies().isResolving()) {
+		if (config().getDependencies().isResolving()) {
 			warn("resolving_dependencies", "");
 			return false;
 		}
 
-		if (config.getProjectInUse().isConsole() == null && config.getConsole().isUnset() && config.getClasspath().isConsoleApp()) {
-			config.logStd("console_estimated");
-			config.getConsole().checkedProperty().set(true);
+		if (config().getProjectInUse().isConsole() == null && config().getConsole().isUnset() && config().getClasspath().isConsoleApp()) {
+			config().logStd("console_estimated");
+			config().getConsole().checkedProperty().set(true);
 		}
 
-		config.disable(true, false);
+		config().disable(true, false);
 
 		preBuild = new File(System.getProperty("java.io.tmpdir") + "/jwin_pre_build_" + random.nextInt(999999));
 		preBuild.mkdir();
 
-		config.setState("copying_dependencies");
+		config().setState("copying_dependencies");
 		File preBuildLibs;
 		try {
-			preBuildLibs = config.getDependencies().copy(preBuild, config::setProgress);
+			preBuildLibs = config().getDependencies().copy(preBuild, config()::setProgress);
 		} catch (IOException e2) {
 			copyDependenciesFailure();
-			config.onErr();
+			config().onErr();
 			return false;
 		}
 
-		config.setState("copying_runtime");
-		config.getJre().copy(preBuild, config::setProgress);
+		config().setState("copying_runtime");
+		config().getJre().copy(preBuild, config()::setProgress);
 
-		config.setState("compiling_source_code");
+		config().setState("compiling_source_code");
 		try {
-			config.getClasspath().compile(preBuild, preBuildLibs, config.getJdk().getValue(),
-					config.getMainClass().getValue(), config::incrementProgress, config.getMainClass()::setAltMain);
+			config().getClasspath().compile(preBuild, preBuildLibs, config().getJdk().getValue(),
+					config().getMainClass().getValue(), config()::incrementProgress, config().getMainClass()::setAltMain);
 		} catch (IllegalStateException x) {
 			compileFailure();
-			config.onErr();
+			config().onErr();
 			return false;
 		}
 		List<RootFileScanner.DetectedFile> detectedFiles = null;
         try {
-            detectedFiles = RootFileScanner.scanRoot(config.getClasspath().getRoot());
+            detectedFiles = RootFileScanner.scanRoot(config().getClasspath().getRoot());
         } catch (IOException e) {
             ErrorHandler.handle(e, "detect important files from root folder");
         }
 
 		if(detectedFiles != null && !detectedFiles.isEmpty()) {
-			List<File> files = config.getRootFiles().getFiles();
-			List<File> exclude = config.getRootFiles().getExclude();
+			List<File> files = config().getRootFiles().getFiles();
+			List<File> exclude = config().getRootFiles().getExclude();
 			boolean found = false;
 			for(RootFileScanner.DetectedFile df: detectedFiles) {
 				if(!exclude.contains(df.file()) && !files.contains(df.file())) {
@@ -241,11 +239,11 @@ public class JwinActions {
 			if(found) {
 				Semaphore wait = new Semaphore(0);
 				List<RootFileScanner.DetectedFile> fdfs = detectedFiles;
-				Platform.runLater(() -> config.getRootFiles().showOverlay(fdfs, wait::release));
+				Platform.runLater(() -> config().getRootFiles().showOverlay(fdfs, wait::release));
 				wait.acquireUninterruptibly();
 			}
 
-			for(File toInclude : config.getRootFiles().getFiles()) {
+			for(File toInclude : config().getRootFiles().getFiles()) {
                 try {
                     Files.copy(toInclude.toPath(), new File(preBuild, toInclude.getName()).toPath());
                 } catch (IOException e) {
@@ -255,32 +253,32 @@ public class JwinActions {
 		}
 
 		if(detectedFiles != null && !detectedFiles.isEmpty()) {
-			List<File> files = config.getRootFiles().getFiles();
-			List<File> exclude = config.getRootFiles().getExclude();
+			List<File> files = config().getRootFiles().getFiles();
+			List<File> exclude = config().getRootFiles().getExclude();
 			for (RootFileScanner.DetectedFile df : detectedFiles) {
 				if (!exclude.contains(df.file()) && !files.contains(df.file())) {
 					exclude.add(df.file());
-					config.logStd(Locale.key("default_excluded", "file", df.file().getName()));
+					config().logStd(Locale.key("default_excluded", "file", df.file().getName()));
 				}
 			}
 		}
 
-        config.setState("copying_resources");
-		config.getClasspath().copyRes(preBuild, config::setProgress);
+        config().setState("copying_resources");
+		config().getClasspath().copyRes(preBuild, config()::setProgress);
 		return true;
 	}
 
 	public void run() {
 		new Thread(() -> {
 			if(!preRun()) {
-				config.setProgress(-1);
-				config.setState("idle");
+				config().setProgress(-1);
+				config().setState("idle");
 				return;
 			}
 
-			config.setProgress(-1);
-			config.logStd("running_proj");
-			config.setState("running");
+			config().setProgress(-1);
+			config().logStd("running_proj");
+			config().setState("running");
 
 			StringBuilder errBuilder = new StringBuilder();
 
@@ -295,8 +293,8 @@ public class JwinActions {
 			};
 
 			String c = "\"rt/bin/java\" -cp \"bin;res;lib/*\" "
-					+ (config.getMainClass().getAltMain() == null ? config.getMainClass().getValue().getKey()
-							: config.getMainClass().getAltMain());
+					+ (config().getMainClass().getAltMain() == null ? config().getMainClass().getValue().getKey()
+							: config().getMainClass().getAltMain());
 			Command command = new Command(_ -> {
 			}, err -> {
 				if(err.endsWith("com.sun.javafx.application.PlatformImpl startup")) return;
@@ -306,12 +304,12 @@ public class JwinActions {
 
 			Process p = command.execute(preBuild);
 
-			if (config.getConsole().checkedProperty().get()) {
+			if (config().getConsole().checkedProperty().get()) {
 				Platform.runLater(() -> {
 					Console con = new Console(window.getLoadedPage(), command);
 					con.show();
 
-					Runnable end = () -> config.stop(p);
+					Runnable end = () -> config().stop(p);
 
 					command.addOnExit(ec ->
 							Platform.runLater(() -> {
@@ -326,9 +324,9 @@ public class JwinActions {
 				});
 			}
 
-			config.logStd("proj_running");
+			config().logStd("proj_running");
 
-			config.run(p, showLog, errBuilder);
+			config().run(p, showLog, errBuilder);
 		}).start();
 	}
 
@@ -340,29 +338,29 @@ public class JwinActions {
 			return;
 		}
 
-		if (config.getIcon().getValue() == null || !config.getIcon().getValue().exists()) {
-			config.getIcon().set(new File(
+		if (config().getIcon().getValue() == null || !config().getIcon().getValue().exists()) {
+			config().getIcon().set(new File(
 					URLDecoder.decode(Objects.requireNonNull(getClass().getResource("/def.ico")).getFile(),
 							Charset.defaultCharset())));
 		}
 
-		if (config.getAppName().getValue().isBlank()) {
+		if (config().getAppName().getValue().isBlank()) {
 			error("app_name_head", "app_name_body");
 			return;
 		}
 
-		if (config.getVersion().getValue().isBlank()) {
-			config.getVersion().setValue("0.0.1");
+		if (config().getVersion().getValue().isBlank()) {
+			config().getVersion().setValue("0.0.1");
 		}
 
-		if (config.getGuid().getValue() == null || config.getGuid().getValue().isBlank()) {
+		if (config().getGuid().getValue() == null || config().getGuid().getValue().isBlank()) {
 			String guid = UUID.randomUUID().toString();
-			config.logStd(Locale.key("guid_generated", "guid", guid));
-			config.getGuid().setValue(guid);
+			config().logStd(Locale.key("guid_generated", "guid", guid));
+			config().getGuid().setValue(guid);
 		}
 
 		// Check for warnings
-		if (config.getJre().isJdk()) {
+		if (config().getJre().isJdk()) {
 			boolean[] cont = new boolean[] { true };
 			alert("using_jdk_as_runtime", "not_recommended_warning", AlertType.ERROR, res -> {
 				if (res != ButtonType.YES) {
@@ -373,18 +371,18 @@ public class JwinActions {
 				return;
 		}
 
-		if (config.getFileInUse() == null) {
+		if (config().getFileInUse() == null) {
 			alert("save_before_building", "save_project_recommendation", AlertType.CONFIRM, res -> {
 				if (res.equals(ButtonType.YES)) {
-					if (config.saveAs())
-						config.logStd("project_saved");
+					if (config().saveAs())
+						config().logStd("project_saved");
 				} else if (res.equals(ButtonType.CANCEL)) {
 					contin[0] = false;
 				}
 			});
 		} else {
-			JWinProject exported = config.export();
-			List<String> diffs = exported.compare(config.getProjectInUse());
+			JWinProject exported = config().export();
+			List<String> diffs = exported.compare(config().getProjectInUse());
 
 			if (!diffs.isEmpty()) {
 				StringBuilder diffStr = new StringBuilder();
@@ -393,9 +391,9 @@ public class JwinActions {
 				alert("save_changes_head", Locale.key("save_changes_body", "diffStr", diffStr.toString().trim()),
 						AlertType.CONFIRM, res -> {
 							if (res.equals(ButtonType.YES)) {
-								FileDealer.write(exported.serialize(), config.getFileInUse());
-								config.setProjectInUse(exported);
-								config.logStd("changes_saved");
+								FileDealer.write(exported.serialize(), config().getFileInUse());
+								config().setProjectInUse(exported);
+								config().logStd("changes_saved");
 							} else if (res.equals(ButtonType.CANCEL)) {
 								contin[0] = false;
 							}
@@ -407,7 +405,7 @@ public class JwinActions {
 			return;
 		}
 
-		File preSaveTo = config.getFileInUse() == null ? null : config.getFileInUse().getParentFile();
+		File preSaveTo = config().getFileInUse() == null ? null : config().getFileInUse().getParentFile();
 		if (preSaveTo == null) {
 			contin[0] = false;
 			alert("select_output_directory", "select_directory_description", AlertType.INFO, res -> {
@@ -424,20 +422,20 @@ public class JwinActions {
 		final File saveTo = preSaveTo;
 
 		if (saveTo != null) {
-			config.disable(true, true);
+			config().disable(true, true);
 			new Thread(() -> {
 				preRun();
 
-				config.setState("generating_launcher");
+				config().setState("generating_launcher");
 
 				File preBuildBat = new File(
-						preBuild.getAbsolutePath().concat("/").concat(config.getAppName().getValue()).concat(".bat"));
+						preBuild.getAbsolutePath().concat("/").concat(config().getAppName().getValue()).concat(".bat"));
 
 				FileDealer.write(
 						"set batdir=%~dp0 \n" + "pushd \"%batdir%\" \ncls\n" + "\"rt/bin/java\" -cp \"res;bin;lib/*\" "
-								+ (config.getMainClass().getAltMain() == null
-										? config.getMainClass().getValue().getKey()
-										: config.getMainClass().getAltMain())
+								+ (config().getMainClass().getAltMain() == null
+										? config().getMainClass().getValue().getKey()
+										: config().getMainClass().getAltMain())
 								+ " %*",
 						preBuildBat);
 
@@ -447,14 +445,14 @@ public class JwinActions {
 				String convertCommand = "b2e /bat \"" + preBuildBat.getAbsolutePath() + "\" /exe \""
 						+ preBuildBat.getAbsolutePath().replace(".bat", ".exe") + "\"";
 
-				if (!config.getConsole().checkedProperty().get()) {
+				if (!config().getConsole().checkedProperty().get()) {
 					convertCommand += " /invisible";
 				}
-				if (config.getAdmin().checkedProperty().get()) {
+				if (config().getAdmin().checkedProperty().get()) {
 					convertCommand += " /uac-admin";
 				}
-				if (config.getIcon().getValue() != null) {
-					convertCommand += " /icon \"" + config.getIcon().getValue().getAbsolutePath() + "\"";
+				if (config().getIcon().getValue() != null) {
+					convertCommand += " /icon \"" + config().getIcon().getValue().getAbsolutePath() + "\"";
 				}
 
 				Command convert = new Command("cmd.exe", "/C", convertCommand);
@@ -472,20 +470,20 @@ public class JwinActions {
 					ErrorHandler.handle(e2, "delete launcher file");
 				}
 
-				config.setState("generating_installer");
-				String template = FileDealer.read("/ist.txt").replace(key("app_name"), config.getAppName().getValue())
-						.replace(key("app_version"), config.getVersion().getValue())
-						.replace(key("app_publisher"), config.getPublisher().getValue())
+				config().setState("generating_installer");
+				String template = FileDealer.read("/ist.txt").replace(key("app_name"), config().getAppName().getValue())
+						.replace(key("app_version"), config().getVersion().getValue())
+						.replace(key("app_publisher"), config().getPublisher().getValue())
 						.replace(key("output_folder"), saveTo.getAbsolutePath())
 						.replace(key("installer_name"),
-								config.getAppName().getValue().concat("_")
-										.concat(config.getVersion().getValue().replace(".", "-")).concat("_installer"))
-						.replace(key("app_icon"), config.getIcon().getValue().getAbsolutePath())
+								config().getAppName().getValue().concat("_")
+										.concat(config().getVersion().getValue().replace(".", "-")).concat("_installer"))
+						.replace(key("app_icon"), config().getIcon().getValue().getAbsolutePath())
 						.replace(key("prebuild_path"), preBuild.getAbsolutePath())
-						.replace(key("GUID"), config.getGuid().getValue());
+						.replace(key("GUID"), config().getGuid().getValue());
 
-				FileTypeAssociation fta = config.getMoreSettings().getFileTypeAssociation();
-				UrlProtocolAssociation upa = config.getMoreSettings().getUrlProtocolAssociation();
+				FileTypeAssociation fta = config().getMoreSettings().getFileTypeAssociation();
+				UrlProtocolAssociation upa = config().getMoreSettings().getUrlProtocolAssociation();
 
 				if (fta == null && upa == null) {
 					template = template.replace(key("add_to_file"), "");
@@ -510,7 +508,7 @@ public class JwinActions {
 
 						String typeReg = FileDealer.read("/type_reg.txt")
 								.replace(key("type_extension"), fta.getTypeExtension()).replace(key("type_icon"),
-										fta.getIcon() == null ? config.getAppName().getValue().concat(".exe")
+										fta.getIcon() == null ? config().getAppName().getValue().concat(".exe")
 												: fta.getIcon().getName());
 
 						reg.append(typeReg).append("\n");
@@ -548,8 +546,8 @@ public class JwinActions {
 					setFileDescription(javaw);
 					setFileDescription(javadll);
 
-					setFileIcon(java, config.getIcon().getValue());
-					setFileIcon(javaw, config.getIcon().getValue());
+					setFileIcon(java, config().getIcon().getValue());
+					setFileIcon(javaw, config().getIcon().getValue());
 
 					new Command("cmd.exe", "/C","ie4uinit.exe -ClearIconCache").execute(preBuild).waitFor();
 					new Command("cmd.exe", "/C","ie4uinit.exe -show").execute(preBuild).waitFor();
@@ -562,7 +560,7 @@ public class JwinActions {
 				Consumer<String> buildLine = line -> {
 					if (line.trim().indexOf("Compressing") == 0) {
 						compressCount[0]++;
-						config.setProgress((compressCount[0] / (double) fileCount) * .9);
+						config().setProgress((compressCount[0] / (double) fileCount) * .9);
 					}
 				};
 				Command build = new Command(buildLine, buildLine, "cmd.exe", "/C",
@@ -582,12 +580,16 @@ public class JwinActions {
 				}
 
 				Platform.runLater(() -> {
-					config.setState("done");
-					config.setProgress(-1);
-					config.disable(false, true);
+					config().setState("done");
+					config().setProgress(-1);
+					config().disable(false, true);
 				});
 			}).start();
 		}
+	}
+
+	public static JwinUi config() {
+		return Jwin.instance.getConfig();
 	}
 
 	private static void setFileIcon(File file, File icon) throws InterruptedException {
@@ -614,9 +616,9 @@ public class JwinActions {
 		String content = FileDealer.read(tempVersionInfo, StandardCharsets.UTF_16);
         assert content != null;
         String modifiedContent = content.replace("VALUE \"FileDescription\", \"Java(TM) Platform SE binary\"",
-						"VALUE \"FileDescription\", \"" + config.getAppName().getValue() + "\"")
+						"VALUE \"FileDescription\", \"" + config().getAppName().getValue() + "\"")
 				.replace("VALUE \"ProductName\", \"Java(TM) Platform SE 23.0.1\"",
-						"VALUE \"ProductName\", \"" + config.getAppName().getValue() + "\"");
+						"VALUE \"ProductName\", \"" + config().getAppName().getValue() + "\"");
 
 		FileDealer.write(modifiedContent, tempVersionInfo, StandardCharsets.UTF_16);
 
@@ -665,8 +667,8 @@ public class JwinActions {
 
 	public static void warn(String head, String content) {
 		alert(head, content, AlertType.INFO);
-		config.logErr(head);
-		config.logErr(content);
+		config().logErr(head);
+		config().logErr(content);
 	}
 
 	public static void error(String head, String content) {
@@ -683,8 +685,8 @@ public class JwinActions {
 
 	public static void error(String head, String content, Consumer<ButtonType> onRes, Runnable onHide, ButtonType... types) {
 		alert(head, content, AlertType.ERROR, onRes, onHide, types);
-		config.logErr(head);
-		config.logErr(content);
+		config().logErr(head);
+		config().logErr(content);
 	}
 
 	public static void alert(String head, String content, AlertType type) {

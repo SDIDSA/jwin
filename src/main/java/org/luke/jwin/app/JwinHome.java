@@ -30,10 +30,24 @@ public class JwinHome extends Page {
 		setConfig(uiLayout.equals("sim") ? JwinUi2.class : JwinUi1.class);
 		LocalStore.setUiLayout(uiLayout);
 	}
-	
+	JwinActions actions;
 	private void setConfig(Class<? extends JwinUi> uiType) {
 		JwinUi old = config;
-		
+		if(actions == null) actions = new JwinActions(window);
+		if(old != null) {
+            try {
+                config = uiType.getConstructor(JwinUi.class).newInstance(old);
+				config.setOnRun(actions::run);
+				config.setOnCompile(actions::compile);
+				getChildren().remove(old);
+				getChildren().addFirst(config);
+				return;
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
 		try {
 			config = uiType.getConstructor(Page.class).newInstance(this);
 		} catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -41,27 +55,17 @@ public class JwinHome extends Page {
 			ErrorHandler.handle(e, "create config object");
 			config = new JwinUi1(this);
 		}
-		JwinActions actions = new JwinActions(window, config);
 
 		config.setOnRun(actions::run);
 		config.setOnCompile(actions::compile);
 
-		if(old == null) {
-			for (String param : window.getApp().getParameters().getRaw()) {
-				String ext = param.substring(param.lastIndexOf(".") + 1);
-				if (ext.equalsIgnoreCase("jwp")) {
-					config.importProject(new File(param));
-				}
-			}
-		}else {
-			getChildren().remove(old);
-			if (old.getFileInUse() != null)
-				config.importProject(old.getFileInUse());
-			else if(old.getClasspath().getRoot() != null)
-				config.loadProject(old.export());
-		}
-		
-		getChildren().addFirst(config);
+        for (String param : window.getApp().getParameters().getRaw()) {
+            String ext = param.substring(param.lastIndexOf(".") + 1);
+            if (ext.equalsIgnoreCase("jwp")) {
+                config.importProject(new File(param));
+            }
+        }
+        getChildren().addFirst(config);
 	}
 	
 	public JwinUi getConfig() {

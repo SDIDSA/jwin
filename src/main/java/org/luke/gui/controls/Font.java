@@ -34,32 +34,20 @@ import javafx.scene.text.FontWeight;
  */
 public class Font {
 
-	private static final String DEFAULT_LATIN_MONO_FAMILY = "Ubuntu Mono";
-	private static final String DEFAULT_LATIN_FAMILY = "Ubuntu";// Ubuntu Roboto
-	private static final String DEFAULT_LATIN_FAMILY_MEDIUM = DEFAULT_LATIN_FAMILY + " Medium";
-
-	private static final String DEFAULT_ARABIC_MONO_FAMILY = "Hasubi Mono";
-	private static final String DEFAULT_ARABIC_FAMILY = "Readex Pro";
-	private static final String DEFAULT_ARABIC_FAMILY_MEDIUM = DEFAULT_ARABIC_FAMILY + " Medium";
+	public static final String DEFAULT_MONO_FAMILY = "Hasubi Mono";
+	public static final String DEFAULT_FAMILY = "Readex Pro";
+	public static final String DEFAULT_FAMILY_MEDIUM = DEFAULT_FAMILY + " Medium";
 
 	public static final FontWeight DEFAULT_WEIGHT = FontWeight.NORMAL;
 	public static final FontPosture DEFAULT_POSTURE = FontPosture.REGULAR;
 	public static final double DEFAULT_SIZE = 14;
 
-//	public static String DEFAULT_MONO_FAMILY = DEFAULT_LATIN_MONO_FAMILY;
-//	public static String DEFAULT_FAMILY = DEFAULT_LATIN_FAMILY;
-//	public static String DEFAULT_FAMILY_MEDIUM = DEFAULT_LATIN_FAMILY_MEDIUM;
-
-	public static String DEFAULT_MONO_FAMILY = DEFAULT_ARABIC_MONO_FAMILY;
-	public static String DEFAULT_FAMILY = DEFAULT_ARABIC_FAMILY;
-	public static String DEFAULT_FAMILY_MEDIUM = DEFAULT_ARABIC_FAMILY_MEDIUM;
-
 	public static final Font DEFAULT = new Font();
 
-	private String family;
-	private double size;
-	private FontWeight weight;
-	private FontPosture posture;
+	private final String family;
+	private final double size;
+	private final FontWeight weight;
+	private final FontPosture posture;
 
 	public Font(String family, double size, FontWeight weight, FontPosture posture) {
 		this.family = family;
@@ -100,26 +88,6 @@ public class Font {
 		this(DEFAULT_FAMILY, size, DEFAULT_WEIGHT, posture);
 	}
 
-	public Font setFamily(String family) {
-		this.family = family;
-		return this;
-	}
-
-	public Font setSize(double size) {
-		this.size = size;
-		return this;
-	}
-
-	public Font setWeight(FontWeight weight) {
-		this.weight = weight;
-		return this;
-	}
-
-	public Font setPosture(FontPosture posture) {
-		this.posture = posture;
-		return this;
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof Font otherFont) {
@@ -148,10 +116,8 @@ public class Font {
 	}
 
 	private static void init() {
-		loadFont(DEFAULT_LATIN_FAMILY);
-		loadFont(DEFAULT_LATIN_MONO_FAMILY);
-		loadFont(DEFAULT_ARABIC_FAMILY);
-		loadFont(DEFAULT_ARABIC_MONO_FAMILY);
+		loadFont(DEFAULT_FAMILY);
+		loadFont(DEFAULT_MONO_FAMILY);
 	}
 
 	private static void loadFont(String name) {

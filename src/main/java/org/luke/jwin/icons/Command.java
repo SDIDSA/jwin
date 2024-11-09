@@ -1,7 +1,6 @@
 package org.luke.jwin.icons;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.function.Consumer;
 
 public class Command {

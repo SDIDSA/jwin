@@ -14,7 +14,6 @@ import java.util.Map.Entry;
 import java.util.zip.ZipFile;
 
 import org.luke.gui.controls.Font;
-import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.label.unkeyed.Text;
 import org.luke.gui.window.Window;
 

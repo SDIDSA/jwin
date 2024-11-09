@@ -4,11 +4,8 @@ import java.io.File;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import javafx.collections.ListChangeListener;
-import javafx.scene.Node;
 import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.alert.ButtonType;

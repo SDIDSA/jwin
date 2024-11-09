@@ -7,7 +7,6 @@ import org.luke.gui.controls.popup.context.items.KeyedMenuItem;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
 import org.luke.gui.locale.Locale;
-import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.layout.JwinUi;
 
 public class DependencyMenu extends MenuMenuItem {

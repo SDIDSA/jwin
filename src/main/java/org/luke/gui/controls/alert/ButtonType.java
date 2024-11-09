@@ -27,9 +27,9 @@ public enum ButtonType {
 	IGNORE("ignore", true),
 	SKIP("skip", true);
 
-	private String key;
-	private boolean filled;
-	private Color fill;
+	private final String key;
+	private final boolean filled;
+	private final Color fill;
 
 	/**
 	 * Constructs a ButtonType with the specified key, fill color, and filled

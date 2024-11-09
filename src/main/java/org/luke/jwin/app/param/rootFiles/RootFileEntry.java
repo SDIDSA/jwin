@@ -24,10 +24,9 @@ import org.luke.jwin.app.file.RootFileScanner;
 import org.luke.jwin.app.layout.JwinUi;
 
 import java.io.File;
-import java.util.function.Consumer;
 
 public class RootFileEntry extends VBox implements Styleable {
-    private RootFileType type;
+    private final RootFileType type;
     private RootFileState state;
 
     private final ColorIcon stateButton;
@@ -50,11 +49,12 @@ public class RootFileEntry extends VBox implements Styleable {
         stateButton.setCursor(Cursor.HAND);
 
         KeyedTooltip ttp = new KeyedTooltip(window, state.getText(), Direction.UP, 0,15);
-        Tooltip.install(stateButton, ttp);;
+        Tooltip.install(stateButton, ttp);
 
         categIcon = new ColorIcon(df.iconName(), 32, 16, false);
 
         RootFileStateMenu menu = new RootFileStateMenu(window, state -> {
+            this.state = state;
             if(state == RootFileState.UNSET) {
                 config.getRootFiles().getExclude().remove(file);
                 config.getRootFiles().getFiles().remove(file);
@@ -70,9 +70,7 @@ public class RootFileEntry extends VBox implements Styleable {
             stateButton.setImage(state.getText());
             ttp.setKey(state.getText());
         });
-        stateButton.setAction(() -> {
-            menu.showPop(stateButton, Direction.DOWN, 0, 15);
-        });
+        stateButton.setAction(() -> menu.showPop(stateButton, Direction.DOWN, 0, 15));
 
         HBox top = new HBox(10);
         top.setAlignment(Pos.CENTER_LEFT);

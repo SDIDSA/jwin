@@ -18,6 +18,7 @@ import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.JWinProject;
+import org.luke.jwin.app.layout.ui2.JwinUi2;
 import org.luke.jwin.app.more.MoreSettings;
 import org.luke.jwin.app.param.*;
 import org.luke.jwin.app.param.deps.DependenciesParam;
@@ -101,6 +102,46 @@ public abstract class JwinUi extends StackPane {
 		saver.getExtensionFilters().add(new ExtensionFilter("jWin Project", "*.jwp"));
 
 		dsaver = new DirectoryChooser();
+	}
+
+	public JwinUi(JwinUi1 source) {
+		this((JwinUi) source);
+	}
+
+	public JwinUi(JwinUi2 source) {
+		this((JwinUi) source);
+	}
+
+	public JwinUi(JwinUi source) {
+		this.ps = source.ps;
+
+		classpath = source.classpath;
+		rootFiles = source.rootFiles;
+		mainClass = source.mainClass;
+		jdk = source.jdk;
+
+		dependencies = source.dependencies;
+		jre = source.jre;
+
+		icon = source.icon;
+		appName = source.appName;
+		version = source.version;
+		publisher = source.publisher;
+
+		console = source.console;
+		admin = source.admin;
+
+		guid = source.guid;
+
+		moreSettings = source.moreSettings;
+		saver = source.saver;
+		dsaver = source.dsaver;
+
+		onRun = source.onRun;
+		onCompile = source.onCompile;
+		fileInUse = source.fileInUse;
+		projectInUse = source.projectInUse;
+		stopped = source.stopped;
 	}
 
 	public JWinProject export() {

@@ -5,7 +5,6 @@ import java.util.Map.Entry;
 
 import org.luke.gui.controls.popup.context.ContextMenu;
 import org.luke.gui.controls.popup.context.items.KeyedMenuItem;
-import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
 import org.luke.gui.locale.Locale;
 import org.luke.jwin.app.layout.JwinUi;

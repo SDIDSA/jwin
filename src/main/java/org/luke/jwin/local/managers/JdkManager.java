@@ -238,7 +238,7 @@ public class JdkManager {
 		return data;
 	}
 
-	public static final int majorVer(String ver) {
+	public static int majorVer(String ver) {
 		return tokenize(ver)[0];
 	}
 

@@ -6,7 +6,7 @@ public enum State {
 	N(Cursor.N_RESIZE), S(Cursor.S_RESIZE), E(Cursor.E_RESIZE), W(Cursor.W_RESIZE), NE(Cursor.NE_RESIZE),
 	NW(Cursor.NW_RESIZE), SE(Cursor.SE_RESIZE), SW(Cursor.SW_RESIZE), D(Cursor.DEFAULT);
 
-	Cursor curs;
+	final Cursor curs;
 
 	private State(Cursor curs) {
 		this.curs = curs;

@@ -63,9 +63,7 @@ public class Tooltip extends PopupControl implements Styleable {
 
 	protected double radius;
 
-	private final StackPane preroot;
-
-	/**
+    /**
 	 * Constructs a tooltip with the specified window, direction, offset, and
 	 * radius.
 	 * 
@@ -82,7 +80,7 @@ public class Tooltip extends PopupControl implements Styleable {
 		this.offsetY = offsetY;
 		this.radius = radius;
 
-		preroot = new StackPane();
+        StackPane preroot = new StackPane();
 		preroot.setPadding(new Insets(10));
 
 		preroot.getChildren().clear();
