@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 import org.luke.gui.exception.ErrorHandler;
@@ -148,7 +147,8 @@ public class JdkManager {
 				String vers = versionOf(r.getAbsolutePath());
 				if (vers == null) {
 					inst = versionFromDir(r);
-					vers = inst.getVersion();
+                    assert inst != null;
+                    vers = inst.getVersion();
 					versionCache.put(inst.getRoot().getAbsolutePath(), inst.getVersion());
 				} else {
 					inst = new LocalInstall(r, vers);
@@ -190,6 +190,7 @@ public class JdkManager {
 		JdkParam.detectJdkCache().forEach(root -> {
 			installs.add(versionFromDir(root));
 		});
+		installs.sort((o1, o2) -> compareVersions(o1.getVersion(), o2.getVersion()));
 		return installs.isEmpty() ? null : installs.getFirst();
 	}
 
@@ -265,7 +266,7 @@ public class JdkManager {
 				return comp;
 		}
 
-		return v1.length > v2.length ? 1 : v2.length > v1.length ? -1 : 0;
+		return Integer.compare(v1.length, v2.length);
 	}
 
 	public static final Comparator<File> FCOMPARATOR = (v1, v2) -> {

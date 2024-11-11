@@ -264,7 +264,7 @@ public class JreParam extends JavaParam {
 												config.logStd(Locale.key("runtime_saved", "path",
 														saveTo.getAbsolutePath()));
 											});
-										}).start();
+										}, "jlink copy thread").start();
 									}
 								}
 							}, ButtonType.YES, ButtonType.NO);
@@ -285,7 +285,7 @@ public class JreParam extends JavaParam {
 			}
 
 			Platform.runLater(this::stopLoading);
-		}).start();
+		}, "jlink generate thread").start();
 	}
 
 	public void copy(File preBuild, DoubleConsumer onProgress) {

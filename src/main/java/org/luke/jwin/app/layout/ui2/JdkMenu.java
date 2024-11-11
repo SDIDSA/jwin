@@ -55,7 +55,7 @@ public class JdkMenu extends MenuMenuItem {
 					});
 					Platform.runLater(() -> addMenuItem(detIt));
 				});
-			}).start();
+			}, "jdk lister").start();
 		});
 	}
 

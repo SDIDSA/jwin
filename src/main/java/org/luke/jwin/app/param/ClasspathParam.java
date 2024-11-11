@@ -128,7 +128,7 @@ public class ClasspathParam extends Param {
 				list.getChildren().add(line);
 				stopLoading();
 			});
-		}).start();
+		}, "classpath entry loader").start();
 	}
 
 	public boolean isConsoleApp() {
@@ -291,7 +291,7 @@ public class ClasspathParam extends Param {
 			String mainClassCommand = "javac -parameters -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\" \""
 					+ launcher.getValue().getAbsolutePath() + "\"";
 
-			Command mainCompileCommand = new Command(line -> {
+			Command mainCompileCommand = new Command(null, line -> {
 				if (!line.isBlank()) {
 					x.add(line);
 				}
@@ -326,8 +326,8 @@ public class ClasspathParam extends Param {
 
 				classPaths.removeAll(removed);
 				if(!added.isEmpty()) {
-					Command compileCommand = new Command(line -> {
-						if (!line.isBlank()) {
+					Command compileCommand = new Command(null, line -> {
+						if (!line.isBlank() && !line.toLowerCase().startsWith("note:")) {
 							x.add(line);
 						}
 					}, "cmd.exe", "/C", com.toString());
@@ -336,6 +336,11 @@ public class ClasspathParam extends Param {
 						if (increment != null)
 							increment.accept(.6);
 					}).waitFor();
+				}
+
+				if (!x.isEmpty()) {
+					throw new IllegalStateException("Failed to Compile",
+							new IllegalStateException(String.join("\n", x)));
 				}
 			}
 

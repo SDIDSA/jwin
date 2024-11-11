@@ -152,7 +152,7 @@ public class DependenciesParam extends Param {
 			if (onFinish != null) {
 				Platform.runLater(() -> onFinish.accept(true));
 			}
-		}).start();
+		}, "maven resolver").start();
 	}
 
 	private void resolveGradle(File grad, Consumer<Boolean> onFinish) {
@@ -182,7 +182,7 @@ public class DependenciesParam extends Param {
 			if (onFinish != null) {
 				Platform.runLater(() -> onFinish.accept(true));
 			}
-		}).start();
+		}, "gradle resolver").start();
 	}
 
 	private File pom(File root) {

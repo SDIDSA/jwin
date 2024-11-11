@@ -47,7 +47,7 @@ public class MoreSettings extends BasicOverlay {
 				long size = FileDealer.clearTemp();
 				Jwin.instance.getConfig().logStd("cleared " + FileDealer.formatSize(size) + " of cache files");
 				Platform.runLater(clearTemp::stopLoading);
-			}).start();
+			}, "cache cleaner").start();
 		});
 
 		center.getChildren().setAll(new MoreParam(ps, "associate_file_type", fileTypeParam),

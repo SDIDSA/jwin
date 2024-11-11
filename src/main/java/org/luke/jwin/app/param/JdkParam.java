@@ -84,7 +84,7 @@ public class JdkParam extends JavaParam {
 				}
 				stopLoading();
 			});
-		}).start();
+		}, "jdk detector").start();
 	}
 
 	private static List<File> detected;

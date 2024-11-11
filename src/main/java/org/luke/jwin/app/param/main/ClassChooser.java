@@ -108,7 +108,7 @@ public class ClassChooser extends BasicOverlay {
 
             found.forEach(e -> results.getChildren().add(treatFound(e)));
 			Platform.runLater(() -> preResults.setContent(results));
-        });
+        }, "class searcher");
         searcher.start();
     }
 	

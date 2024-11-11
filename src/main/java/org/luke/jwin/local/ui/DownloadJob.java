@@ -130,7 +130,6 @@ public class DownloadJob extends LocalInstallUi {
 
 	public void start() {
 		new Thread(() -> {
-
 			try {
 				URL url = URI.create(urlString).toURL();
 				URLConnection con = url.openConnection();
@@ -195,7 +194,7 @@ public class DownloadJob extends LocalInstallUi {
 			} catch (IOException | InterruptedException e) {
 				ErrorHandler.handle(e, "download file " + urlString);
 			}
-		}).start();
+		}, "download thread for " + urlString).start();
 	}
 
 }

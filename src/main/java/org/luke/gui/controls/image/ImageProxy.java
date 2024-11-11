@@ -70,29 +70,25 @@ public class ImageProxy {
 	 * @param onLoad Callback function to handle the loaded image.
 	 */
 	public static void asyncLoad(String path, double size, Consumer<Image> onLoad) {
-		new Thread() {
-			@SuppressWarnings("deprecation")
-			@Override
-			public void run() {
-				Image found = cache.get(size + "_" + path);
-				if (found == null) {
-					try {
-						found = SwingFXUtils.toFXImage(ImageIO.read(new URL(path)), null);
-					} catch (IOException e) {
-						found = new Image(path);
-					}
-					if (found.getHeight() == 0) {
-						asyncLoad(path, size, onLoad);
-						return;
-					}
-					if (found.getHeight() != size) {
-						found = resize(found, size);
-					}
-					cache.put(size + "_" + path, found);
-				}
-				onLoad.accept(found);
-			}
-		}.start();
+		new Thread(() -> {
+            Image found = cache.get(size + "_" + path);
+            if (found == null) {
+                try {
+                    found = SwingFXUtils.toFXImage(ImageIO.read(new URL(path)), null);
+                } catch (IOException e) {
+                    found = new Image(path);
+                }
+                if (found.getHeight() == 0) {
+                    asyncLoad(path, size, onLoad);
+                    return;
+                }
+                if (found.getHeight() != size) {
+                    found = resize(found, size);
+                }
+                cache.put(size + "_" + path, found);
+            }
+            onLoad.accept(found);
+        }, "image loader for " + path).start();
 	}
 
 	/**

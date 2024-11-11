@@ -332,7 +332,7 @@ public class JwinActions {
 			config().logStd("proj_running");
 
 			config().run(p, showLog, errBuilder);
-		}).start();
+		}, "application runner").start();
 	}
 
 	public void compile() {
@@ -588,7 +588,7 @@ public class JwinActions {
 					config().setProgress(-1);
 					config().disable(false, true);
 				});
-			}).start();
+			}, "installer builder").start();
 		}
 	}
 

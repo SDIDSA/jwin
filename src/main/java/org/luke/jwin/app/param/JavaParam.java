@@ -139,7 +139,7 @@ public class JavaParam extends Param {
 			if (onFinish != null) {
 				Platform.runLater(onFinish);
 			}
-		}).start();
+		}, "java directory parser").start();
 	}
 
 	protected void setZip(File file, String additional, Runnable onFinish) {
@@ -160,7 +160,7 @@ public class JavaParam extends Param {
 			if (onFinish != null) {
 				Platform.runLater(onFinish);
 			}
-		}).start();
+		}, "java zip parser").start();
 	}
 
 	protected static HashMap<String, String> parseInputStream(InputStream is) throws IOException {

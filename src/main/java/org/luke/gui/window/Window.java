@@ -146,7 +146,7 @@ public class Window extends Stage {
 					| InvocationTargetException | NoSuchMethodException | SecurityException x) {
 				ErrorHandler.handle(x, "create page (" + type.getSimpleName() + ".java:0)");
 			}
-		}).start();
+		}, "page loader for " + type.getName()).start();
 	}
 
 	// Load a page asynchronously

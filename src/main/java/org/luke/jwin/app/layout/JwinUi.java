@@ -278,7 +278,7 @@ public abstract class JwinUi extends StackPane {
 					setState("idle");
 				});
 			});
-		}).start();
+		}, "project importer").start();
 	}
 
 	private final AtomicBoolean ran = new AtomicBoolean(false);

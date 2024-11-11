@@ -83,7 +83,12 @@ public class Command {
 			registerHandler(process.getInputStream(), inputHandlers);
 			registerHandler(process.getErrorStream(), errorHandlers);
 
-			ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor();
+			ScheduledExecutorService exec = Executors.newSingleThreadScheduledExecutor((r) -> {
+				Thread t = new Thread(r, "exit checker for process");
+				t.setDaemon(true);
+				return t;
+			});
+
 			Runnable onExitCheck = () -> {
 				if(process.isAlive()) {
 					for (Runnable periodical : periodicals) {
@@ -119,6 +124,6 @@ public class Command {
 			} catch (IOException e) {
 				ErrorHandler.handle(e, "handling output");
 			}
-		}).start();
+		}, "command output handler for " + String.join(" ", command)).start();
 	}
 }

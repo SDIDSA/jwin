@@ -93,7 +93,7 @@ public class SectionItem extends StackPane implements Styleable {
 		
 		new Thread(() -> {
 			getContent(settings, contentClass);
-		}).start();
+		}, "settings content loader").start();
 	}
 
 	public SectionItem(Settings settings, String key, Runnable onAction) {

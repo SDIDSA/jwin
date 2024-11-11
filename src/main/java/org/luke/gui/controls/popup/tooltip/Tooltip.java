@@ -226,7 +226,7 @@ public class Tooltip extends PopupControl implements Styleable {
 					position(node, finalToUse);
 					fadeIn.playFromStart();
 				});
-			}).start();
+			}, "tooltip thread").start();
 		};
 		if (isShowing()) {
 			adjust.run();
