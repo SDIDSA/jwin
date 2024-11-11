@@ -16,8 +16,8 @@ import javafx.scene.layout.StackPane;
 
 public class MainClassSearch extends StackPane implements Styleable {
 
-	private ModernTextInput field;
-	private ColorIcon icon;
+	private final ModernTextInput field;
+	private final ColorIcon icon;
 
 	public MainClassSearch(Window window) {
 		setPadding(new Insets(1));

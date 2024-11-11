@@ -5,7 +5,7 @@ import org.luke.gui.window.Page;
 
 public class SettingsPan extends FullOverlay {
 	
-	private AppSettings appSetts;
+	private final AppSettings appSetts;
 	public SettingsPan(Page page) {
 		super(page);
 		

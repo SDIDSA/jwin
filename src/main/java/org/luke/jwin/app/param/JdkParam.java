@@ -5,14 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.luke.gui.exception.ErrorHandler;
+import org.luke.gui.locale.Locale;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 
 import javafx.application.Platform;
 import javafx.stage.DirectoryChooser;
+import org.luke.jwin.app.Jwin;
 
 public class JdkParam extends JavaParam {
-	private DirectoryChooser dc;
+	private final DirectoryChooser dc;
 
 	public JdkParam(Window ps) {
 		super(ps, "jdk_compile");
@@ -26,9 +28,45 @@ public class JdkParam extends JavaParam {
 		File dir = dc.showDialog(getWindow());
 		if (dir != null) {
 			if (isJdk(dir))
-				set(dir);
+				setFile(dir);
 		}
+	}
 
+	public void setFile(File file) {
+		super.set(file, log());
+	}
+
+	public void setFile(File file, Runnable onFinish) {
+		super.set(file, log(onFinish));
+	}
+
+	public void setFile(File file, String additional) {
+		super.set(file, additional, log());
+	}
+
+	public void setFile(File file, String additional, Runnable onFinish) {
+		super.set(file, additional, log(onFinish));
+	}
+
+	@Override
+	public void set(File file, String additional, Runnable onFinish) {
+		super.set(file, additional, log(onFinish));
+	}
+
+	private Runnable log;
+	private synchronized Runnable log() {
+		if(log == null) {
+			log = () -> Jwin.instance.getConfig()
+					.logStd(Locale.key("jdk_set", "version", version));
+		}
+		return log;
+	}
+
+	private Runnable log(Runnable or) {
+		return () -> {
+			if(or != null) or.run();
+			if(or != log) log.run();
+		};
 	}
 
 	public void detect() {

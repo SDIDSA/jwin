@@ -31,10 +31,10 @@ import javafx.scene.text.TextFlow;
  * @author SDIDSA
  */
 public class MultiText extends TextFlow {
-	private Window window;
+	private final Window window;
 
-	private ArrayList<TextNode> textNodes;
-	private ArrayList<ColorItem> nodes;
+	private final ArrayList<TextNode> textNodes;
+	private final ArrayList<ColorItem> nodes;
 
 	private Color fill;
 

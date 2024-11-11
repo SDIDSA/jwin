@@ -14,7 +14,7 @@ import javafx.scene.layout.VBox;
 
 public class SettingsMenu extends VBox {
 
-	private ArrayList<Section> sections;
+	private final ArrayList<Section> sections;
 
 	public SettingsMenu(Settings settings) {
 		setPadding(new Insets(30, 6, 30, 6));

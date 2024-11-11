@@ -26,9 +26,9 @@ public class SettingsMenu extends ContextMenu {
 
 		MenuItem deps = new DependencyMenu(this, config);
 
-		MenuItem conMen = new BooleanSetting(this, "console", config.getConsole().checkedProperty());
+		MenuItem conMen = new BooleanSetting(this, "console", config.getConsole().property());
 
-		MenuItem adMen = new BooleanSetting(this, "run_as_admin", config.getAdmin().checkedProperty());
+		MenuItem adMen = new BooleanSetting(this, "run_as_admin", config.getAdmin().property());
 
 		addMenuItem(fileMen);
 		addMenuItem(cpMen);

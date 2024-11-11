@@ -20,12 +20,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class DepTab extends Tab implements Styleable {
-	private Param param;
+	private final Param param;
 
-	private ArrayList<File> files;
+	private final ArrayList<File> files;
 
-	private VerticalScrollable scrollable;
-	private VBox list;
+	private final VerticalScrollable scrollable;
+	private final VBox list;
 
 	public DepTab(Param param, String title) {
 		super(title);

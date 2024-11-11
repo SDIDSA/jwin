@@ -1,5 +1,6 @@
 package org.luke.jwin.app.more;
 
+import javafx.beans.binding.Bindings;
 import org.luke.gui.controls.check.KeyedCheck;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.file.UrlProtocolAssociation;
@@ -8,9 +9,9 @@ import org.luke.jwin.ui.TextVal;
 import javafx.scene.layout.VBox;
 
 public class UrlProtocolParam extends VBox {
-	private TextVal protocol;
+	private final TextVal protocol;
 
-	private KeyedCheck enable;
+	private final KeyedCheck enable;
 
 	public UrlProtocolParam(Window window) {
 		super(10);
@@ -18,13 +19,15 @@ public class UrlProtocolParam extends VBox {
 		protocol = new TextVal(window, "url_protocol");
 		enable = new KeyedCheck(window, "enable", 16);
 
-		protocol.disableProperty().bind(enable.checkedProperty().not());
+		protocol.disableProperty().bind(
+				Bindings.createObjectBinding(() -> !enable.get(),
+					enable.property()));
 
 		getChildren().addAll(protocol, enable);
 	}
 
 	public boolean isEnabled() {
-		return enable.checkedProperty().get();
+		return enable.get();
 	}
 
 	public UrlProtocolAssociation getValue() {
@@ -34,10 +37,10 @@ public class UrlProtocolParam extends VBox {
 	public void set(UrlProtocolAssociation urlProtocol) {
 		if (urlProtocol != null) {
 			protocol.setValue(urlProtocol.getProtocol());
-			enable.checkedProperty().set(true);
+			enable.property().set(true);
 		} else {
 			protocol.setValue("");
-			enable.checkedProperty().set(false);
+			enable.property().set(false);
 		}
 	}
 }

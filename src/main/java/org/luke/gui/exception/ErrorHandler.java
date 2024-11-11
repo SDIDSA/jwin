@@ -18,7 +18,8 @@ public class ErrorHandler {
      * @param task A description of the task or operation being performed when the exception occurred.
      */
     public static void handle(Throwable x, String task) {
-        System.err.println(x.getClass().getSimpleName() + " occurred while trying to " + task + "\ncause: " + x.getMessage());
-        x.printStackTrace();
+        RuntimeException rx = new RuntimeException(x.getClass().getSimpleName() +
+                " occurred while trying to " + task + "\ncause: " + x.getMessage(), x);
+        rx.printStackTrace(System.err);
     }
 }

@@ -11,7 +11,7 @@ import javafx.scene.paint.Color;
 
 public class UiLayoutIcon extends LayerIcon implements Styleable {
 
-	private DropShadow ds;
+	private final DropShadow ds;
 
 	public UiLayoutIcon(Window win, String type, double size, Style style) {
 		super(size);

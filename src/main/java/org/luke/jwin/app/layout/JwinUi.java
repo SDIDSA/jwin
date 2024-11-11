@@ -207,7 +207,6 @@ public abstract class JwinUi extends StackPane {
 	public void importProject(Window win) {
 		File loadFrom = saver.showOpenDialog(win);
 		if (loadFrom != null) {
-			getConsole().unset();
 			importProject(loadFrom);
 		}
 	}
@@ -221,7 +220,6 @@ public abstract class JwinUi extends StackPane {
 	public void importJavaProject(Window win) {
 		File loadFrom = dsaver.showDialog(win);
 		if (loadFrom != null) {
-			getConsole().unset();
 			importJavaProject(loadFrom);
 		}
 	}
@@ -234,6 +232,7 @@ public abstract class JwinUi extends StackPane {
 	}
 
 	public void loadProject(JWinProject project) {
+		projectInUse = project;
 		Page p = Jwin.winstance.getLoadedPage();
 		if(p != null) {
 			for(Node node : p.getChildren()) {
@@ -254,14 +253,18 @@ public abstract class JwinUi extends StackPane {
 			runOnUiThread(() -> rootFiles.getExclude().addAll(project.getRootFilesExclude()));
 			mainClass.setAltMain(null);
 			runOnUiThread(() -> mainClass.set(project.getMainClass()));
-			runOnUiThread(() -> jdk.set(project.getJdk()));
-			runOnUiThread(() -> jre.set(project.getJre()));
+			runOnUiThread(() -> jdk.setFile(project.getJdk()));
+			runOnUiThread(() -> jre.setFile(project.getJre()));
 			runOnUiThread(() -> icon.set(project.getIcon()));
 			runOnUiThread(() -> appName.setValue(project.getAppName()));
 			runOnUiThread(() -> version.setValue(project.getAppVersion()));
 			runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
-			runOnUiThread(() -> console.checkedProperty().set(project.isConsole() != null && project.isConsole()));
-			runOnUiThread(() -> admin.checkedProperty().set(project.isAdmin() != null && project.isAdmin()));
+			if(project.isConsole() != null) {
+				runOnUiThread(() -> {
+					console.set(project.isConsole());
+				});
+			}
+			runOnUiThread(() -> admin.property().set(project.isAdmin() != null && project.isAdmin()));
 			runOnUiThread(() -> guid.setValue(project.getGuid()));
 			project.getManualJars().forEach(f -> runOnUiThread(() -> dependencies.addManualJar(f)));
 
@@ -275,8 +278,6 @@ public abstract class JwinUi extends StackPane {
 					setState("idle");
 				});
 			});
-
-			projectInUse = project;
 		}).start();
 	}
 
@@ -414,6 +415,8 @@ public abstract class JwinUi extends StackPane {
 	public abstract void incrementProgress(double max);
 
 	public abstract void logStd(String line);
+
+	public abstract void logStd(String line, boolean keyed);
 
 	public abstract void logStdOver(String line);
 

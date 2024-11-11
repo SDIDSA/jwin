@@ -37,6 +37,9 @@ public class LocalStore {
 			JSONObject t = new JSONObject(Objects.requireNonNull(FileDealer.read(json)));
 			t.keySet().forEach(key -> loaded.put(key, t.getString(key)));
 		} else {
+			if(!json.getParentFile().exists()) {
+				json.getParentFile().mkdir();
+			}
 			FileDealer.write("{}", json);
 		}
 	}
@@ -46,7 +49,11 @@ public class LocalStore {
 	}
 
 	private static void set(String key, String value) {
-		loaded.put(key, value);
+		if(value == null) {
+			loaded.remove(key);
+		}else {
+			loaded.put(key, value);
+		}
 		save();
 	}
 

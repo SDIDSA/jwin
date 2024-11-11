@@ -79,9 +79,9 @@ public class JwinUi2 extends JwinUi implements Styleable {
 
 		IconSetting icon = new IconSetting(ps, this.icon::select);
 
-		TextTooltip.install(icon, Direction.UP, "select_app_icon", 15, 15, true);;
+		TextTooltip.install(icon, Direction.UP, "select_app_icon", 15, 15, true);
 
-		this.icon.setOnSet(icon::set);
+        this.icon.setOnSet(icon::set);
 		this.icon.setOnUnSet(icon::unset);
 
 		InputIconButton imp = new InputIconButton(ps, "java", 24, "import_java_project", () -> {
@@ -181,16 +181,17 @@ public class JwinUi2 extends JwinUi implements Styleable {
 
 	@Override
 	public void logStd(String line) {
-		Platform.runLater(() -> {
-			logs.addOutput(line);
-		});
+		logStd(line, true);
+	}
+
+	@Override
+	public void logStd(String line, boolean keyed) {
+		Platform.runLater(() -> logs.addOutput(line, keyed));
 	}
 
 	@Override
 	public void logErr(String line) {
-		Platform.runLater(() -> {
-			logs.addError(line);
-		});
+		Platform.runLater(() -> logs.addError(line));
 	}
 
 	@Override
@@ -200,9 +201,7 @@ public class JwinUi2 extends JwinUi implements Styleable {
 
 	@Override
 	public void logStdOver(String line) {
-		Platform.runLater(() -> {
-			logs.overrideLast(line);
-		});
+		Platform.runLater(() -> logs.overrideLast(line));
 	}
 
 	@Override

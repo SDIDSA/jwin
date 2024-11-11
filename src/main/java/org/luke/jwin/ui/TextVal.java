@@ -13,10 +13,10 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 public class TextVal extends VBox implements Styleable {
-	private TextField field;
+	private final TextField field;
 
-	private Label lab;
-	private HBox bottom;
+	private final Label lab;
+	private final HBox bottom;
 
 	public TextVal(Window window, String name) {
 		super(7);

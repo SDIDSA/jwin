@@ -27,7 +27,7 @@ public enum AlertType {
 	 *
 	 * @param buttonTypes The associated button types.
 	 */
-	private AlertType(ButtonType... buttonTypes) {
+    AlertType(ButtonType... buttonTypes) {
 		buttons = Arrays.asList(buttonTypes);
 	}
 

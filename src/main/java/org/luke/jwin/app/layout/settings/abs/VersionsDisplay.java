@@ -20,12 +20,12 @@ import javafx.scene.layout.VBox;
 
 public class VersionsDisplay extends VBox implements Styleable {
 
-	private VerticalScrollable preVDisp;
-	private VBox vDisp;
+	private final VerticalScrollable preVDisp;
+	private final VBox vDisp;
 
-	private Label empty;
+	private final Label empty;
 	
-	private Label titLab;
+	private final Label titLab;
 
 	public VersionsDisplay(Window win, String title, Node...nodes) {
 		super(20);

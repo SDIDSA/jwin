@@ -48,8 +48,8 @@ public class Alert extends Overlay implements Styleable {
 
 	private Function<Style, Color> bodyFill;
 
-	private EnumMap<ButtonType, Runnable> actions;
-	private EnumMap<ButtonType, AlertButton> buttons;
+	private final EnumMap<ButtonType, Runnable> actions;
+	private final EnumMap<ButtonType, AlertButton> buttons;
 
 	public Alert(Pane owner, Window window, AlertType type, double width) {
 		super(owner, window);

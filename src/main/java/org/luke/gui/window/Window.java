@@ -37,23 +37,23 @@ import javafx.stage.StageStyle;
  */
 public class Window extends Stage {
 	// Data associated with the window
-	private HashMap<String, Object> data = new HashMap<>();
+	private final HashMap<String, Object> data = new HashMap<>();
 
 	// Listeners to be executed on window close
-	private ArrayList<Runnable> onClose = new ArrayList<>();
+	private final ArrayList<Runnable> onClose = new ArrayList<>();
 
 	// Width of the window border
-	private DoubleProperty borderWidth;
+	private final DoubleProperty borderWidth;
 
 	// Object properties for style and locale
-	private ObjectProperty<Style> style;
-	private ObjectProperty<Locale> locale;
+	private final ObjectProperty<Style> style;
+	private final ObjectProperty<Locale> locale;
 
 	// Root content of the window
-	private AppPreRoot root;
+	private final AppPreRoot root;
 
 	// Reference to the JavaFX application
-	private Application app;
+	private final Application app;
 
 	// Constructor to initialize the window with a specified style and locale
 	public Window(Application app, Style style, Locale locale) {

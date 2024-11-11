@@ -17,7 +17,7 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.VBox;
 
 public class UiLayoutOption extends VBox implements Styleable {
-	private KeyedRadio top;
+	private final KeyedRadio top;
 
 	public UiLayoutOption(Window window, String text, String img) {
 		super(15);
@@ -27,7 +27,7 @@ public class UiLayoutOption extends VBox implements Styleable {
 		
 		setCursor(Cursor.HAND);
 		
-		setOnMousePressed(e -> {
+		setOnMousePressed(_ -> {
 			getCheck().checkedProperty().set(true);
 		});
 		

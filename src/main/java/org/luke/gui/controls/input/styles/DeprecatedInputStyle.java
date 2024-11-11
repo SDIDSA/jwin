@@ -20,7 +20,7 @@ import javafx.util.Duration;
  * @author SDIDSA
  */
 public class DeprecatedInputStyle extends InputStyle {
-	private ObjectProperty<Color> borderProperty;
+	private final ObjectProperty<Color> borderProperty;
 
 	private Timeline focus;
 	private Timeline unfocus;

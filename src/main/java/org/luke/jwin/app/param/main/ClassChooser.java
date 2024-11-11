@@ -51,7 +51,7 @@ public class ClassChooser extends BasicOverlay {
 		MainClassSearch search = new MainClassSearch(ps.getWindow());
 
 		onlyMainClasses = new KeyedCheck(ps.getWindow(), "only_main", 16);
-		onlyMainClasses.checkedProperty().set(true);
+		onlyMainClasses.property().set(true);
 
 		results = new VBox();
 		results.setPadding(new Insets(10));
@@ -68,7 +68,7 @@ public class ClassChooser extends BasicOverlay {
 
 		BiConsumer<String, Boolean> searchFor = this::searchFor;
 
-		search.valueProperty().addListener((_, _, nv) -> searchFor.accept(nv.trim(), onlyMainClasses.checkedProperty().get()));
+		search.valueProperty().addListener((_, _, nv) -> searchFor.accept(nv.trim(), onlyMainClasses.get()));
 
 		center.setAlignment(Pos.CENTER);
 		center.getChildren().addAll(search, onlyMainClasses, preResults);
@@ -78,11 +78,11 @@ public class ClassChooser extends BasicOverlay {
 			results.getChildren().clear();
 			search.clear();
 			classNames = classLister.get();
-			searchFor.accept("", onlyMainClasses.checkedProperty().get());
+			searchFor.accept("", onlyMainClasses.get());
 		});
 
-		onlyMainClasses.checkedProperty().addListener((_,_,_) ->
-				searchFor.accept(search.getValue().trim(), onlyMainClasses.checkedProperty().get()));
+		onlyMainClasses.property().addListener((_,_,_) ->
+				searchFor.accept(search.getValue().trim(), onlyMainClasses.get()));
 
 		applyStyle(ps.getWindow().getStyl());
 	}
@@ -123,8 +123,8 @@ public class ClassChooser extends BasicOverlay {
 						.replace("/", ".")
 						.replace("\\", ".");
 				res.put(name, f);
-			};
-		});
+			}
+        });
 		
 		return res;
 	}
@@ -151,6 +151,10 @@ public class ClassChooser extends BasicOverlay {
 		if (parts.length > 3) {
 			displayName.insert(0, "... .");
 		}
+        return makeLink(e, displayName, name);
+	}
+
+	private Link makeLink(String e, StringBuilder displayName, String name) {
 		Link className = new Link(getWindow(), displayName.toString());
 		className.setAction(() -> {
 			File file = new File(classNames.get(e).getAbsolutePath().concat("/").concat(e));

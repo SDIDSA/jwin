@@ -22,7 +22,7 @@ import javafx.scene.layout.VBox;
 public class SettingsContent extends VBox implements Styleable {
 	protected Font header = new Font(Font.DEFAULT_FAMILY_MEDIUM, 20);
 	
-	private ArrayList<Label> headers = new ArrayList<>();
+	private final ArrayList<Label> headers = new ArrayList<>();
 
 	public SettingsContent(Settings settings) {
 		setPadding(new Insets(30, 40, 80, 40));

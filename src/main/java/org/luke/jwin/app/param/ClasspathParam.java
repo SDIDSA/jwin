@@ -138,8 +138,8 @@ public class ClasspathParam extends Param {
 			File f = new File(ent.getValue().getAbsolutePath().concat("/").concat(ent.getKey()));
 			String content = FileUtils.readFile(f);
 			String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
-			if (formattedSource.contains("(System.in)") || formattedSource.contains("System.out")
-					|| formattedSource.contains("System.err")) {
+			if (formattedSource.contains("(System" + ".in)") || formattedSource.contains("System" + ".out")
+					|| formattedSource.contains("System" + ".err")) {
 				return true;
 			}
 		}
@@ -345,9 +345,7 @@ public class ClasspathParam extends Param {
 				File fileToCheck = new File(
 						preBuildBin.getAbsolutePath() + "\\" + source.getKey().replace(".java", ".class"));
 				if (!fileToCheck.exists()) {
-					throw new IllegalStateException("Failed to Compile",
-							new IllegalStateException("source file " + source.getKey() + " was not compiled for an " +
-									"unknown reason"));
+					throw new IllegalStateException("source file " + source.getKey() + " was not compiled");
 				}
 			}
 
@@ -359,7 +357,8 @@ public class ClasspathParam extends Param {
 			return preBuildBin;
 		} catch (InterruptedException | SecurityException | UnsupportedClassVersionError e1) {
 			ErrorHandler.handle(e1, "compile/load source code");
-			JwinActions.error("Failed to compile/load your code", e1.getMessage());
+			JwinActions.error("failed_to_compile_head", "failed_to_compile_body");
+			Jwin.instance.getConfig().logStd(e1.getMessage(), false);
 			Thread.currentThread().interrupt();
 		}
 		return null;
@@ -423,14 +422,14 @@ public class ClasspathParam extends Param {
 		return launcherContent.toString();
 	}
 
-	public boolean isValidMainClass(File mainClass) {
+	public boolean isInvalidMainClass(File mainClass) {
 		for (File root : files) {
 			if (mainClass.getAbsolutePath().contains(root.getAbsolutePath())) {
-				return true;
+				return false;
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 	public void copyRes(File preBuild, DoubleConsumer onProgress) {

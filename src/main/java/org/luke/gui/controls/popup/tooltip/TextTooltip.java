@@ -22,7 +22,7 @@ import javafx.scene.text.Text;
  * @author SDIDSA
  */
 public class TextTooltip extends Tooltip {
-	private Text text;
+	private final Text text;
 
 	/**
 	 * Constructs a new TextTooltip with the specified parameters.

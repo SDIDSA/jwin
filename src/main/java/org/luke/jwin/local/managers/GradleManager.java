@@ -1,10 +1,7 @@
 package org.luke.jwin.local.managers;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.json.JSONObject;
@@ -168,7 +165,7 @@ public class GradleManager {
 		if (file.listFiles() == null) {
 			return null;
 		}
-		for (File sf : file.listFiles()) {
+		for (File sf : Objects.requireNonNull(file.listFiles())) {
 			if (sf.isDirectory()) {
 				LocalInstall version = versionFromDir(sf);
 				if (version != null) {

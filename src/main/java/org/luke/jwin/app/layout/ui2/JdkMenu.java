@@ -51,8 +51,7 @@ public class JdkMenu extends MenuMenuItem {
 					MenuItem detIt = new MenuItem(getSubMenu(), disp);
 					detIt.setAction(() -> {
 						menu.hide();
-						config.getJdk().set(jdk.getRoot());
-						config.logStd(Locale.key("jdk_set", "version", disp));
+						config.getJdk().setFile(jdk.getRoot());
 					});
 					Platform.runLater(() -> addMenuItem(detIt));
 				});

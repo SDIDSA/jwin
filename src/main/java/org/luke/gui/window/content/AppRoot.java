@@ -23,13 +23,13 @@ import javafx.scene.paint.Paint;
 public class AppRoot extends BorderPane implements Styleable {
 	public static final Color DEFAULT_WINDOW_BORDER = Color.gray(.5);
 
-	private AppPreRoot parent;
-	private MoveResizeHelper helper;
+	private final AppPreRoot parent;
+	private final MoveResizeHelper helper;
 
 	private Paint borderFill;
 	private double borderWidth;
 
-	private AppBar bar;
+	private final AppBar bar;
 
 	public AppRoot(Window window, AppPreRoot parent) {
 		this.parent = parent;

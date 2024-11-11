@@ -17,7 +17,7 @@ import javafx.beans.property.ObjectProperty;
  * @author SDIDSA
  */
 public class Label extends Text implements Localized, KeyedTextNode {
-	private Window window;
+	private final Window window;
 	private String key;
 
 	/**

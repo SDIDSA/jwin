@@ -10,8 +10,8 @@ public class Tab {
 	private TabPane owner;
 	private TabTitle titleDisp;
 	
-	private StringProperty title;
-	private ObjectProperty<Node> content;
+	private final StringProperty title;
+	private final ObjectProperty<Node> content;
 	
 	public Tab(String title) {
 		this.title = new SimpleStringProperty(title);

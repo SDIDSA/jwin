@@ -165,7 +165,7 @@
 	"jdk_set": "Project JDK has been set to <version>",
 	"still_resolving": "try again once dependencies are resolved successfully",
 	"missing_jdk_head": "JDK installation required",
-	"missing_jdk_body": "you haven't specified a jdk",
+	"missing_jdk_body": "you haven't specified a valid jdk",
 	"missing_jre_head": "JRE installation required",
 	"missing_jre_body": "you haven't specified a jre",
 	"using_default_jdk": "using default JDK: <version>",
@@ -246,5 +246,10 @@
 	"mutltipe_mains": "Found multiple classes with main method\n\tautomatic main class selection failed",
 	"only_main": "Only show classes that have the main method",
 	"no_main_head": "Probably not a main class",
-	"no_main_body": "The class you have selected doesn't seem to define a main method, do you want to use it anyway ?"
+	"no_main_body": "The class you have selected doesn't seem to define a main method, do you want to use it anyway ?",
+	"classpath_cleared": "The classpath was cleared",
+	"class_path_added": "<class> was added to the classpath",
+	"jdk_jre_head": "Incompatible Java versions",
+	"jdk_jre_body": "Your JRE <jre_version> will not be able to run code compiled by Your JDK <jdk_version>",
+	"jre_set": "Project JRE has been set to <version>"
 }

@@ -22,10 +22,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class MoreSettings extends BasicOverlay {
-	private FileTypeParam fileTypeParam;
-	private UrlProtocolParam urlProtocolParam;
+	private final FileTypeParam fileTypeParam;
+	private final UrlProtocolParam urlProtocolParam;
 
-	private Button clearTemp;
+	private final Button clearTemp;
 	
 	public MoreSettings(Page ps) {
 		super(ps);
@@ -85,7 +85,7 @@ public class MoreSettings extends BasicOverlay {
 	}
 
 	private static class MoreParam extends VBox implements Styleable {
-		private Label lab;
+		private final Label lab;
 		public MoreParam(Page page, String name, Node node) {
 			super(20);
 

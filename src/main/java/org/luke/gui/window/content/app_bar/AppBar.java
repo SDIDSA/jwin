@@ -14,10 +14,10 @@ import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 
 public class AppBar extends HBox implements Styleable {
-	private AppBarButton info;
-	private ColorIcon icon;
+	private final AppBarButton info;
+	private final ColorIcon icon;
 
-	private HBox buttons;
+	private final HBox buttons;
 	
 	public AppBar(Window window, MoveResizeHelper helper) {
 		setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);

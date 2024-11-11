@@ -22,7 +22,7 @@ public class Backgrounds {
 		// static use only.
 	}
 
-	private static HashMap<BackSet, Background> cache = new HashMap<>();
+	private static final HashMap<BackSet, Background> cache = new HashMap<>();
 
 	/**
 	 * Creates a Background with the specified fill color, corner radii, and insets.
@@ -102,9 +102,9 @@ public class Backgrounds {
 	}
 
 	private static class BackSet {
-		private Paint fill;
-		private CornerRadii radius;
-		private Insets insets;
+		private final Paint fill;
+		private final CornerRadii radius;
+		private final Insets insets;
 
 		public BackSet(Paint fill, CornerRadii radius, Insets insets) {
 			this.fill = fill;

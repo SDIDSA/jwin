@@ -27,7 +27,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 public class ThemeSetting extends VBox implements Styleable {
-	private StackPane disp;
+	private final StackPane disp;
 
 	public ThemeSetting(Settings settings) {
 

@@ -15,6 +15,8 @@ import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.local.LocalStore;
+import org.luke.jwin.local.managers.JdkManager;
+import org.luke.jwin.local.managers.LocalInstall;
 
 public class MavenResolver {
 	public static List<File> resolve(File pom) {
@@ -26,19 +28,23 @@ public class MavenResolver {
 		File projectJdk = jdkParam.isJdk() ? jdkParam.getValue() : null;
 
 		if (!defaultJdk.exists() && projectJdk == null) {
-			Semaphore s = new Semaphore(0);
+			LocalInstall jdk = JdkManager.maxVersion();
+			if(jdk != null) {
+				defaultJdk = jdk.getRoot();
+				jdkParam.setFile(defaultJdk);
+			} else {
+				Semaphore s = new Semaphore(0);
+				JwinActions.alert("No Jdk Selected", "jdk is required to resolve maven dependencies, set default jdk now ?",
+						AlertType.ERROR, res -> {
+							if (res == ButtonType.YES) {
+								Jwin.instance.openSettings("jdk_versions");
+							}
+							s.release();
+						}, ButtonType.CANCEL, ButtonType.YES);
 
-			JwinActions.alert("No Jdk Selected", "jdk is required to resolve maven dependencies, set default jdk now ?",
-					AlertType.ERROR, res -> {
-						if (res == ButtonType.YES) {
-							Jwin.instance.openSettings("jdk versions");
-						}
-						s.release();
-					}, ButtonType.CANCEL, ButtonType.YES);
-
-			s.acquireUninterruptibly();
-			defaultJdk = new File(LocalStore.getDefaultJdk());
-
+				s.acquireUninterruptibly();
+				defaultJdk = new File(LocalStore.getDefaultJdk());
+			}
 			if (!defaultJdk.exists()) {
 				return null;
 			}

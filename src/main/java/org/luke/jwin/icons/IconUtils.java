@@ -1,8 +1,12 @@
 package org.luke.jwin.icons;
 
+import org.luke.gui.exception.ErrorHandler;
+import org.luke.jwin.app.Command;
+
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public class IconUtils {
     public static File toIco(File in) {
@@ -17,14 +21,15 @@ public class IconUtils {
 
             return out;
         } catch (InterruptedException e1) {
-            e1.printStackTrace();
+            ErrorHandler.handle(e1, "convert png to ico");
             Thread.currentThread().interrupt();
         }
         return null;
     }
 
     private static File getMagick() {
-        return new File(URLDecoder.decode(IconUtils.class.getResource("/magick.exe").getFile(), StandardCharsets.UTF_8))
+        return new File(URLDecoder.decode(Objects.requireNonNull(IconUtils.class.getResource("/magick.exe"))
+                .getFile(), StandardCharsets.UTF_8))
                 .getParentFile();
     }
 }

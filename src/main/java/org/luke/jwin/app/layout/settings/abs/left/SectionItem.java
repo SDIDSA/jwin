@@ -26,7 +26,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 public class SectionItem extends StackPane implements Styleable {
-	private static HashMap<Class<? extends SettingsContent>, SettingsContent> cache = new HashMap<>();
+	private static final HashMap<Class<? extends SettingsContent>, SettingsContent> cache = new HashMap<>();
 	private static SectionItem selected;
 
 	private synchronized static SettingsContent getContent(Settings settings, Class<? extends SettingsContent> contentClass) {
@@ -38,7 +38,6 @@ public class SectionItem extends StackPane implements Styleable {
 			} catch (InstantiationException | IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchMethodException | SecurityException x) {
 				ErrorHandler.handle(x, "create settings content for " + contentClass.getSimpleName());
-				x.printStackTrace();
 			}
 		}
 		return found;
@@ -51,9 +50,9 @@ public class SectionItem extends StackPane implements Styleable {
 
 	private boolean fillSet = false;
 
-	private Label lab;
+	private final Label lab;
 
-	private BooleanProperty selectedProperty;
+	private final BooleanProperty selectedProperty;
 
 	private Runnable onSelected;
 	private Runnable action;

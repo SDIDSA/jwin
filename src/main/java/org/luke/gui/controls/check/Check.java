@@ -56,7 +56,7 @@ public class Check extends StackPane implements Styleable {
 		tick.visibleProperty().bind(checked);
 
 		setCursor(Cursor.HAND);
-		setOnMouseClicked(e -> flip());
+		setOnMouseClicked(_ -> flip());
 
 		applyStyle(window.getStyl());
 	}
@@ -103,7 +103,7 @@ public class Check extends StackPane implements Styleable {
 			inverted.removeListener(listener);
 		}
 
-		listener = (obs, ov, nv) -> restyle.run();
+		listener = (_, _, _) -> restyle.run();
 
 		checked.addListener(listener);
 		inverted.addListener(listener);
@@ -139,5 +139,9 @@ public class Check extends StackPane implements Styleable {
 	 */
 	public void setChecked(boolean checked) {
 		this.checked.set(checked);
+	}
+
+	public boolean isChecked() {
+		return checked.get();
 	}
 }

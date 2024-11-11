@@ -51,7 +51,9 @@ public class JwinActions {
 		fc = new DirectoryChooser();
 	}
 
-	private boolean preRun() {
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean preRun() {
+		JWinProject project = config().getProjectInUse();
 		List<File> cp = config().getClasspath().getFiles();
 
 		if (cp.isEmpty()) {
@@ -90,7 +92,7 @@ public class JwinActions {
 			}
 		}
 
-		if (!config().getClasspath().isValidMainClass(config().getMainClass().getValue().getValue())) {
+		if (config().getClasspath().isInvalidMainClass(config().getMainClass().getValue().getValue())) {
 			error("mc_invalid_head", "mc_invalid_body");
 			return false;
 		}
@@ -114,13 +116,10 @@ public class JwinActions {
 				if (!fs.isEmpty()) {
 					File f = fs.getFirst();
 					Semaphore s = new Semaphore(0);
-					config().getJdk().set(f, " (found in your system)", () -> {
-						config().logStd("jdk " + config().getJdk().getVersion() + " was detected, using that...");
-						s.release();
-					});
+					config().getJdk().set(f, " (found in your system)", s::release);
 					s.acquireUninterruptibly();
 				} else {
-					error("Missing Jdk", "You didn't select the jdk to compile your application");
+					error("missing_jdk_head", "missing_jdk_body");
 					return false;
 				}
 			}
@@ -128,8 +127,8 @@ public class JwinActions {
 		}
 
 		if (!config().getJdk().isJdk()) {
-			error("Invalid Jdk",
-					"The jdk directory you selected is unsupported and can not be used to compile your app");
+			error("missing_jdk_head",
+					"missing_jdk_body");
 			return false;
 		}
 
@@ -158,7 +157,7 @@ public class JwinActions {
 			}
 
 			Semaphore s = new Semaphore(0);
-			config().getJre().set(config().getJdk().getValue(), s::release);
+			config().getJre().setFile(config().getJdk().getValue(), s::release);
 			s.acquireUninterruptibly();
 
 			rt = config().getJre().getValue();
@@ -176,8 +175,9 @@ public class JwinActions {
 
 		int versionCompare = jreVersion.compareTo(jdkVersion);
 		if (versionCompare < 0) {
-			error("Uncompatible Java versions",
-					"Your JRE " + jreVersion + " will not be able to run code compiled by Your JDK " + jdkVersion);
+			error("jdk_jre_head", Locale.key("jdk_jre_body",
+					"jre_version", jreVersion.toString(),
+					"jdk_version", jdkVersion.toString()));
 			return false;
 		}
 
@@ -186,9 +186,10 @@ public class JwinActions {
 			return false;
 		}
 
-		if (config().getProjectInUse().isConsole() == null && config().getConsole().isUnset() && config().getClasspath().isConsoleApp()) {
+		if (config().getConsole().isUnset() &&
+				config().getClasspath().isConsoleApp()) {
 			config().logStd("console_estimated");
-			config().getConsole().checkedProperty().set(true);
+			config().getConsole().set(true);
 		}
 
 		config().disable(true, false);
@@ -252,6 +253,10 @@ public class JwinActions {
             }
 		}
 
+		if(project != config().getProjectInUse()) {
+			return false;
+		}
+
 		if(detectedFiles != null && !detectedFiles.isEmpty()) {
 			List<File> files = config().getRootFiles().getFiles();
 			List<File> exclude = config().getRootFiles().getExclude();
@@ -265,7 +270,7 @@ public class JwinActions {
 
         config().setState("copying_resources");
 		config().getClasspath().copyRes(preBuild, config()::setProgress);
-		return true;
+		return project == config().getProjectInUse();
 	}
 
 	public void run() {
@@ -304,7 +309,7 @@ public class JwinActions {
 
 			Process p = command.execute(preBuild);
 
-			if (config().getConsole().checkedProperty().get()) {
+			if (config().getConsole().get()) {
 				Platform.runLater(() -> {
 					Console con = new Console(window.getLoadedPage(), command);
 					con.show();
@@ -332,11 +337,6 @@ public class JwinActions {
 
 	public void compile() {
 		boolean[] contin = new boolean[] { true };
-
-		if (preBuild == null) {
-			error("temp_unfound_head", "temp_unfound_body");
-			return;
-		}
 
 		if (config().getIcon().getValue() == null || !config().getIcon().getValue().exists()) {
 			config().getIcon().set(new File(
@@ -424,7 +424,11 @@ public class JwinActions {
 		if (saveTo != null) {
 			config().disable(true, true);
 			new Thread(() -> {
-				preRun();
+				if(!preRun()) {
+					config().setProgress(-1);
+					config().setState("idle");
+					return;
+				}
 
 				config().setState("generating_launcher");
 
@@ -445,10 +449,10 @@ public class JwinActions {
 				String convertCommand = "b2e /bat \"" + preBuildBat.getAbsolutePath() + "\" /exe \""
 						+ preBuildBat.getAbsolutePath().replace(".bat", ".exe") + "\"";
 
-				if (!config().getConsole().checkedProperty().get()) {
+				if (!config().getConsole().get()) {
 					convertCommand += " /invisible";
 				}
-				if (config().getAdmin().checkedProperty().get()) {
+				if (config().getAdmin().get()) {
 					convertCommand += " /uac-admin";
 				}
 				if (config().getIcon().getValue() != null) {
@@ -615,10 +619,16 @@ public class JwinActions {
 
 		String content = FileDealer.read(tempVersionInfo, StandardCharsets.UTF_16);
         assert content != null;
-        String modifiedContent = content.replace("VALUE \"FileDescription\", \"Java(TM) Platform SE binary\"",
-						"VALUE \"FileDescription\", \"" + config().getAppName().getValue() + "\"")
-				.replace("VALUE \"ProductName\", \"Java(TM) Platform SE 23.0.1\"",
-						"VALUE \"ProductName\", \"" + config().getAppName().getValue() + "\"");
+		String fileDescription = content.split("FileDescription")[1].split("VALUE")[0]
+				.replace("\"","")
+				.replace(",", "")
+				.trim();
+		String productName = content.split("ProductName")[1].split("VALUE")[0]
+				.replace("\"","")
+				.replace(",", "")
+				.trim();
+        String modifiedContent = content.replace(fileDescription, config().getAppName().getValue())
+				.replace(productName, config().getAppName().getValue()+ " " + config().getVersion().getValue());
 
 		FileDealer.write(modifiedContent, tempVersionInfo, StandardCharsets.UTF_16);
 

@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.shape.Triangle;
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -217,7 +218,7 @@ public class Tooltip extends PopupControl implements Styleable {
 				try {
 					Thread.sleep(10);
 				} catch (InterruptedException x) {
-					x.printStackTrace();
+					ErrorHandler.handle(x, "show tooltip");
 					Thread.currentThread().interrupt();
 				}
 
@@ -240,7 +241,7 @@ public class Tooltip extends PopupControl implements Styleable {
 		fadeOut.playFromStart();
 	}
 
-	private static HashMap<Node, Installation> registered = new HashMap<>();
+	private static final HashMap<Node, Installation> registered = new HashMap<>();
 
 	public static void install(Node node, Tooltip tooltip) {
 		Installation evs = registered.get(node);

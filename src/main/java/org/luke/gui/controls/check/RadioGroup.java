@@ -14,9 +14,9 @@ import javafx.beans.property.SimpleObjectProperty;
  * @author SDIDSA
  */
 public class RadioGroup {
-	private ArrayList<Radio> radios;
+	private final ArrayList<Radio> radios;
 
-	private ObjectProperty<Radio> value;
+	private final ObjectProperty<Radio> value;
 
 	/**
 	 * Constructs a RadioGroup with the specified Radio controls.
@@ -54,8 +54,8 @@ public class RadioGroup {
 	 * @param radio The Radio control to add.
 	 */
 	public void add(Radio radio) {
-		radio.checkedProperty().addListener((obs, ov, nv) -> {
-			if (nv.booleanValue()) {
+		radio.checkedProperty().addListener((_, _, nv) -> {
+			if (nv) {
 				value.set(radio);
 				radios.forEach(e -> {
 					if (e != radio) {

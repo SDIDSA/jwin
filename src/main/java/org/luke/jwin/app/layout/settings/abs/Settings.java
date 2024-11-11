@@ -30,18 +30,18 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
 public class Settings extends StackPane implements Styleable {
-	private Window win;
-	private ExpandingHSpace leftBack;
-	private ExpandingHSpace rightBack;
+	private final Window win;
+	private final ExpandingHSpace leftBack;
+	private final ExpandingHSpace rightBack;
 
-	private StackPane content;
+	private final StackPane content;
 	protected SettingsMenu sideBar;
 
-	private VerticalScrollBar sideSb;
-	private VerticalScrollBar mainSb;
-	private HBox root;
+	private final VerticalScrollBar sideSb;
+	private final VerticalScrollBar mainSb;
+	private final HBox root;
 	
-	private Text esc;
+	private final Text esc;
 
 	public Settings(Window win) {
 		this.win = win;

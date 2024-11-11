@@ -26,7 +26,7 @@ import javafx.scene.paint.Paint;
  * @author SDIDSA
  */
 public class Separator extends Region implements Styleable {
-    private DropShadow ds;
+    private final DropShadow ds;
 
     /**
      * Constructs a Separator with the specified window and orientation.

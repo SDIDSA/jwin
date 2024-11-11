@@ -25,6 +25,7 @@ import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.locale.Locale;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
+import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.layout.JwinUi;
 
@@ -58,15 +59,48 @@ public class JreParam extends JavaParam {
 	public void browseDir() {
 		File dir = dc.showDialog(getWindow());
 		if (dir != null) {
-			set(dir);
+			setFile(dir);
 		}
 	}
 
 	public void browseArchive() {
 		File file = fc.showOpenDialog(getWindow());
 		if (file != null) {
-			set(file);
+			setFile(file);
 		}
+	}
+
+	public void setFile(File file) {
+		super.set(file, log());
+	}
+
+	public void setFile(File file, Runnable onFinish) {
+		super.set(file, log(onFinish));
+	}
+
+	public void setFile(File file, String additional) {
+		super.set(file, additional, log());
+	}
+
+	public void setFile(File file, String additional, Runnable onFinish) {
+		super.set(file, additional, log(onFinish));
+	}
+
+	private Runnable log;
+	private synchronized Runnable log() {
+		if(log == null) {
+			log = () -> Jwin.instance.getConfig()
+					.logStd(Locale.key("jre_set", "version", version));
+		}
+		return log;
+	}
+
+	private Runnable log(Runnable or) {
+		if(or == log()) return or;
+		return () -> {
+			if(or != null) or.run();
+			log.run();
+		};
 	}
 
 	public void generateFromJdk(Window ps, JwinUi config) {
@@ -134,7 +168,7 @@ public class JreParam extends JavaParam {
 				return;
 			}
 
-			if (!config.getClasspath().isValidMainClass(config.getMainClass().getValue().getValue())) {
+			if (config.getClasspath().isInvalidMainClass(config.getMainClass().getValue().getValue())) {
 				cancel.run();
 				JwinActions.error("mc_invalid_head", "mc_invalid_body");
 				return;
@@ -202,12 +236,11 @@ public class JreParam extends JavaParam {
 				}
 
 				Platform.runLater(() -> startLoading("Generating JRE ..."));
-				Command gen = new Command(System.out::println, System.out::println,"cmd", "/c",
+				Command gen = new Command("cmd", "/c",
 						"jlink --no-header-files --no-man-pages --strip-debug --module-path \""
 								+ preGenLibs.getAbsolutePath() + "\" --add-modules " + String.join(",", deps)
 								+ " --output \"" + preGen.getAbsolutePath().concat("/rt") + "\"");
 
-				System.out.println(gen);
 				gen.execute(jdkBin).waitFor();
 
 				File preGenRt = new File(preGen.getAbsolutePath().concat("/rt"));

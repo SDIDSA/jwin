@@ -24,15 +24,15 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 
 public class ComboInput extends Input implements Styleable, Localized {
-	private String key;
+	private final String key;
 
-	private Text prompt;
-	private Text base;
+	private final Text prompt;
+	private final Text base;
 
-	private Triangle arrow;
+	private final Triangle arrow;
 
-	private ArrayList<ComboItem> items;
-	private ContextMenu popup;
+	private final ArrayList<ComboItem> items;
+	private final ContextMenu popup;
 
 	private ComboItem selected;
 
@@ -72,14 +72,14 @@ public class ComboInput extends Input implements Styleable, Localized {
 
 		items = new ArrayList<>();
 		popup = new ContextMenu(window);
-		setOnMouseClicked(e -> {
+		setOnMouseClicked(_ -> {
 			requestFocus();
 			popup.showPop(this, Direction.DOWN_LEFT, 10);
 		});
 
-		focusedProperty().addListener((obs, ov, nv) -> {
+		focusedProperty().addListener((_, _, nv) -> {
 			inputStyle.focus(nv);
-			if (!nv.booleanValue()) {
+			if (!nv) {
 				popup.hide();
 			}
 		});
@@ -126,14 +126,6 @@ public class ComboInput extends Input implements Styleable, Localized {
 	
 	public void setCreator(BiFunction<ContextMenu, String, ComboItem> creator) {
 		this.creator = creator;
-	}
-	
-	public void addItem(String key) {
-		ComboItem item = creator == null ? new KeyedTextItem(popup, key) : creator.apply(popup, key);
-		
-		item.menuItem().setAction(() -> setValue(item));
-		
-		addItem(item);
 	}
 
 	public void addItem(ComboItem item) {
@@ -197,16 +189,17 @@ public class ComboInput extends Input implements Styleable, Localized {
 		if (value.isEmpty()) {
 			selected = null;
 			base.textProperty().unbind();
-			base.setText("");
+			base.setText("--");
 			this.value.unbind();
-			this.value.set("");
-		} else
+			this.value.set("--");
+		} else {
 			for (ComboItem item : items) {
 				if (item.getValue().equals(value)) {
 					setValue(item);
 					return;
 				}
 			}
+		}
 	}
 
 	@Override

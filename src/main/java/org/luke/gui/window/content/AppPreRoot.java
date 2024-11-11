@@ -21,10 +21,10 @@ import javafx.scene.paint.Paint;
 public class AppPreRoot extends StackPane {
 	public static final double DEFAULT_PADDING = 15;
 
-	private BooleanProperty padded;
-	private DoubleProperty padding;
+	private final BooleanProperty padded;
+	private final DoubleProperty padding;
 	
-	private AppRoot root;
+	private final AppRoot root;
 	
 	public AppPreRoot(Window window) {
 		setBackground(Background.EMPTY);

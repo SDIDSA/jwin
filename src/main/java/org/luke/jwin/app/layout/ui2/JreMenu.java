@@ -17,7 +17,7 @@ public class JreMenu extends MenuMenuItem {
 		getSubMenu().addOnShowing(() -> {
 			File val = config.getJre().getValue();
 			if (val != null) {
-				valItem.setText("jre " + config.getJdk().getVersion());
+				valItem.setText("jre " + config.getJre().getVersion());
 			}else {
 				valItem.setKey("not_selected");
 			}

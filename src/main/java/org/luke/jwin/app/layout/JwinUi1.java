@@ -245,12 +245,17 @@ public class JwinUi1 extends JwinUi implements Styleable {
 
 	@Override
 	public void logStd(String line) {
-		System.out.println(line);
+		//Do Nothing
+	}
+
+	@Override
+	public void logStd(String line, boolean keyed) {
+		//Do Nothing
 	}
 
 	@Override
 	public void logErr(String line) {
-		System.err.println(line);
+		//Do Nothing
 	}
 
 	@Override

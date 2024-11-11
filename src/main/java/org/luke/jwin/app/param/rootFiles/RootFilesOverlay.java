@@ -39,7 +39,7 @@ public class RootFilesOverlay extends BasicOverlay {
         topLab = new Label(ps.getWindow(), "root_files_subhead",
                 new Font(16));
         showAll = new KeyedCheck(ps.getWindow(), "root_files_show_all", 16);
-        showAll.checkedProperty().addListener((_,_,_) -> {
+        showAll.property().addListener((_,_,_) -> {
             if(onShowallChanged != null) onShowallChanged.run();
         });
 
@@ -63,7 +63,7 @@ public class RootFilesOverlay extends BasicOverlay {
     public void show(List<RootFileScanner.DetectedFile> detectedFiles) {
         if(detectedFiles == null) return;
         onShowallChanged = null;
-        showAll.checkedProperty().set(false);
+        showAll.property().set(false);
         onShowallChanged = () -> refreshFiles(detectedFiles);
         refreshFiles(detectedFiles);
         super.show();
@@ -81,7 +81,7 @@ public class RootFilesOverlay extends BasicOverlay {
                     }
                 }
                 if(df == null) {
-                    if(!showAll.checkedProperty().get()) {
+                    if(!showAll.get()) {
                         continue;
                     }
                     df = new RootFileScanner.DetectedFile(f, "category_unknown", "file", false);

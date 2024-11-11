@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.luke.gui.controls.Font;
+import org.luke.gui.controls.alert.AlertButton;
+import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.controls.image.ColoredIcon;
 import org.luke.gui.controls.input.combo.ComboInput;
 import org.luke.gui.controls.input.combo.ComboItem;
@@ -42,7 +44,7 @@ public abstract class LocalManagerSettings extends SettingsContent {
 
 	private final Settings settings;
 
-	private final ComboInput defCombo;
+	protected final ComboInput defCombo;
 
 	private final DirectoryChooser dc;
 
@@ -50,26 +52,7 @@ public abstract class LocalManagerSettings extends SettingsContent {
 		super(settings);
 		this.settings = settings;
 
-		ContextMenu addList = new ContextMenu(settings.getWindow());
-		addList.setVScrollable(300);
-		addList.addOnShowing(() -> {
-			addList.clear();
-			addList.addMenuItems(installableVersions().stream().map(v -> {
-				MenuItem i = new MenuItem(addList, v);
-				i.setAction(() -> {
-					DownloadJob job = install(settings.getWindow(), v);
-
-					job.addOnStateChanged(s -> {
-						if (s == DownloadState.DONE || s == DownloadState.CANCELED || s == DownloadState.FAILED) {
-							Platform.runLater(this::refreshManaged);
-						}
-					});
-
-					refresh();
-				});
-				return i;
-			}).collect(Collectors.toList()));
-		});
+		ContextMenu addList = makeContextMenu(settings);
 
 		dc = new DirectoryChooser();
 
@@ -83,7 +66,11 @@ public abstract class LocalManagerSettings extends SettingsContent {
 
 		defCombo.setCreator(this::createComboItem);
 
-		HBox def = new HBox(defLab, new ExpandingHSpace(), defCombo);
+		AlertButton clear = new AlertButton(settings.getWindow(), ButtonType.CANCEL);
+		clear.setKey("clear");
+		clear.setAction(this::clearDefault);
+
+		HBox def = new HBox(10, defLab, new ExpandingHSpace(), defCombo, clear);
 		def.setAlignment(Pos.CENTER_LEFT);
 
 		ColoredIcon addManaged = new ColoredIcon(settings.getWindow(), "add", 24, Style::getTextMuted);
@@ -124,7 +111,29 @@ public abstract class LocalManagerSettings extends SettingsContent {
 		applyStyle(settings.getWindow().getStyl());
 	}
 
-	// System.out.print
+	private ContextMenu makeContextMenu(Settings settings) {
+		ContextMenu addList = new ContextMenu(settings.getWindow());
+		addList.setVScrollable(300);
+		addList.addOnShowing(() -> {
+			addList.clear();
+			addList.addMenuItems(installableVersions().stream().map(v -> {
+				MenuItem i = new MenuItem(addList, v);
+				i.setAction(() -> {
+					DownloadJob job = install(settings.getWindow(), v);
+
+					job.addOnStateChanged(s -> {
+						if (s == DownloadState.DONE || s == DownloadState.CANCELED || s == DownloadState.FAILED) {
+							Platform.runLater(this::refreshManaged);
+						}
+					});
+
+					refresh();
+				});
+				return i;
+			}).collect(Collectors.toList()));
+		});
+		return addList;
+	}
 
 	private void refresh() {
 		refreshManaged();
@@ -217,6 +226,8 @@ public abstract class LocalManagerSettings extends SettingsContent {
 	public abstract boolean isValid(String version);
 
 	public abstract void addInst(File dir);
+
+	public abstract void clearDefault();
 
 	public abstract ComboItem createComboItem(ContextMenu men, String key);
 

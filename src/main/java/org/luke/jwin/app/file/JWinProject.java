@@ -99,8 +99,8 @@ public class JWinProject {
 		this.appName = config.getAppName().getValue();
 		this.appVersion = config.getVersion().getValue();
 		this.appPublisher = config.getPublisher().getValue();
-		this.console = config.getConsole().checkedProperty().get();
-		this.admin = config.getAdmin().checkedProperty().get();
+		this.console = config.getConsole().isUnset() ? null : config.getConsole().get();
+		this.admin = config.getAdmin().get();
 		this.guid = config.getGuid().getValue();
 		this.fileTypeAsso = config.getMoreSettings().getFileTypeAssociation();
 		this.urlProtocolAsso = config.getMoreSettings().getUrlProtocolAssociation();
@@ -221,7 +221,9 @@ public class JWinProject {
 		data.put(APP_NAME, appName);
 		data.put(APP_VERSION, appVersion);
 		data.put(APP_PUBLISHER, appPublisher);
-		data.put(CONSOLE, console);
+		if(console != null) {
+			data.put(CONSOLE, console);
+		}
 		data.put(ADMIN, admin);
 		data.put(GUID, guid);
 
@@ -254,7 +256,7 @@ public class JWinProject {
 				obj.getString(APP_NAME),
 				obj.getString(APP_VERSION),
 				obj.getString(APP_PUBLISHER),
-				obj.getBoolean(CONSOLE),
+				obj.isNull(CONSOLE) ? null : obj.getBoolean(CONSOLE),
                 obj.has(ADMIN) && obj.getBoolean(ADMIN),
 				obj.optString(GUID, ""),
 				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null,

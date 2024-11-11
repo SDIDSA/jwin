@@ -5,6 +5,7 @@ import java.io.File;
 import org.luke.gui.controls.popup.context.ContextMenu;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
+import org.luke.gui.locale.Locale;
 import org.luke.jwin.app.layout.JwinUi;
 
 public class ClassPathMenu extends MenuMenuItem {
@@ -35,14 +36,15 @@ public class ClassPathMenu extends MenuMenuItem {
 			addMenuItem("clear", () -> {
 				menu.hide();
 				config.getClasspath().clear();
-				config.logStd("the classpath was cleared");
+				config.logStd("classpath_cleared");
 			});
 			
 			addMenuItem("add", () -> {
 				menu.hide();
 				File added = config.getClasspath().add();
 				if(added != null) {
-					config.logStd(config.getClasspath().generateDisplay(added) + " was added to the classpath");
+					config.logStd(Locale.key("class_path_added", "class",
+							config.getClasspath().generateDisplay(added)));
 				}
 			});
 		});

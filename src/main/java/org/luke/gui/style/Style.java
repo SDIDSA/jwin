@@ -53,10 +53,10 @@ public class Style {
 	}
 
 	private Color accent;
-	private HashMap<String, Color> colors;
+	private final HashMap<String, Color> colors;
 
-	private String themeName;
-	private double brightnessModifier;
+	private final String themeName;
+	private final double brightnessModifier;
 
 	public Style(String theme, Color accent, double brightnessModifier) {
 		colors = new HashMap<>();

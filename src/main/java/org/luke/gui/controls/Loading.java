@@ -16,10 +16,10 @@ import javafx.scene.shape.Circle;
  * @author SDIDSA
  */
 public class Loading extends Pane {
-    private Circle[] circles = new Circle[4];
-    private Runnable init;
-    private Timeline animation;
-    private ObjectProperty<Paint> fill = new SimpleObjectProperty<>();
+    private final Circle[] circles = new Circle[4];
+    private final Runnable init;
+    private final Timeline animation;
+    private final ObjectProperty<Paint> fill = new SimpleObjectProperty<>();
 
     /**
      * Constructs a Loading indicator with the specified size.

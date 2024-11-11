@@ -69,7 +69,7 @@ public class Downloader {
 
 			File temp = File.createTempFile(name, "");
 			temp.delete();
-			new Command(System.out::println, System.err::println, "cmd", "/c",
+			new Command("cmd", "/c",
 					"7z x \"" + output.getAbsolutePath() + "\" -aou -o\"" + temp.getAbsolutePath() + "\"")
 					.execute(Jwin.get7z()).waitFor();
 

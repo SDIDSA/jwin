@@ -21,9 +21,9 @@ import javafx.scene.text.FontWeight;
 public class Section extends VBox implements Styleable {
 
 	private MultiText title;
-	private VBox items;
+	private final VBox items;
 	
-	private ArrayList<SectionItem> secItems;
+	private final ArrayList<SectionItem> secItems;
 
 	public Section(Settings settings, String titleKey, boolean first) {
 

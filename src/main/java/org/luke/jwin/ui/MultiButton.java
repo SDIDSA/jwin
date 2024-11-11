@@ -18,12 +18,12 @@ import javafx.scene.text.FontWeight;
 
 public class MultiButton extends HBox implements Styleable {
 
-	private org.luke.gui.controls.button.Button main;
-	private AbstractButton preIc;
+	private final org.luke.gui.controls.button.Button main;
+	private final AbstractButton preIc;
 	
 	private ContextMenu options;
 	
-	private ColorIcon ic;
+	private final ColorIcon ic;
 	
 	public MultiButton(Window window, String key) {
 		super(4);

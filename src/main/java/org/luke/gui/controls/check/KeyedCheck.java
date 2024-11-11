@@ -42,13 +42,23 @@ public class KeyedCheck extends HBox implements Styleable {
 		label.setMouseTransparent(true);
 
 		setOnMouseClicked(_ -> check.flip());
-		check.checkedProperty().addListener((_,_,_) -> unset = false);
+		check.checkedProperty().addListener((_, _, _) -> unset = false);
 
 		setCursor(Cursor.HAND);
 
 		getChildren().addAll(check, label);
 
+		unset = true;
 		applyStyle(window.getStyl());
+	}
+
+	public void set(boolean val) {
+		check.setChecked(val);
+		unset = false;
+	}
+
+	public boolean get() {
+		return check.isChecked();
 	}
 
 	public boolean isUnset() {
@@ -64,7 +74,7 @@ public class KeyedCheck extends HBox implements Styleable {
 	 *
 	 * @return The BooleanProperty for the checked property.
 	 */
-	public BooleanProperty checkedProperty() {
+	public BooleanProperty property() {
 		return check.checkedProperty();
 	}
 

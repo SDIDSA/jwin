@@ -84,6 +84,12 @@ public class GradleSettings extends LocalManagerSettings {
 	}
 
 	@Override
+	public void clearDefault() {
+		LocalStore.setDefaultGradle(null);
+		defCombo.setValue("");
+	}
+
+	@Override
 	public ComboItem createComboItem(ContextMenu men, String key) {
 		return new GradleVersionItem(men, key);
 	}

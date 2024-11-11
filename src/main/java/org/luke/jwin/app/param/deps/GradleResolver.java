@@ -7,10 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
-import java.util.concurrent.Semaphore;
-
-import org.luke.gui.controls.alert.AlertType;
-import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.locale.Locale;
 import org.luke.jwin.app.Command;
@@ -40,74 +36,54 @@ public class GradleResolver {
 			File defaultGradle = new File(LocalStore.getDefaultGradle());
 			File projectGradle = null;
 
-			File gwp = new File(
-					grad.getParentFile().getAbsolutePath() + "\\gradle\\wrapper\\gradle-wrapper.properties");
-			if (gwp.exists()) {
-				String url = parseInputStream(new FileInputStream(gwp)).get("distributionUrl").replace("https\\://",
-						"https://");
+			String dist_url = getDistributionUrl(grad.getParentFile());
+			if(dist_url == null) return null;
+			String version = getGradleVersion(grad.getParentFile());
+			if(version == null) return null;
 
-				String version = "gradle_" + url.split("-")[1];
+			File groot = GradleManager.dirForVer(version);
 
-				File groot = GradleManager.dirForVer(version);
+			if (groot.exists()) {
+				projectGradle = groot;
+			} else {
+				// check the gradle wrapper dist folder
+				String userHome = System.getProperty("user.home");
 
-				if (groot.exists()) {
-					projectGradle = groot;
-				} else {
-					// check the gradle wrapper dist folder
-					String userHome = System.getProperty("user.home");
-
-					File gradleDists = new File(userHome + "\\.gradle\\wrapper\\dists");
-					if (gradleDists.exists()) {
-						for (File sf : Objects.requireNonNull(gradleDists.listFiles())) {
-							LocalInstall inst = GradleManager.versionFromDir(sf);
-							if (inst != null && inst.getVersion().equals(version)) {
-								Jwin.instance.getConfig().logStd(
-										Locale.key("ver_found_in", "version", version, "path", sf.getAbsolutePath()));
-								JwinActions.copyDirCont(inst.getRoot(), groot, null);
-								projectGradle = groot;
-								break;
-							}
+				File gradleDists = new File(userHome + "\\.gradle\\wrapper\\dists");
+				if (gradleDists.exists()) {
+					for (File sf : Objects.requireNonNull(gradleDists.listFiles())) {
+						LocalInstall inst = GradleManager.versionFromDir(sf);
+						if (inst != null && inst.getVersion().equals(version)) {
+							Jwin.instance.getConfig().logStd(
+									Locale.key("ver_found_in", "version", version, "path", sf.getAbsolutePath()));
+							JwinActions.copyDirCont(inst.getRoot(), groot, null);
+							projectGradle = groot;
+							break;
 						}
 					}
-
-					if (projectGradle == null) {
-						// download if not found
-						Jwin.instance.getConfig().logStd(Locale.key("down_vers", "version", version));
-						Downloader.downloadZipInto(url, (dp) -> {
-							Jwin.instance.getConfig().logStdOver(Locale.key("down_prog", "version", version, "progress",
-									displayProgressBar(((int) (dp * 100)))));
-						}, (cp) -> {
-							Jwin.instance.getConfig().logStdOver(Locale.key("ext_prog", "version", version, "progress",
-									displayProgressBar(((int) (cp * 100)))));
-						}, groot, f -> Objects.requireNonNull(GradleManager.versionFromDir(f)).getRoot());
-
-						Jwin.instance.getConfig().logStdOver(Locale.key("vers_ready", "version", version));
-						projectGradle = groot;
-					}
-
 				}
+
+				if (projectGradle == null) {
+					Jwin.instance.getConfig().logStd(Locale.key("down_vers", "version", version));
+					Downloader.downloadZipInto(dist_url, (dp) -> {
+						Jwin.instance.getConfig().logStdOver(Locale.key("down_prog", "version", version, "progress",
+								displayProgressBar(((int) (dp * 100)))));
+					}, (cp) -> {
+						Jwin.instance.getConfig().logStdOver(Locale.key("ext_prog", "version", version, "progress",
+								displayProgressBar(((int) (cp * 100)))));
+					}, groot, f -> Objects.requireNonNull(GradleManager.versionFromDir(f)).getRoot());
+
+					Jwin.instance.getConfig().logStdOver(Locale.key("vers_ready", "version", version));
+					projectGradle = groot;
+				}
+
 			}
 
-			if (!defaultGradle.exists() && projectGradle == null) {
-				Semaphore s = new Semaphore(0);
 
-				JwinActions.alert("gradle_unset_head", "gradle_unset_body", AlertType.ERROR, res -> {
-					if (res == ButtonType.YES) {
-						Jwin.instance.openSettings("gradle_versions");
-					}
-					s.release();
-				}, ButtonType.CANCEL, ButtonType.YES);
+            defaultGradle.exists();
 
-				s.acquireUninterruptibly();
-
-				defaultGradle = new File(LocalStore.getDefaultGradle());
-				if (!defaultGradle.exists()) {
-					return null;
-				}
-			}
-
-			// gradle is ready
-			File gradle = projectGradle != null ? projectGradle : defaultGradle;
+            // gradle is ready
+			File gradle = projectGradle;
 
 			String gradleVersion = Objects.requireNonNull(GradleManager.versionFromDir(gradle)).getVersion();
 
@@ -179,12 +155,6 @@ public class GradleResolver {
 				Jwin.instance.getConfig().logStdOver(Locale.key("vers_ready", "version", "jdk " + maxJavaVer));
 				Jwin.instance.getConfig().separate();
 				jdkToUse[0] = downloadInto;
-			}
-
-            if (!jdkParam.isJdk()) {
-				LocalInstall jdk = JdkManager.maxVersion();
-				jdkParam.set(jdk.getRoot());
-				Jwin.instance.getConfig().logStd(Locale.key("jdk_set", "version", jdk.getVersion()));
 			}
 
 			// jdk is ready
@@ -286,18 +256,17 @@ public class GradleResolver {
 	 */
 	public static String getDistributionUrl(File root) {
 		try {
-			File gwp = new File(root.getAbsolutePath() + "\\gradle\\wrapper\\gradle-wrapper.properties");
+			File gwp = new File(root.getAbsolutePath(), "\\gradle\\wrapper\\gradle-wrapper.properties");
 			if (gwp.exists()) {
-				String url = parseInputStream(new FileInputStream(gwp)).get("distributionUrl").replace("https\\://",
-						"https://");
-				return url;
+                return parseInputStream(new FileInputStream(gwp)).get("distributionUrl").replace("https\\://",
+                        "https://");
 			}
 		} catch (Exception x) {
 			ErrorHandler.handle(x, "getting gradle version");
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Retrieves the Gradle version from a Gradle project directory.
 	 * Parses the distribution URL to extract the version information.
@@ -308,8 +277,7 @@ public class GradleResolver {
 	public static String getGradleVersion(File root) {
 		String url = getDistributionUrl(root);
 		if(url != null) {
-			String version = "gradle_" + url.split("-")[1];
-			return version;
+            return "gradle_" + url.split("-")[1];
 		}
 		return null;
 	}
