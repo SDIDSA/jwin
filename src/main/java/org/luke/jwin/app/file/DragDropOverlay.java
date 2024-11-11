@@ -2,6 +2,7 @@ package org.luke.jwin.app.file;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.layout.VBox;
 import org.luke.gui.controls.alert.Overlay;
@@ -26,6 +27,7 @@ public class DragDropOverlay extends Overlay implements Styleable {
         root.setAlignment(Pos.CENTER);
         root.setMaxWidth(600);
         icon = new ColorIcon("import-java", 256, 128);
+        icon.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
         text = new Label(window, "");
 
         root.getChildren().addAll(icon, text);

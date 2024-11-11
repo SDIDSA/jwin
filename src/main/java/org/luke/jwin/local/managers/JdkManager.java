@@ -14,6 +14,7 @@ import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
+import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.local.LocalStore;
 import org.luke.jwin.local.ui.DownloadJob;
 import org.luke.jwin.local.ui.DownloadState;
@@ -186,7 +187,10 @@ public class JdkManager {
 
 	public static LocalInstall maxVersion() {
 		List<LocalInstall> installs = allInstalls();
-		return installs.isEmpty() ? null : allInstalls().getFirst();
+		JdkParam.detectJdkCache().forEach(root -> {
+			installs.add(versionFromDir(root));
+		});
+		return installs.isEmpty() ? null : installs.getFirst();
 	}
 
 	public static LocalInstall versionFromDir(File file) {

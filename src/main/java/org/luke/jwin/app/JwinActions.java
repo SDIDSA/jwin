@@ -72,7 +72,7 @@ public class JwinActions {
 				config().getMainClass().set(mc);
 			} else {
 				if(mcs.size() > 1) {
-					config().logStd("mutltipe_mains");
+					config().logStd("multiple_mains");
 				}
 				Semaphore wait = new Semaphore(0);
 				AtomicBoolean selected = new AtomicBoolean(false);
