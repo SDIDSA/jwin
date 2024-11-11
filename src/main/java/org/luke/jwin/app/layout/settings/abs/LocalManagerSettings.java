@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.luke.gui.controls.Font;
+import org.luke.gui.controls.alert.AlertButton;
+import org.luke.gui.controls.alert.ButtonType;
 import org.luke.gui.controls.image.ColoredIcon;
 import org.luke.gui.controls.input.combo.ComboInput;
 import org.luke.gui.controls.input.combo.ComboItem;
@@ -15,6 +17,7 @@ import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.context.ContextMenu;
 import org.luke.gui.controls.popup.context.items.MenuItem;
+import org.luke.gui.controls.popup.tooltip.KeyedTooltip;
 import org.luke.gui.controls.popup.tooltip.TextTooltip;
 import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.controls.space.Separator;
@@ -34,21 +37,81 @@ import javafx.stage.DirectoryChooser;
 
 public abstract class LocalManagerSettings extends SettingsContent {
 
-	private VersionsDisplay managed;
-	private VersionsDisplay local;
+	private final VersionsDisplay managed;
+	private final VersionsDisplay local;
 
-	private Label defLab;
+	private final Label defLab;
 
-	private Settings settings;
+	private final Settings settings;
 
-	private ComboInput defCombo;
+	protected final ComboInput defCombo;
 
-	private DirectoryChooser dc;
+	private final DirectoryChooser dc;
 
 	public LocalManagerSettings(Settings settings, String name) {
 		super(settings);
 		this.settings = settings;
 
+		ContextMenu addList = makeContextMenu(settings);
+
+		dc = new DirectoryChooser();
+
+		defLab = new Label(settings.getWindow(), "default_" + name.toLowerCase() + "_version");
+
+		defCombo = new ComboInput(settings.getWindow(), new Font(14), "unset");
+
+		defCombo.valueProperty().addListener((_, _, nv) -> setDefaultVersion(nv));
+
+		defCombo.setMinWidth(250);
+
+		defCombo.setCreator(this::createComboItem);
+
+		AlertButton clear = new AlertButton(settings.getWindow(), ButtonType.CANCEL);
+		clear.setKey("clear");
+		clear.setAction(this::clearDefault);
+
+		HBox def = new HBox(10, defLab, new ExpandingHSpace(), defCombo, clear);
+		def.setAlignment(Pos.CENTER_LEFT);
+
+		ColoredIcon addManaged = new ColoredIcon(settings.getWindow(), "add", 24, Style::getTextMuted);
+		addManaged.setAction(() -> addList.showPop(addManaged, Direction.DOWN_LEFT, 10));
+		addManaged.setCursor(Cursor.HAND);
+
+		KeyedTooltip addVersion = new KeyedTooltip(settings.getWindow(), "add", Direction.UP, 15, 15);
+		TextTooltip.install(addManaged, addVersion);
+
+		ColoredIcon addLocal = new ColoredIcon(settings.getWindow(), "add", 24, Style::getTextMuted);
+		addLocal.setAction(() -> {
+			File f = dc.showDialog(settings.getWindow());
+			if (f != null) {
+				addInst(f);
+				refreshLocal();
+			}
+		});
+		addLocal.setCursor(Cursor.HAND);
+
+		KeyedTooltip browse = new KeyedTooltip(settings.getWindow(), "browse", Direction.UP, 15, 15);
+		TextTooltip.install(addLocal, browse);
+
+		managed = new VersionsDisplay(settings.getWindow(), "managed_by_jwin", addManaged);
+
+		local = new VersionsDisplay(settings.getWindow(), "in_your_system", addLocal);
+
+		managed.maxWidthProperty().bind(widthProperty().subtract(111).divide(2));
+
+		local.maxWidthProperty().bind(widthProperty().subtract(111).divide(2));
+
+		getChildren().add(def);
+
+		separate(settings.getWindow(), 20);
+
+		getChildren().addAll(new HBox(15, managed, new Separator(settings.getWindow(), Orientation.VERTICAL), local));
+
+		refresh();
+		applyStyle(settings.getWindow().getStyl());
+	}
+
+	private ContextMenu makeContextMenu(Settings settings) {
 		ContextMenu addList = new ContextMenu(settings.getWindow());
 		addList.setVScrollable(300);
 		addList.addOnShowing(() -> {
@@ -69,63 +132,8 @@ public abstract class LocalManagerSettings extends SettingsContent {
 				return i;
 			}).collect(Collectors.toList()));
 		});
-
-		dc = new DirectoryChooser();
-
-		defLab = new Label(settings.getWindow(), "default_" + name.toLowerCase() + "_version");
-
-		defCombo = new ComboInput(settings.getWindow(), new Font(14), "unset");
-
-		defCombo.valueProperty().addListener((obs, ov, nv) -> {
-			setDefaultVersion(nv);
-		});
-
-		defCombo.setMinWidth(250);
-
-		defCombo.setCreator((m, k) -> createComboItem(m, k));
-
-		HBox def = new HBox(defLab, new ExpandingHSpace(), defCombo);
-		def.setAlignment(Pos.CENTER_LEFT);
-
-		ColoredIcon addManaged = new ColoredIcon(settings.getWindow(), "add", 24, Style::getTextNormal);
-		addManaged.setAction(() -> {
-			addList.showPop(addManaged, Direction.DOWN_LEFT, 10);
-		});
-		addManaged.setCursor(Cursor.HAND);
-
-		TextTooltip.install(addManaged, Direction.UP, "Add Version", 15, 15);
-
-		ColoredIcon addLocal = new ColoredIcon(settings.getWindow(), "add", 24, Style::getTextNormal);
-		addLocal.setAction(() -> {
-			File f = dc.showDialog(settings.getWindow());
-			if (f != null) {
-				addInst(f);
-				refreshLocal();
-			}
-		});
-		addLocal.setCursor(Cursor.HAND);
-
-		TextTooltip.install(addLocal, Direction.UP, "Browse", 15, 15);
-
-		managed = new VersionsDisplay(settings.getWindow(), "managed_by_jwin", addManaged);
-
-		local = new VersionsDisplay(settings.getWindow(), "in_your_system", addLocal);
-
-		managed.maxWidthProperty().bind(widthProperty().subtract(111).divide(2));
-
-		local.maxWidthProperty().bind(widthProperty().subtract(111).divide(2));
-
-		getChildren().add(def);
-
-		separate(settings.getWindow(), 20);
-
-		getChildren().addAll(new HBox(15, managed, new Separator(settings.getWindow(), Orientation.VERTICAL), local));
-
-		refresh();
-		applyStyle(settings.getWindow().getStyl());
+		return addList;
 	}
-
-	// System.out.print
 
 	private void refresh() {
 		refreshManaged();
@@ -137,16 +145,13 @@ public abstract class LocalManagerSettings extends SettingsContent {
 
 		HashMap<String, Node> lines = new HashMap<>();
 
-		localInstalls().forEach(ver -> {
-			lines.put(ver.getVersion(), localUi(settings.getWindow(), ver, this::refreshLocal));
-		});
+		localInstalls().forEach(ver ->
+				lines.put(ver.getVersion(), localUi(settings.getWindow(), ver, this::refreshLocal)));
 
-		List<String> versions = lines.keySet().stream().collect(Collectors.toList());
+		List<String> versions = new ArrayList<>(lines.keySet());
 		versions.sort(comparator());
 
-		versions.forEach(v -> {
-			local.addLine(lines.get(v));
-		});
+		versions.forEach(v -> local.addLine(lines.get(v)));
 
 		refreshCombo();
 
@@ -168,12 +173,9 @@ public abstract class LocalManagerSettings extends SettingsContent {
 			lines.put(ver, job);
 		});
 
-		List<String> versions = lines.keySet().stream().collect(Collectors.toList());
-		versions.sort(comparator());
+		List<String> versions = lines.keySet().stream().sorted(comparator()).toList();
 
-		versions.forEach(v -> {
-			managed.addLine(lines.get(v));
-		});
+        versions.forEach(v -> managed.addLine(lines.get(v)));
 
 		refreshCombo();
 
@@ -184,16 +186,14 @@ public abstract class LocalManagerSettings extends SettingsContent {
 		defCombo.clearItems();
 
 		ArrayList<ComboItem> items = new ArrayList<>();
-		managedInstalls().forEach(f -> {
-			items.add(createComboItem(defCombo.getPopup(), f.getAbsolutePath()));
-		});
-		localInstalls().forEach(f -> {
-			items.add(createComboItem(defCombo.getPopup(), f.getRoot().getAbsolutePath()));
-		});
+		managedInstalls().forEach(f ->
+				items.add(createComboItem(defCombo.getPopup(), f.getAbsolutePath())));
+		localInstalls().forEach(f ->
+				items.add(createComboItem(defCombo.getPopup(), f.getRoot().getAbsolutePath())));
 
 		items.sort((p1, p2) -> comparator().compare(p1.getDisplay(), p2.getDisplay()));
 
-		defCombo.addItems(items.toArray(new ComboItem[items.size()]));
+		defCombo.addItems(items.toArray(new ComboItem[0]));
 
 		String defVer = getDefaultVersion();
 		if (isValid(defVer)) {
@@ -226,6 +226,8 @@ public abstract class LocalManagerSettings extends SettingsContent {
 	public abstract boolean isValid(String version);
 
 	public abstract void addInst(File dir);
+
+	public abstract void clearDefault();
 
 	public abstract ComboItem createComboItem(ContextMenu men, String key);
 

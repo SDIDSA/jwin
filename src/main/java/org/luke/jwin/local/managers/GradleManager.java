@@ -1,10 +1,7 @@
 package org.luke.jwin.local.managers;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.json.JSONObject;
@@ -18,17 +15,17 @@ import org.luke.jwin.local.ui.Installed;
 
 public class GradleManager {
 
-	private static HashMap<String, String> versionCache = new HashMap<>();
+	private static final HashMap<String, String> versionCache = new HashMap<>();
 
-	private static HashMap<String, String> installable;
+	private static final HashMap<String, String> installable;
 
-	private static HashMap<String, Installed> managedCache = new HashMap<>();
+	private static final HashMap<String, Installed> managedCache = new HashMap<>();
 
-	private static HashMap<File, Installed> localCache = new HashMap<>();
+	private static final HashMap<File, Installed> localCache = new HashMap<>();
 
 	private static final File root = new File(System.getenv("appData") + "\\jwin\\gradle");
 
-	private static HashMap<String, DownloadJob> downloadJobs = new HashMap<>();
+	private static final HashMap<String, DownloadJob> downloadJobs = new HashMap<>();
 
 	static {
 		installable = new HashMap<>();
@@ -168,7 +165,7 @@ public class GradleManager {
 		if (file.listFiles() == null) {
 			return null;
 		}
-		for (File sf : file.listFiles()) {
+		for (File sf : Objects.requireNonNull(file.listFiles())) {
 			if (sf.isDirectory()) {
 				LocalInstall version = versionFromDir(sf);
 				if (version != null) {
@@ -189,12 +186,16 @@ public class GradleManager {
 	}
 
 	public static final Comparator<String> COMPARATOR = (v1, v2) -> {
-		double iv1 = Double.parseDouble(v1.split("_")[1].split(" ")[0]);
-		double iv2 = Double.parseDouble(v2.split("_")[1].split(" ")[0]);
-		return -Double.compare(iv1, iv2);
+		String[] iv1 = v1.split("_")[1].split(" ")[0].split("\\.");
+		String[] iv2 = v2.split("_")[1].split(" ")[0].split("\\.");
+		int it1 = Integer.parseInt(iv1[0]);
+		int it2 = Integer.parseInt(iv2[0]);
+		int dc1 = Integer.parseInt(iv1[1]);
+		int dc2 = Integer.parseInt(iv2[1]);
+		int itc = -Integer.compare(it1, it2);
+		int dcc = -Integer.compare(dc1, dc2);
+		return itc == 0 ? dcc : itc;
 	};
 
-	public static final Comparator<File> FCOMPARATOR = (v1, v2) -> {
-		return COMPARATOR.compare(v1.getName(), v2.getName());
-	};
+	public static final Comparator<File> FCOMPARATOR = (v1, v2) -> COMPARATOR.compare(v1.getName(), v2.getName());
 }

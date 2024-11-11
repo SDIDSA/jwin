@@ -19,8 +19,8 @@ import javafx.scene.layout.HBox;
  * @author SDIDSA
  */
 public class KeyedRadio extends HBox implements Styleable {
-	private Radio check;
-	private Label label;
+	private final Radio check;
+	private final Label label;
 
 	/**
 	 * Constructs a KeyedRadio instance with the specified window, key, and size.

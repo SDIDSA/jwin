@@ -12,7 +12,7 @@ import jna.ITaskbarList3;
 import jna.TaskbarPeer;
 
 public class ProgressBar extends javafx.scene.control.ProgressBar implements Styleable {
-	private Window stage;
+	private final Window stage;
 	
 	public ProgressBar(Window stage) {
 		this.stage = stage;

@@ -1,5 +1,6 @@
 package org.luke.gui.controls.check;
 
+import javafx.geometry.NodeOrientation;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
@@ -22,10 +23,10 @@ import javafx.scene.layout.StackPane;
  * @author SDIDSA
  */
 public class Check extends StackPane implements Styleable {
-	private BooleanProperty checked;
-	private BooleanProperty inverted;
+	private final BooleanProperty checked;
+	private final BooleanProperty inverted;
 
-	private Pane tick;
+	private final Pane tick;
 
 	/**
 	 * Constructs a Check instance with the specified window and size.
@@ -36,6 +37,8 @@ public class Check extends StackPane implements Styleable {
 	public Check(Window window, double size) {
 		setMinSize(size, size);
 		setMaxSize(size, size);
+
+		setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 
 		inverted = new SimpleBooleanProperty(false);
 		checked = new SimpleBooleanProperty(false);
@@ -53,7 +56,7 @@ public class Check extends StackPane implements Styleable {
 		tick.visibleProperty().bind(checked);
 
 		setCursor(Cursor.HAND);
-		setOnMouseClicked(e -> flip());
+		setOnMouseClicked(_ -> flip());
 
 		applyStyle(window.getStyl());
 	}
@@ -100,7 +103,7 @@ public class Check extends StackPane implements Styleable {
 			inverted.removeListener(listener);
 		}
 
-		listener = (obs, ov, nv) -> restyle.run();
+		listener = (_, _, _) -> restyle.run();
 
 		checked.addListener(listener);
 		inverted.addListener(listener);
@@ -136,5 +139,9 @@ public class Check extends StackPane implements Styleable {
 	 */
 	public void setChecked(boolean checked) {
 		this.checked.set(checked);
+	}
+
+	public boolean isChecked() {
+		return checked.get();
 	}
 }

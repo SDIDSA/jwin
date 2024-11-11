@@ -28,12 +28,12 @@ import javafx.scene.shape.StrokeType;
  */
 public class Back extends Pane {
 
-	private DoubleProperty width, height;
-	private ObjectProperty<Paint> fill;
-	private ObjectProperty<Paint> stroke;
-	private ObjectProperty<CornerRadii> radius;
-	private ObjectProperty<BorderWidths> strokeWidth;
-	private ObjectProperty<StrokeType> strokeType;
+	private final DoubleProperty width, height;
+	private final ObjectProperty<Paint> fill;
+	private final ObjectProperty<Paint> stroke;
+	private final ObjectProperty<CornerRadii> radius;
+	private final ObjectProperty<BorderWidths> strokeWidth;
+	private final ObjectProperty<StrokeType> strokeType;
 
 	/**
 	 * Constructs a new {@code Back} with default settings.
@@ -57,15 +57,14 @@ public class Back extends Pane {
 		prefWidthProperty().bind(width);
 		prefHeightProperty().bind(height);
 
-		backgroundProperty().bind(Bindings.createObjectBinding(() -> {
-			return new Background(new BackgroundFill(fill.get(), radius.get(), null));
-		}, fill, radius));
+		backgroundProperty().bind(Bindings.createObjectBinding(() ->
+				new Background(new BackgroundFill(fill.get(), radius.get(), null)), fill, radius));
 
-		borderProperty().bind(Bindings.createObjectBinding(() -> {
-			return new Border(new BorderStroke(stroke.get(),
-					new BorderStrokeStyle(strokeType.get(), StrokeLineJoin.ROUND, StrokeLineCap.ROUND, 0, 0, null),
-					radius.get(), strokeWidth.get()));
-		}, stroke, radius, strokeWidth, strokeType));
+		borderProperty().bind(Bindings.createObjectBinding(() ->
+				new Border(new BorderStroke(stroke.get(),
+                	new BorderStrokeStyle(strokeType.get(), StrokeLineJoin.ROUND,
+							StrokeLineCap.ROUND, 0, 0, null),
+               			radius.get(), strokeWidth.get())), stroke, radius, strokeWidth, strokeType));
 	}
 
 	public DoubleProperty wProp() {

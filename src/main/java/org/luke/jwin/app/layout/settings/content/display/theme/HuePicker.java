@@ -19,18 +19,18 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 public class HuePicker extends StackPane implements Styleable {
-	private Canvas hueCan;
+	private final Canvas hueCan;
 
-	private DoubleProperty hue;
+	private final DoubleProperty hue;
 
-	private Rectangle selector;
+	private final Rectangle selector;
 
 	public HuePicker(Window window, int size) {
 		setAlignment(Pos.TOP_LEFT);
 
 		hue = new SimpleDoubleProperty(100);
 
-		double width = size / 6;
+		double width = size / 6d;
 		
 		hueCan = new Canvas();
 		hueCan.setWidth(width);
@@ -39,7 +39,7 @@ public class HuePicker extends StackPane implements Styleable {
 		setMaxSize(width + 2, size + 2);
 		setMinSize(width + 2, size + 2);
 
-		selector = new Rectangle(width + 6, size / 15);
+		selector = new Rectangle(width + 6, size / 15d);
 		selector.setFill(Color.TRANSPARENT);
 		selector.setStroke(Color.WHITE);
 		selector.setStrokeWidth(2);

@@ -11,11 +11,12 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.zip.ZipFile;
 
 import org.luke.gui.controls.Font;
-import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.label.unkeyed.Text;
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.window.Window;
 
 import javafx.application.Platform;
@@ -41,7 +42,7 @@ public class JavaParam extends Param {
 		if (file.listFiles() == null) {
 			return null;
 		}
-		for (File sf : file.listFiles()) {
+		for (File sf : Objects.requireNonNull(file.listFiles())) {
 			if (sf.isDirectory()) {
 				Entry<String, File> version = getVersionFromDir(sf);
 				if (version != null) {
@@ -52,7 +53,7 @@ public class JavaParam extends Param {
 					HashMap<String, String> data = parseInputStream(new FileInputStream(sf));
 					return Map.entry(data.get("JAVA_VERSION"), sf.getParentFile());
 				} catch (IOException e) {
-					e.printStackTrace();
+					ErrorHandler.handle(e, "get java version");
 				}
 			}
 		}
@@ -72,14 +73,14 @@ public class JavaParam extends Param {
 
 						meta.putAll(parseInputStream(is));
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						ErrorHandler.handle(e1, "parse jre version from archive");
 					}
 				}
 			});
 			arch.close();
 			return meta.get("JAVA_VERSION");
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			ErrorHandler.handle(e1, "parse jre version from archive");
 		}
 		return null;
 	}
@@ -95,19 +96,19 @@ public class JavaParam extends Param {
 		return javac.exists();
 	}
 
-	public void set(File file) {
+	protected void set(File file) {
 		set(file, "", null);
 	}
 
-	public void set(File file, Runnable onFinish) {
+	protected void set(File file, Runnable onFinish) {
 		set(file, "", onFinish);
 	}
 
-	public void set(File file, String additional) {
+	protected void set(File file, String additional) {
 		set(file, additional, null);
 	}
 
-	public void set(File file, String additional, Runnable onFinish) {
+	protected void set(File file, String additional, Runnable onFinish) {
 		if (file == null || !file.exists()) {
 			return;
 		}
@@ -118,7 +119,7 @@ public class JavaParam extends Param {
 		}
 	}
 
-	public void setDir(File dir, String additional, Runnable onFinish) {
+	protected void setDir(File dir, String additional, Runnable onFinish) {
 		if (!dir.exists()) {
 			return;
 		}
@@ -141,7 +142,7 @@ public class JavaParam extends Param {
 		}).start();
 	}
 
-	public void setZip(File file, String additional, Runnable onFinish) {
+	protected void setZip(File file, String additional, Runnable onFinish) {
 		startLoading();
 		new Thread(() -> {
 			String version = getVersionFromZip(file);
@@ -151,7 +152,7 @@ public class JavaParam extends Param {
 				Platform.runLater(() -> {
 					list.getChildren().clear();
 					addFile(getWindow(), file, file.getName() + additional,
-							new Label(getWindow(), this.version, new Font(12)));
+							new Text(this.version, new Font(12)));
 				});
 			}
 			Platform.runLater(this::stopLoading);

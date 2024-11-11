@@ -11,7 +11,7 @@ import org.luke.gui.controls.Font;
 import org.luke.gui.controls.Loading;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.controls.label.unkeyed.Text;
-import org.luke.gui.controls.scroll.Scrollable;
+import org.luke.gui.controls.scroll.VerticalScrollable;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
@@ -37,7 +37,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.FontWeight;
 
 public abstract class Param extends StackPane implements Styleable {
-	private static ArrayList<Param> all = new ArrayList<>();
+	private static final ArrayList<Param> all = new ArrayList<>();
 	public static void clearAll() {
 		all.forEach(Param::clear);
 	}
@@ -51,15 +51,15 @@ public abstract class Param extends StackPane implements Styleable {
 	protected HBox top;
 
 	protected VBox root;
-	private Loading pi;
-	private Label loadingLabel;
-	private Label head;
-	private VBox loadingRoot;
+	private final Loading pi;
+	private final Label loadingLabel;
+	private final Label head;
+	private final VBox loadingRoot;
 
-	protected Scrollable sp;
+	protected VerticalScrollable sp;
 	protected StackPane listCont;
 	
-	private Window window;
+	private final Window window;
 	
 	protected Param(Window window, String name) {
 		this.window = window;
@@ -79,7 +79,7 @@ public abstract class Param extends StackPane implements Styleable {
 		list.setAlignment(Pos.CENTER);
 		list.setPadding(new Insets(10,15,10,10));
 
-		sp = new Scrollable();
+		sp = new VerticalScrollable();
 		sp.setContent(list);
 
 		sp.setMinHeight(47);
@@ -132,24 +132,9 @@ public abstract class Param extends StackPane implements Styleable {
 		top.getChildren().add(button);
 	}
 
-	private ArrayList<Text> files = new ArrayList<>();
-	public HBox addFile(Window window, File file, String name, Node... post) {
-		Text lab = new Text(name, new Font(12));
-		files.add(lab);
-		lab.setFill(window.getStyl().get().getTextNormal());
-		
-		HBox line = new HBox(10, new ImageView(typeIcon(file)), lab, hSpace());
-		line.setAlignment(Pos.CENTER);
-		for (Node inf : post) {
-			line.getChildren().add(inf);
-			
-			if(inf instanceof Label alab) {
-				alab.setFill(window.getStyl().get().getTextNormal());
-				files.add(alab);
-			}
-		}
-		list.getChildren().addAll(line);
-		return line;
+	private final ArrayList<Text> files = new ArrayList<>();
+	public void addFile(Window window, File file, String name, Node... post) {
+		list.getChildren().addAll(generateLine(window, file, name, post));
 	}
 
 	public HBox generateLine(Window window, File file, String name, Node... post) {
@@ -163,7 +148,7 @@ public abstract class Param extends StackPane implements Styleable {
 		for (Node inf : post) {
 			line.getChildren().add(inf);
 			
-			if(inf instanceof Label alab) {
+			if(inf instanceof Text alab) {
 				alab.setFill(window.getStyl().get().getTextNormal());
 				files.add(alab);
 			}

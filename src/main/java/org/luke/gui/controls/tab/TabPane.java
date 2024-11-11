@@ -22,9 +22,9 @@ import javafx.scene.layout.BorderPane;
  * @author SDIDSA
  */
 public class TabPane extends BorderPane implements Styleable {
-    private Window window;
-    private TabTitles titles;
-    private ArrayList<Tab> tabs;
+    private final Window window;
+    private final TabTitles titles;
+    private final ArrayList<Tab> tabs;
 
     /**
      * Constructs a TabPane with the specified window.

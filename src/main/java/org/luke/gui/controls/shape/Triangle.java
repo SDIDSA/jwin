@@ -16,7 +16,7 @@ import javafx.scene.shape.Polygon;
  */
 public class Triangle extends StackPane implements ColorItem {
 
-	private Polygon poly;
+	private final Polygon poly;
 
 	public Triangle(double size) {
 		poly = new Polygon();

@@ -2,7 +2,7 @@ package org.luke.jwin.app.layout.settings.abs;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.alert.Overlay;
-import org.luke.gui.controls.scroll.ScrollBar;
+import org.luke.gui.controls.scroll.VerticalScrollBar;
 import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.controls.space.FixedHSpace;
 import org.luke.gui.controls.space.FixedVSpace;
@@ -30,18 +30,18 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 
 public class Settings extends StackPane implements Styleable {
-	private Window win;
-	private ExpandingHSpace leftBack;
-	private ExpandingHSpace rightBack;
+	private final Window win;
+	private final ExpandingHSpace leftBack;
+	private final ExpandingHSpace rightBack;
 
-	private StackPane content;
+	private final StackPane content;
 	protected SettingsMenu sideBar;
 
-	private ScrollBar sideSb;
-	private ScrollBar mainSb;
-	private HBox root;
+	private final VerticalScrollBar sideSb;
+	private final VerticalScrollBar mainSb;
+	private final HBox root;
 	
-	private Text esc;
+	private final Text esc;
 
 	public Settings(Window win) {
 		this.win = win;
@@ -69,7 +69,7 @@ public class Settings extends StackPane implements Styleable {
 		content.setMinWidth(0);
 		content.maxWidthProperty().bind(Bindings.when(w.lessThan(740)).then(w).otherwise(740));
 
-		sideSb = new ScrollBar(6, 1);
+		sideSb = new VerticalScrollBar(6, 1);
 		sideSb.install(root, sideBar);
 
 		sideSb.bindOpacityToHover(sideBar);
@@ -84,7 +84,7 @@ public class Settings extends StackPane implements Styleable {
 		
 		exitCont.getChildren().addAll(new FixedVSpace(15), close, new FixedVSpace(8), esc);
 
-		mainSb = new ScrollBar(16, 4);
+		mainSb = new VerticalScrollBar(16, 4);
 		mainSb.install(root, content);
 		
 		StackPane.setAlignment(mainSb, Pos.CENTER_RIGHT);

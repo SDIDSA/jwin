@@ -44,14 +44,14 @@ import javafx.scene.paint.Color;
  * @author SDIDSA
  */
 public class TextInput extends Input implements Styleable, Localized {
-	private Window window;
-	private TextInputControl field;
-	private HBox preField;
+	private final Window window;
+	private final TextInputControl field;
+	private final HBox preField;
 
-	private AtomicInteger caretPos;
+	private final AtomicInteger caretPos;
 
-	private BooleanProperty notSelected;
-	private ObjectProperty<IndexRange> selection;
+	private final BooleanProperty notSelected;
+	private final ObjectProperty<IndexRange> selection;
 
 	private ContextMenu menu;
 
@@ -155,7 +155,7 @@ public class TextInput extends Input implements Styleable, Localized {
 		menu.addMenuItem(paste);
 
 		Consumer<Boolean> checkSelection = nv -> {
-			if (nv.booleanValue()) {
+			if (nv) {
 				menu.disable(cut);
 				menu.disable(copy);
 			} else {
@@ -214,7 +214,7 @@ public class TextInput extends Input implements Styleable, Localized {
 	}
 
 	public void addPreField(Node node) {
-		preField.getChildren().add(0, node);
+		preField.getChildren().addFirst(node);
 	}
 
 	public void addPreField(Node... nodes) {

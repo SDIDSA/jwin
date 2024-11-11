@@ -4,32 +4,69 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.luke.gui.exception.ErrorHandler;
+import org.luke.gui.locale.Locale;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 
 import javafx.application.Platform;
 import javafx.stage.DirectoryChooser;
+import org.luke.jwin.app.Jwin;
 
 public class JdkParam extends JavaParam {
-	private DirectoryChooser dc;
+	private final DirectoryChooser dc;
 
 	public JdkParam(Window ps) {
 		super(ps, "jdk_compile");
 
 		dc = new DirectoryChooser();
-		addButton(ps, "detect", () -> detect());
-		addButton(ps, "select", () -> browse());
+		addButton(ps, "detect", this::detect);
+		addButton(ps, "select", this::browse);
 	}
 
-	public File browse() {
+	public void browse() {
 		File dir = dc.showDialog(getWindow());
 		if (dir != null) {
 			if (isJdk(dir))
-				set(dir);
-			return dir;
+				setFile(dir);
 		}
+	}
 
-		return null;
+	public void setFile(File file) {
+		super.set(file, log());
+	}
+
+	public void setFile(File file, Runnable onFinish) {
+		super.set(file, log(onFinish));
+	}
+
+	public void setFile(File file, String additional) {
+		super.set(file, additional, log());
+	}
+
+	public void setFile(File file, String additional, Runnable onFinish) {
+		super.set(file, additional, log(onFinish));
+	}
+
+	@Override
+	public void set(File file, String additional, Runnable onFinish) {
+		super.set(file, additional, log(onFinish));
+	}
+
+	private Runnable log;
+	private synchronized Runnable log() {
+		if(log == null) {
+			log = () -> Jwin.instance.getConfig()
+					.logStd(Locale.key("jdk_set", "version", version));
+		}
+		return log;
+	}
+
+	private Runnable log(Runnable or) {
+		return () -> {
+			if(or != null) or.run();
+			if(or != log) log.run();
+		};
 	}
 
 	public void detect() {
@@ -39,7 +76,7 @@ public class JdkParam extends JavaParam {
 			if (detected.isEmpty()) {
 				return;
 			}
-			File jdk = detected.get(0);
+			File jdk = detected.getFirst();
 
 			Platform.runLater(() -> {
 				if (jdk != null && jdk.exists()) {
@@ -64,12 +101,12 @@ public class JdkParam extends JavaParam {
 		ArrayList<File> res = new ArrayList<>();
 
 		ArrayList<String> sources = new ArrayList<>();
-		Command find = new Command(line -> sources.add(line), "cmd.exe", "/C", "dir /b /s javac.exe");
+		Command find = new Command(sources::add, "cmd.exe", "/C", "dir /b /s javac.exe");
 
 		try {
 			find.execute(new File("C:\\Program Files")).waitFor();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			ErrorHandler.handle(e, "detect jdk installations");
 			Thread.currentThread().interrupt();
 		}
 

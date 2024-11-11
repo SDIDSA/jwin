@@ -24,7 +24,7 @@ public interface Styleable {
 	/**
 	 * Applies the passed Style on this Node. The behavior of this method is defined
 	 * by subclasses.
-	 * 
+	 * <p>
 	 * Note: Do not manually call this method; use
 	 * {@link org.luke.gui.window.Window#setStyle(Style) Window.setStyle(Style)} to
 	 * apply a Style on the whole scene graph.
@@ -47,7 +47,7 @@ public interface Styleable {
 	 * @param color - the Color to be converted
 	 * @return a CSS representation of the Color
 	 */
-	public static String colorToCss(Color color) {
+	static String colorToCss(Color color) {
 		return "rgb(" + (int) (color.getRed() * 255) + "," + (int) (color.getGreen() * 255) + ","
 				+ (int) (color.getBlue() * 255) + ", " + color.getOpacity() + ")";
 	}
@@ -58,7 +58,7 @@ public interface Styleable {
 	 * @param node  - the Styleable node to bind the Style
 	 * @param style - the ObjectProperty holding the Style
 	 */
-	public static void bindStyle(Styleable node, ObjectProperty<Style> style) {
+	static void bindStyle(Styleable node, ObjectProperty<Style> style) {
 		bindStyleWeak(node, style);
 	}
 

@@ -16,8 +16,8 @@ import javafx.scene.layout.StackPane;
 
 public class MainClassSearch extends StackPane implements Styleable {
 
-	private ModernTextInput field;
-	private ColorIcon icon;
+	private final ModernTextInput field;
+	private final ColorIcon icon;
 
 	public MainClassSearch(Window window) {
 		setPadding(new Insets(1));
@@ -36,6 +36,10 @@ public class MainClassSearch extends StackPane implements Styleable {
 
 	public StringProperty valueProperty() {
 		return field.valueProperty();
+	}
+
+	public String getValue() {
+		return field.getValue();
 	}
 
 	public void clear() {

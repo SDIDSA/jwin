@@ -2,8 +2,12 @@ package org.luke.jwin.app.layout.ui2;
 
 import org.luke.gui.controls.popup.context.ContextMenu;
 import org.luke.gui.controls.popup.context.items.MenuItem;
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.window.Window;
+import org.luke.jwin.app.file.RootFileScanner;
 import org.luke.jwin.app.layout.JwinUi;
+
+import java.io.IOException;
 
 public class SettingsMenu extends ContextMenu {
 
@@ -22,9 +26,9 @@ public class SettingsMenu extends ContextMenu {
 
 		MenuItem deps = new DependencyMenu(this, config);
 
-		MenuItem conMen = new BooleanSetting(this, "console", config.getConsole().checkedProperty());
+		MenuItem conMen = new BooleanSetting(this, "console", config.getConsole().property());
 
-		MenuItem adMen = new BooleanSetting(this, "run_as_admin", config.getAdmin().checkedProperty());
+		MenuItem adMen = new BooleanSetting(this, "run_as_admin", config.getAdmin().property());
 
 		addMenuItem(fileMen);
 		addMenuItem(cpMen);
@@ -35,6 +39,13 @@ public class SettingsMenu extends ContextMenu {
 		addMenuItem(conMen);
 		addMenuItem(adMen);
 
+		addMenuItem("root_files", () -> {
+            try {
+                config.getRootFiles().showOverlay(RootFileScanner.scanRoot(config.getClasspath().getRoot()));
+            } catch (IOException e) {
+				ErrorHandler.handle(e, "open root files overlay");
+            }
+        });
 		addMenuItem("more_settings", config.getMoreSettings()::show);
 	}
 

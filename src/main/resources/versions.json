@@ -1,5 +1,10 @@
 {
 	"gradle": {
+		"gradle_8.10": "https://services.gradle.org/distributions/gradle-8.10-bin.zip",
+		"gradle_8.9": "https://services.gradle.org/distributions/gradle-8.9-bin.zip",
+		"gradle_8.8": "https://services.gradle.org/distributions/gradle-8.8-bin.zip",
+		"gradle_8.7": "https://services.gradle.org/distributions/gradle-8.7-bin.zip",
+		"gradle_8.6": "https://services.gradle.org/distributions/gradle-8.6-bin.zip",
 		"gradle_8.5": "https://services.gradle.org/distributions/gradle-8.5-bin.zip",
 		"gradle_8.4": "https://services.gradle.org/distributions/gradle-8.4-bin.zip",
 		"gradle_8.3": "https://services.gradle.org/distributions/gradle-8.3-bin.zip",
@@ -15,7 +20,9 @@
 		"gradle_7.0": "https://services.gradle.org/distributions/gradle-7.0-bin.zip"
 	},
 	"jdk": {
+		"jdk_23_x64": "https://corretto.aws/downloads/latest/amazon-corretto-23-x64-windows-jdk.zip",
 		"jdk_21_x64": "https://corretto.aws/downloads/latest/amazon-corretto-21-x64-windows-jdk.zip",
+		"jdk_19_x64": "https://corretto.aws/downloads/latest/amazon-corretto-19-x64-windows-jdk.zip",
 		"jdk_17_x64": "https://corretto.aws/downloads/latest/amazon-corretto-17-x64-windows-jdk.zip",
 		"jdk_11_x64": "https://corretto.aws/downloads/latest/amazon-corretto-11-x64-windows-jdk.zip",
 		"jdk_11_x86": "https://corretto.aws/downloads/latest/amazon-corretto-11-x86-windows-jdk.zip",
@@ -36,9 +43,8 @@
 		"gradle_7.5": "18",
 		"gradle_7.6": "19",
 		"gradle_8.3": "20",
-		"gradle_8.5": "21"
+		"gradle_8.5": "21",
+		"gradle_8.8": "22",
+		"gradle_8.10": "23"
 	}
-}// https://services.gradle.org/distributions/gradle-<ver>-bin.zip
-// https://corretto.aws/downloads/latest/amazon-corretto-<ver>-x64-windows-jdk.zip
-//https://cdn.azul.com/zulu/bin/zulu21.30.15-ca-fx-jdk21.0.1-win_x64.zip
-//https://cdn.azul.com/zulu/bin/zulu17.46.19-ca-fx-jdk17.0.9-win_x64.zip
+}

@@ -22,23 +22,23 @@ public class MoveResizeHelper {
 	private double initW;
 	private double initH;
 
-	private TileHint hint;
+	private final TileHint hint;
 	private boolean tiled = false;
 	private double tiledW;
 	private double tiledH;
 	private double tiledX;
 	private double tiledY;
 
-	private int range;
+	private final int range;
 	private double padding;
 
 	private State state;
 
-	private Window win;
-	private AppPreRoot parent;
+	private final Window win;
+	private final AppPreRoot parent;
 
-	private ArrayList<Runnable> onTile = new ArrayList<>();
-	private ArrayList<Runnable> onUnTile = new ArrayList<>();
+	private final ArrayList<Runnable> onTile = new ArrayList<>();
+	private final ArrayList<Runnable> onUnTile = new ArrayList<>();
 	
 	private boolean pressed = false;
 

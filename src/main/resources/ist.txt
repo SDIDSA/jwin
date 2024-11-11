@@ -21,8 +21,13 @@ DisableProgramGroupPage=yes
 OutputDir=$output_folder$
 OutputBaseFilename=$installer_name$
 SetupIconFile=$app_icon$
-Compression=lzma
+
 SolidCompression=yes
+Compression=lzma2/ultra64
+LZMAUseSeparateProcess=yes
+LZMADictionarySize=1048576
+LZMANumFastBytes=273
+
 WizardStyle=modern
 $add_to_setup$
 

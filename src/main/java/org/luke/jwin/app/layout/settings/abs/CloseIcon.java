@@ -13,7 +13,7 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.StackPane;
 
 public class CloseIcon extends StackPane implements Styleable {
-	private ColorIcon icon;
+	private final ColorIcon icon;
 	
 	public CloseIcon(Settings settings) {
 		setMinSize(36, 36);

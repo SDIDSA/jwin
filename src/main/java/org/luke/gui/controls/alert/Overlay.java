@@ -32,18 +32,18 @@ import javafx.util.Duration;
  */
 public class Overlay extends StackPane {
 	private Pane owner;
-	private Window window;
+	private final Window window;
 
-	private StackPane back;
-	private VBox content;
+	private final StackPane back;
+	private final VBox content;
 
-	private Timeline show;
-	private Timeline hide;
+	private final Timeline show;
+	private final Timeline hide;
 
-	private ArrayList<Runnable> onShown;
-	private ArrayList<Runnable> onShowing;
-	private ArrayList<Runnable> onHidden;
-	private ArrayList<Runnable> onHiding;
+	private final ArrayList<Runnable> onShown;
+	private final ArrayList<Runnable> onShowing;
+	private final ArrayList<Runnable> onHidden;
+	private final ArrayList<Runnable> onHiding;
 
 	private boolean autoHide = true;
 
@@ -94,7 +94,7 @@ public class Overlay extends StackPane {
 						new KeyValue(content.scaleXProperty(), 1, SplineInterpolator.EASE_OUT),
 						new KeyValue(content.scaleYProperty(), 1, SplineInterpolator.EASE_OUT)));
 
-		show.setOnFinished(e -> {
+		show.setOnFinished(_ -> {
 			onShown.forEach(Runnable::run);
 
 			back.setCache(false);
@@ -111,12 +111,12 @@ public class Overlay extends StackPane {
 		content.setScaleX(.8);
 		content.setScaleY(.8);
 
-		back.setOnMouseClicked(e -> {
+		back.setOnMouseClicked(_ -> {
 			if (autoHide)
 				hide();
 		});
 
-		content.setOnMousePressed(e -> requestFocus());
+		content.setOnMousePressed(_ -> requestFocus());
 
 		addEventFilter(KeyEvent.KEY_PRESSED, e -> {
 			if (e.getCode().equals(KeyCode.ESCAPE) && autoHide) {
@@ -160,6 +160,16 @@ public class Overlay extends StackPane {
 
 	public void addOnHidden(Runnable onHidden) {
 		this.onHidden.add(onHidden);
+	}
+
+	public void addOnHiddenOnce(Runnable onHidden) {
+		this.onHidden.add(new Runnable() {
+			@Override
+			public void run() {
+				onHidden.run();
+				Platform.runLater(() -> Overlay.this.onHidden.remove(this));
+			}
+		});
 	}
 
 	public void addOnHiding(Runnable onHiding) {
@@ -211,7 +221,7 @@ public class Overlay extends StackPane {
 			return;
 		}
 		show.stop();
-		hide.setOnFinished(e -> {
+		hide.setOnFinished(_ -> {
 			boolean hidingLast = this == last();
 			owner.getChildren().remove(this);
 			if (hidingLast) {
@@ -226,6 +236,10 @@ public class Overlay extends StackPane {
 		});
 		hide.playFromStart();
 		onHiding.forEach(Runnable::run);
+	}
+
+	public boolean isShowing() {
+		return getScene() != null;
 	}
 
 	/**
@@ -246,7 +260,7 @@ public class Overlay extends StackPane {
 	}
 
 	private Node last() {
-		return owner.getChildren().get(owner.getChildren().size() - 1);
+		return owner.getChildren().getLast();
 	}
 
 	public Pane getOwner() {

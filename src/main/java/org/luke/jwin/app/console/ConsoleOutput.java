@@ -2,7 +2,11 @@ package org.luke.jwin.app.console;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.scene.layout.Priority;
 import org.luke.gui.controls.scroll.Scrollable;
 import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.controls.space.Separator;
@@ -22,17 +26,20 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 public class ConsoleOutput extends VBox implements Styleable {
-	private Window win;
-	private VBox lines;
+	private final AtomicBoolean ignoreChanges = new AtomicBoolean(false);
 
-	private Scrollable sc;
+	private final Window win;
+	private final VBox lines;
+
+	private final Scrollable sc;
 
 	ConsoleToggleAction wrap;
 	ConsoleToggleAction autoScroll;
 
 	ArrayList<ConsoleLine> allLines;
 
-	private ConsoleAction stop;
+	private final ConsoleAction stop;
+	private final ConsoleLine emptyLine;
 
 	public ConsoleOutput(Window win) {
 		super(5);
@@ -45,19 +52,21 @@ public class ConsoleOutput extends VBox implements Styleable {
 		lines.setPadding(new Insets(5));
 
 		sc = new Scrollable();
+		VBox.setVgrow(sc, Priority.ALWAYS);
 		sc.setContent(lines);
 
 		sc.setMinWidth(0);
 		sc.maxWidthProperty().bind(widthProperty().subtract(10));
 
 		wrap = new ConsoleToggleAction(win, "wrap", "soft_wrap");
-		wrap.enabledProperty().addListener((obs, ov, nv) -> {
+		wrap.enabledProperty().addListener((_, ov, nv) -> {
 			if (ov.booleanValue() != nv.booleanValue()) {
-				allLines.forEach(l -> {
-					l.setWrappingWidth(wrap.isEnabled() ? (sc.getWidth() - 15) : 0);
-				});
+				allLines.forEach(l ->
+						l.setWrappingWidth(wrap.isEnabled() ? (sc.getWidth() - 15) : 0));
 			}
 		});
+
+		emptyLine = new ConsoleLine(win, "", ConsoleLineType.STDOUT, false);
 
 		autoScroll = new ConsoleToggleAction(win, "auto-scroll", "auto_scroll_on_output");
 		autoScroll.setEnabled(true);
@@ -68,8 +77,17 @@ public class ConsoleOutput extends VBox implements Styleable {
 		gdown.setRotate(180);
 
 		erase.setDisable(true);
-		lines.getChildren().addListener((ListChangeListener<? super Node>) c -> {
+		lines.getChildren().addListener((ListChangeListener<? super Node>) _ -> {
+			if(ignoreChanges.get()) {
+				return;
+			}
 			erase.setDisable(allLines.isEmpty());
+			Platform.runLater(() -> {
+				ignoreChanges.set(true);
+				lines.getChildren().remove(emptyLine);
+				lines.getChildren().add(emptyLine);
+				ignoreChanges.set(false);
+			});
 		});
 
 		erase.setAction(() -> {
@@ -77,8 +95,8 @@ public class ConsoleOutput extends VBox implements Styleable {
 			lines.getChildren().clear();
 		});
 
-		gup.setAction(() -> sc.getScrollBar().positionProperty().set(0));
-		gdown.setAction(() -> sc.getScrollBar().positionProperty().set(1));
+		gup.setAction(() -> sc.getVerticalScrollBar().positionProperty().set(0));
+		gdown.setAction(() -> sc.getVerticalScrollBar().positionProperty().set(1));
 
 		ConsoleToggleAction consIn = new ConsoleToggleAction(win, "consin", "display_input_lines");
 		consIn.setEnabled(true);
@@ -90,17 +108,12 @@ public class ConsoleOutput extends VBox implements Styleable {
 		stop = new ConsoleAction(win, "stop", "stop_running_app");
 		stop.setDisable(true);
 
-		consIn.enabledProperty().addListener((obs, ov, nv) -> {
-			refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
-		});
+		ChangeListener<Boolean> refreshLines = (_, _, _) ->
+				refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
 
-		consOut.enabledProperty().addListener((obs, ov, nv) -> {
-			refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
-		});
-
-		consErr.enabledProperty().addListener((obs, ov, nv) -> {
-			refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
-		});
+		consIn.enabledProperty().addListener(refreshLines);
+		consOut.enabledProperty().addListener(refreshLines);
+		consErr.enabledProperty().addListener(refreshLines);
 
 		HBox top = new HBox(5, new ExpandingHSpace(), consIn, consOut, consErr,
 				new Separator(win, Orientation.VERTICAL), wrap, autoScroll, new Separator(win, Orientation.VERTICAL),
@@ -130,34 +143,58 @@ public class ConsoleOutput extends VBox implements Styleable {
 	}
 
 	public void addLine(String line, ConsoleLineType type) {
-		ConsoleLine l = new ConsoleLine(win, line, type);
+		addLine(line, type, true);
+	}
+
+	public void addLine(String line, ConsoleLineType type, boolean keyed) {
+		ConsoleLine l = new ConsoleLine(win, line, type, keyed);
 		allLines.add(l);
 		l.setWrappingWidth(wrap.isEnabled() ? (sc.getWidth() - 20) : 0);
 		lines.getChildren().add(l);
 
 		if (autoScroll.isEnabled()) {
-			sc.getScrollBar().positionProperty().set(1);
+			sc.getVerticalScrollBar().positionProperty().set(1);
 		}
 	}
 
 	public void overrideLast(String content) {
+		overrideLast(content, true);
+	}
+
+	public void overrideLast(String content, boolean keyed) {
 		if (allLines.isEmpty()) {
 			addOutput(content);
 		} else {
-			allLines.get(allLines.size() - 1).setKey(content);
+			if(keyed) {
+				allLines.getLast().setKey(content);
+			}else {
+				allLines.getLast().setText(content);
+			}
 		}
 	}
 
+	public void addError(String line, boolean keyed) {
+		addLine(line, ConsoleLineType.ERROUT, keyed);
+	}
+
+	public void addOutput(String line, boolean keyed) {
+		addLine(line, ConsoleLineType.STDOUT, keyed);
+	}
+
+	public void addInput(String line, boolean keyed) {
+		addLine(line, ConsoleLineType.IN, keyed);
+	}
+
 	public void addError(String line) {
-		addLine(line, ConsoleLineType.ERROUT);
+		addError(line, true);
 	}
 
 	public void addOutput(String line) {
-		addLine(line, ConsoleLineType.STDOUT);
+		addOutput(line, true);
 	}
 
 	public void addInput(String line) {
-		addLine(line, ConsoleLineType.IN);
+		addInput(line, true);
 	}
 
 	@Override
@@ -171,4 +208,8 @@ public class ConsoleOutput extends VBox implements Styleable {
 		Styleable.bindStyle(this, style);
 	}
 
+	public void clear() {
+		allLines.clear();
+		lines.getChildren().clear();
+	}
 }

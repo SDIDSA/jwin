@@ -16,7 +16,7 @@ import javafx.scene.paint.Color;
  */
 public class CheckMenuItem extends KeyedMenuItem {
 
-	private Check check;
+	private final Check check;
 
 	/**
 	 * Constructs a check menu item with the specified parent context menu, key, and

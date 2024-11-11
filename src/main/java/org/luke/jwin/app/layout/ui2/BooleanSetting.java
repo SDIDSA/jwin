@@ -9,11 +9,9 @@ public class BooleanSetting extends CheckMenuItem {
 	public BooleanSetting(ContextMenu menu, String name, BooleanProperty property) {
 		super(menu, name, null);
 
-		property.addListener((obs, ov, nv) -> {
-			checkedProperty().set(nv);
-		});
+		property.addListener((_, _, nv) -> checkedProperty().set(nv));
 
-		checkedProperty().addListener((obs, ov, nv) -> {
+		checkedProperty().addListener((_, ov, nv) -> {
 			if (ov != nv)
 				property.set(nv);
 		});

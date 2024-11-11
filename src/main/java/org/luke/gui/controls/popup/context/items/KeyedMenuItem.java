@@ -46,4 +46,13 @@ public class KeyedMenuItem extends MenuItem {
 	public String getKey() {
 		return ((Label) lab).getKey();
 	}
+
+	/**
+	 * Sets the key associated with the menu item.
+	 * <p>
+	 * @param key  The key or text associated with the menu item.
+	 */
+    public void setKey(String key) {
+		((Label) lab).setKey(key);
+	}
 }

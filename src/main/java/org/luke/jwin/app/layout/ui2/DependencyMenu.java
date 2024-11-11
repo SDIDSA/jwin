@@ -3,6 +3,7 @@ package org.luke.jwin.app.layout.ui2;
 import java.io.File;
 
 import org.luke.gui.controls.popup.context.ContextMenu;
+import org.luke.gui.controls.popup.context.items.KeyedMenuItem;
 import org.luke.gui.controls.popup.context.items.MenuItem;
 import org.luke.gui.controls.popup.context.items.MenuMenuItem;
 import org.luke.gui.locale.Locale;
@@ -35,7 +36,8 @@ public class DependencyMenu extends MenuMenuItem {
 		resolve.setAction(() -> {
 			manual.getSubMenu().hide();
 			menu.hide();
-			config.getDependencies().resolve(config.getClasspath().getRoot());
+			config.setState("resolving_dependencies");
+			config.getDependencies().resolve(config.getClasspath().getRoot(), (_) -> config.setState("idle"));
 		});
 		addMenuItem(manual);
 		addMenuItem(auto);
@@ -86,7 +88,7 @@ public class DependencyMenu extends MenuMenuItem {
 
 			int remaining = config.getDependencies().getResolvedJars().size() - 5;
 			if (remaining > 0) {
-				MenuItem entDisp = new MenuItem(getSubMenu(), Locale.key( "and_other_deps", "count", remaining));
+				MenuItem entDisp = new KeyedMenuItem(getSubMenu(), Locale.key( "and_other_deps", "count", remaining));
 				entDisp.setDisable(true);
 
 				auto.addMenuItem(entDisp);

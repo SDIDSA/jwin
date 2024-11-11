@@ -27,14 +27,14 @@ import javafx.stage.FileChooser.ExtensionFilter;
 
 public class DependenciesParam extends Param {
 
-	private TabPane disp;
+	private final TabPane disp;
 
-	private DepTab resolved;
-	private DepTab manual;
+	private final DepTab resolved;
+	private final DepTab manual;
 
 	private boolean resolving = false;
 
-	private FileChooser fc;
+	private final FileChooser fc;
 
 	public DependenciesParam(Window ps, Supplier<File> rootSupplier, JwinUi config) {
 		super(ps, "dependencies");
@@ -110,17 +110,22 @@ public class DependenciesParam extends Param {
 		}
 
 		File pom = pom(root);
+		File grad = grad(root);
 		if (pom.exists()) {
 			Jwin.instance.getConfig().logStd(Locale.key("detected_file", "file", "pom.xml"));
-			resolveMaven(root, pom, onFinish);
-		} else {
-			File grad = grad(root);
+			resolveMaven(pom, onFinish);
+		} else if(grad.exists()){
 			Jwin.instance.getConfig().logStd(Locale.key("detected_file", "file", grad.getName()));
-			resolveGradle(root, grad, onFinish);
+			resolveGradle(grad, onFinish);
+		}else {
+			Jwin.instance.getConfig().logErr("no_build_tool");
+			defOnFin.accept(false);
+			if (onFinish != null)
+				onFinish.accept(false);
 		}
 	}
 
-	private void resolveMaven(File root, File pom, Consumer<Boolean> onFinish) {
+	private void resolveMaven(File pom, Consumer<Boolean> onFinish) {
 		startLoading();
 
 		new Thread(() -> {
@@ -130,6 +135,9 @@ public class DependenciesParam extends Param {
 
 			if (jars != null) {
 				Platform.runLater(() -> jars.forEach(resolved::addJar));
+			}else {
+				onFinish.accept(false);
+				return;
 			}
 			resolving = false;
 
@@ -139,15 +147,15 @@ public class DependenciesParam extends Param {
 			});
 
 			Platform.runLater(() -> {
-				defOnFin.accept(jars != null);
+				defOnFin.accept(true);
 			});
 			if (onFinish != null) {
-				Platform.runLater(() -> onFinish.accept(jars != null));
+				Platform.runLater(() -> onFinish.accept(true));
 			}
 		}).start();
 	}
 
-	private void resolveGradle(File root, File grad, Consumer<Boolean> onFinish) {
+	private void resolveGradle(File grad, Consumer<Boolean> onFinish) {
 		startLoading();
 
 		new Thread(() -> {
@@ -157,6 +165,9 @@ public class DependenciesParam extends Param {
 
 			if (jars != null) {
 				Platform.runLater(() -> jars.forEach(resolved::addJar));
+			} else {
+				onFinish.accept(false);
+				return;
 			}
 			resolving = false;
 
@@ -166,10 +177,10 @@ public class DependenciesParam extends Param {
 			});
 
 			Platform.runLater(() -> {
-				defOnFin.accept(jars != null);
+				defOnFin.accept(true);
 			});
 			if (onFinish != null) {
-				Platform.runLater(() -> onFinish.accept(jars != null));
+				Platform.runLater(() -> onFinish.accept(true));
 			}
 		}).start();
 	}
@@ -223,9 +234,8 @@ public class DependenciesParam extends Param {
 
 			Files.copy(dep.toPath(), Path.of(preBuildLibs.getAbsolutePath().concat("/").concat(dep.getName())));
 
-			final int fi = i;
-			if (onProgress != null) {
-				onProgress.accept((fi / (double) deps.size()) * .2);
+            if (onProgress != null) {
+				onProgress.accept((i / (double) deps.size()) * .2);
 			}
 		}
 

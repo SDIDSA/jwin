@@ -7,8 +7,8 @@ import org.luke.jwin.local.managers.GradleManager;
 
 public class GradleVersionItem extends MenuItem implements ComboItem {
 
-	private String path;
-	private String version;
+	private final String path;
+	private final String version;
 
 	public GradleVersionItem(ContextMenu menu, String text) {
 		super(menu, GradleManager.versionOf(text), false);

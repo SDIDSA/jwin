@@ -22,13 +22,14 @@ import javafx.scene.paint.Color;
  * @author SDIDSA
  */
 public enum ButtonType {
-	CLOSE("close"), DONE("done"), CANCEL("cancel", true), DELETE("delete"), USE_DEFAULT("use_default", true),
+	CLOSE("close"), DONE("done"), CANCEL("cancel", false), DELETE("delete"), USE_DEFAULT("use_default", true),
 	SELECT_NOW("select_now", true), YES("yes"), NO("no"), OK("ok", true), VIEW_LOG("view_full_error_log"),
-	IGNORE("ignore", true);
+	IGNORE("ignore", true),
+	SKIP("skip", true);
 
-	private String key;
-	private boolean filled;
-	private Color fill;
+	private final String key;
+	private final boolean filled;
+	private final Color fill;
 
 	/**
 	 * Constructs a ButtonType with the specified key, fill color, and filled
@@ -38,7 +39,7 @@ public enum ButtonType {
 	 * @param fill   The optional fill color of the button.
 	 * @param filled The filled status of the button.
 	 */
-	private ButtonType(String key, Color fill, boolean filled) {
+    ButtonType(String key, Color fill, boolean filled) {
 		this.key = key;
 		this.fill = fill;
 		this.filled = filled;
@@ -49,7 +50,7 @@ public enum ButtonType {
 	 *
 	 * @param key The key (text) associated with the button type.
 	 */
-	private ButtonType(String key) {
+    ButtonType(String key) {
 		this(key, null, true);
 	}
 
@@ -59,7 +60,7 @@ public enum ButtonType {
 	 * @param key    The key (text) associated with the button type.
 	 * @param filled The filled status of the button.
 	 */
-	private ButtonType(String key, boolean filled) {
+    ButtonType(String key, boolean filled) {
 		this(key, null, filled);
 	}
 
@@ -69,7 +70,7 @@ public enum ButtonType {
 	 * @param key  The key (text) associated with the button type.
 	 * @param fill The optional fill color of the button.
 	 */
-	private ButtonType(String key, Color fill) {
+    ButtonType(String key, Color fill) {
 		this(key, fill, true);
 	}
 

@@ -3,9 +3,7 @@ package org.luke.jwin.app.param.deps;
 import java.io.File;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 
 import org.luke.gui.controls.alert.AlertType;
@@ -17,31 +15,36 @@ import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.local.LocalStore;
+import org.luke.jwin.local.managers.JdkManager;
+import org.luke.jwin.local.managers.LocalInstall;
 
 public class MavenResolver {
 	public static List<File> resolve(File pom) {
 
-		ArrayList<File> jars = new ArrayList<File>();
-		File defaultJdk = new File(LocalStore.getDefaultJdk());
+        File defaultJdk = new File(LocalStore.getDefaultJdk());
 
 		JdkParam jdkParam = Jwin.instance.getConfig().getJdk();
 
 		File projectJdk = jdkParam.isJdk() ? jdkParam.getValue() : null;
 
 		if (!defaultJdk.exists() && projectJdk == null) {
-			Semaphore s = new Semaphore(0);
+			LocalInstall jdk = JdkManager.maxVersion();
+			if(jdk != null) {
+				defaultJdk = jdk.getRoot();
+				jdkParam.setFile(defaultJdk);
+			} else {
+				Semaphore s = new Semaphore(0);
+				JwinActions.alert("No Jdk Selected", "jdk is required to resolve maven dependencies, set default jdk now ?",
+						AlertType.ERROR, res -> {
+							if (res == ButtonType.YES) {
+								Jwin.instance.openSettings("jdk_versions");
+							}
+							s.release();
+						}, ButtonType.CANCEL, ButtonType.YES);
 
-			JwinActions.alert("No Jdk Selected", "jdk is required to resolve maven dependencies, set default jdk now ?",
-					AlertType.ERROR, res -> {
-						if (res == ButtonType.YES) {
-							Jwin.instance.openSettings("jdk versions");
-						}
-						s.release();
-					}, ButtonType.CANCEL, ButtonType.YES);
-
-			s.acquireUninterruptibly();
-			defaultJdk = new File(LocalStore.getDefaultJdk());
-
+				s.acquireUninterruptibly();
+				defaultJdk = new File(LocalStore.getDefaultJdk());
+			}
 			if (!defaultJdk.exists()) {
 				return null;
 			}
@@ -75,10 +78,7 @@ public class MavenResolver {
 
 			command.execute(tempMvn.getParentFile()).waitFor();
 
-			for (File f : temp.listFiles()) {
-				jars.add(f);
-			}
-			return jars;
+            return new ArrayList<>(Arrays.asList(Objects.requireNonNull(temp.listFiles())));
 		} catch (Exception x) {
 			ErrorHandler.handle(x, "resolving dependencies");
 			JwinActions.error("resolve_fail_head", "resolve_fail_body");

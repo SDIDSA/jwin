@@ -4,9 +4,11 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.luke.gui.locale.Locale;
 import org.luke.gui.style.Style;
 import org.luke.jwin.app.file.FileDealer;
 
@@ -14,6 +16,7 @@ import javafx.scene.paint.Color;
 
 public class LocalStore {
 	private static final String STYLE = "style";
+	private static final String LANGUAGE = "language";
 	private static final String STYLE_MODE = "style_mode";
 	private static final String STYLE_BRIGHTNESS = "style_brightness";
 	private static final String STYLE_ACCENT = "style_accent";
@@ -27,15 +30,16 @@ public class LocalStore {
 
 	private static final File json = new File(System.getenv("appData") + "\\jwin\\config.json");
 
-	private static final HashMap<String, String> loaded = new HashMap<String, String>();
+	private static final HashMap<String, String> loaded = new HashMap<>();
 
 	static {
 		if (json.exists()) {
-			JSONObject t = new JSONObject(FileDealer.read(json));
-			t.keySet().forEach(key -> {
-				loaded.put(key, t.getString(key));
-			});
+			JSONObject t = new JSONObject(Objects.requireNonNull(FileDealer.read(json)));
+			t.keySet().forEach(key -> loaded.put(key, t.getString(key)));
 		} else {
+			if(!json.getParentFile().exists()) {
+				json.getParentFile().mkdir();
+			}
 			FileDealer.write("{}", json);
 		}
 	}
@@ -45,7 +49,11 @@ public class LocalStore {
 	}
 
 	private static void set(String key, String value) {
-		loaded.put(key, value);
+		if(value == null) {
+			loaded.remove(key);
+		}else {
+			loaded.put(key, value);
+		}
 		save();
 	}
 
@@ -68,6 +76,15 @@ public class LocalStore {
 
 	public static void setStyle(Style style) {
 		set(STYLE, serializeStyle(style));
+	}
+
+	public static Locale getLanguage() {
+		String langId = get(LANGUAGE);
+		return Locale.byName(langId == null ? "en_US" : get(LANGUAGE));
+	}
+
+	public static void setLanguage(Locale locale) {
+		set(LANGUAGE, locale.getName());
 	}
 
 	public static String getUiLayout() {
@@ -163,12 +180,12 @@ public class LocalStore {
 
 	private static String serializeList(List<String> list) {
 		JSONArray arr = new JSONArray();
-		list.forEach(s -> arr.put(s));
+		list.forEach(arr::put);
 		return arr.toString();
 	}
 
 	private static ArrayList<String> deserializeList(String arr) {
-		ArrayList<String> res = new ArrayList<String>();
+		ArrayList<String> res = new ArrayList<>();
 		JSONArray jarr = new JSONArray(arr);
 		jarr.forEach(o -> res.add((String) o));
 		return res;

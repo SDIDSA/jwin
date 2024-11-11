@@ -19,8 +19,10 @@ import javafx.scene.layout.HBox;
  * @author SDIDSA
  */
 public class KeyedCheck extends HBox implements Styleable {
-	private Check check;
-	private Label label;
+	private final Check check;
+	private final Label label;
+
+	private boolean unset = true;
 
 	/**
 	 * Constructs a KeyedCheck instance with the specified window, key, and size.
@@ -39,13 +41,32 @@ public class KeyedCheck extends HBox implements Styleable {
 		check.setMouseTransparent(true);
 		label.setMouseTransparent(true);
 
-		setOnMouseClicked(e -> check.flip());
+		setOnMouseClicked(_ -> check.flip());
+		check.checkedProperty().addListener((_, _, _) -> unset = false);
 
 		setCursor(Cursor.HAND);
 
 		getChildren().addAll(check, label);
 
+		unset = true;
 		applyStyle(window.getStyl());
+	}
+
+	public void set(boolean val) {
+		check.setChecked(val);
+		unset = false;
+	}
+
+	public boolean get() {
+		return check.isChecked();
+	}
+
+	public boolean isUnset() {
+		return unset;
+	}
+
+	public void unset() {
+		unset = true;
 	}
 
 	/**
@@ -53,7 +74,7 @@ public class KeyedCheck extends HBox implements Styleable {
 	 *
 	 * @return The BooleanProperty for the checked property.
 	 */
-	public BooleanProperty checkedProperty() {
+	public BooleanProperty property() {
 		return check.checkedProperty();
 	}
 

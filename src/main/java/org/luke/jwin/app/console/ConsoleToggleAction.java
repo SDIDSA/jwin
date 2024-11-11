@@ -16,7 +16,7 @@ import javafx.scene.layout.Background;
 
 public class ConsoleToggleAction extends ColorIcon {
 
-	private BooleanProperty enabled;
+	private final BooleanProperty enabled;
 	public ConsoleToggleAction(Window win, String name, String tooltip) {
 		super(name, 20);
 		

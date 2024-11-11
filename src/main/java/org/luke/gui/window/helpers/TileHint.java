@@ -22,12 +22,10 @@ import javafx.util.Duration;
 
 public class TileHint extends Stage {
 	private static final double PADDING = 10;
-	private static Rectangle screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+	private static final Rectangle screenSize = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
 
-	private DoubleProperty opac;
-
-	private Timeline show;
-	private Timeline hide;
+    private final Timeline show;
+	private final Timeline hide;
 
 	private Tile tile;
 
@@ -48,7 +46,7 @@ public class TileHint extends Stage {
 		
 		setOnHidden(e-> owner.setAlwaysOnTop(false));
 
-		opac = new SimpleDoubleProperty(0);
+        DoubleProperty opac = new SimpleDoubleProperty(0);
 		opac.addListener((obs, ov, nv) -> setOpacity(nv.doubleValue()));
 
 		show = new Timeline(60.0, new KeyFrame(Duration.seconds(.1), new KeyValue(opac, 1)));

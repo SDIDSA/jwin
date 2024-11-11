@@ -14,7 +14,7 @@ import javafx.scene.layout.Background;
 
 public class ManagerButton extends ColorIcon {
 	
-	private KeyedTooltip tt;
+	private final KeyedTooltip tt;
 
 	public ManagerButton(Window win, String name, String tooltip) {
 		super(name, 12);

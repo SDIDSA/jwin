@@ -1,0 +1,91 @@
+{
+  "version": "1.0",
+  "categories": {
+    "configuration": {
+      "patterns": [
+        "docker-compose.yml",
+        "docker-compose.yaml",
+        "config.yml",
+        "config.yaml",
+        "config.json",
+        "config.properties",
+        "application.properties",
+        "settings.xml",
+        "*.properties"
+      ],
+      "sensitive": false,
+      "icon": "config"
+    },
+    "native": {
+      "patterns": [
+        "*.dll",
+        "*.so",
+        "*.dylib",
+        "lib/*.dll",
+        "lib/*.so",
+        "lib/*.dylib"
+      ],
+      "sensitive": false,
+      "icon": "dll"
+    },
+    "documentation": {
+      "patterns": [
+        "README*"
+      ],
+      "sensitive": false,
+      "icon": "docs"
+    },
+    "license": {
+      "patterns": [
+        "LICENSE*",
+        "NOTICE*"
+      ],
+      "sensitive": false,
+      "icon": "legal"
+    },
+    "data": {
+      "description": "Data and initialization files",
+      "patterns": [
+        "*.db",
+        "data.json",
+        "initial-data.json",
+        "initial-data.xml",
+        "schema.sql",
+        "init.sql"
+      ],
+      "sensitive": false,
+      "icon": "data"
+    },
+    "resources": {
+      "description": "Resource directories",
+      "patterns": [
+        "data/*",
+        "assets/*",
+        "scripts/*",
+        "templates/*"
+      ],
+      "sensitive": false,
+      "icon": "folder"
+    },
+    "certificates": {
+      "description": "Security certificates",
+      "patterns": [
+        "*.crt",
+        "*.pem",
+        "*.key"
+      ],
+      "sensitive": true,
+      "icon": "security"
+    }
+  },
+  "excludedPaths": [
+    ".git",
+    ".idea",
+    ".gradle",
+    ".gitignore",
+    "build",
+    "target",
+    "bin",
+    "src"
+  ]
+}

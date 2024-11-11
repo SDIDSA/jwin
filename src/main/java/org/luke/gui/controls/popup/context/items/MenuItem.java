@@ -35,11 +35,11 @@ public class MenuItem extends HBox implements Styleable {
 	protected Text lab;
 	protected BooleanProperty active;
 
-	private ContextMenu menu;
+	private final ContextMenu menu;
 
 	private Runnable action;
 
-	private Color fill;
+	private final Color fill;
 
 	private boolean hideOnAction = true;
 
@@ -53,7 +53,7 @@ public class MenuItem extends HBox implements Styleable {
 	 * @param menu  The parent {@link ContextMenu} to which this menu item belongs.
 	 * @param key   The key or text associated with the menu item.
 	 * @param fill  The fill color of the menu item.
-	 * @param keyed Indicates whether the menu item is keyed.
+	 * @param keyed Indicates whether the menu item is localized.
 	 */
 	public MenuItem(ContextMenu menu, String key, Color fill, boolean keyed) {
 		this.menu = menu;
@@ -146,21 +146,21 @@ public class MenuItem extends HBox implements Styleable {
 	 * color.
 	 *
 	 * @param menu The parent {@link ContextMenu} to which this menu item belongs.
-	 * @param key  The key or text associated with the menu item.
+	 * @param text The text associated with the menu item.
 	 * @param fill The fill color of the menu item.
 	 */
-	public MenuItem(ContextMenu menu, String key, Color fill) {
-		this(menu, key, fill, false);
+	public MenuItem(ContextMenu menu, String text, Color fill) {
+		this(menu, text, fill, false);
 	}
 
 	/**
 	 * Constructs a menu item with the specified parent context menu and key.
 	 *
 	 * @param menu The parent {@link ContextMenu} to which this menu item belongs.
-	 * @param key  The key or text associated with the menu item.
+	 * @param text The text associated with the menu item.
 	 */
-	public MenuItem(ContextMenu menu, String key) {
-		this(menu, key, null, false);
+	public MenuItem(ContextMenu menu, String text) {
+		this(menu, text, null, false);
 	}
 
 	/**
@@ -169,10 +169,10 @@ public class MenuItem extends HBox implements Styleable {
 	 *
 	 * @param menu The parent {@link ContextMenu} to which this menu item belongs.
 	 * @param text The text associated with the menu item.
-	 * @param b    A boolean indicator.
+	 * @param keyed Indicates whether the menu item is localized.
 	 */
-	public MenuItem(ContextMenu menu, String text, boolean b) {
-		this(menu, text, null, b);
+	public MenuItem(ContextMenu menu, String text, boolean keyed) {
+		this(menu, text, null, keyed);
 	}
 
 	/**
@@ -193,7 +193,6 @@ public class MenuItem extends HBox implements Styleable {
 			try {
 				action.run();
 			} catch (Exception x) {
-				x.printStackTrace();
 				ErrorHandler.handle(x, "fire action for menu item [" + lab.getText() + "]");
 			}
 		}

@@ -1,5 +1,6 @@
 package org.luke.jwin.app.layout.settings.content.display.theme;
 
+import javafx.geometry.NodeOrientation;
 import org.luke.gui.factory.Borders;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
@@ -20,15 +21,17 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 
 public class SBPicker extends StackPane implements Styleable {
-	private Canvas sbCan;
+	private final Canvas sbCan;
 
-	private DoubleProperty saturation;
-	private DoubleProperty brightness;
+	private final DoubleProperty saturation;
+	private final DoubleProperty brightness;
 
-	private Circle selector;
+	private final Circle selector;
 
 	public SBPicker(Window window, int size) {
 		setAlignment(Pos.TOP_LEFT);
+
+		setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 
 		saturation = new SimpleDoubleProperty(1);
 		brightness = new SimpleDoubleProperty(0.5);

@@ -1,5 +1,5 @@
 # jwin
-a simple java tool to deploy java apps to windows (supports plain java projects and maven projects for now).
+a simple java tool to deploy java apps to windows (supports plain java projects, maven and gradle* projects).
 
 ## how to use
 

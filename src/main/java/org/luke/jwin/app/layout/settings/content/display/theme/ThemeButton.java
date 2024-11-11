@@ -1,5 +1,6 @@
 package org.luke.jwin.app.layout.settings.content.display.theme;
 
+import javafx.geometry.NodeOrientation;
 import org.luke.gui.controls.image.ColorIcon;
 import org.luke.gui.controls.popup.Direction;
 import org.luke.gui.controls.popup.tooltip.KeyedTooltip;
@@ -17,6 +18,7 @@ public class ThemeButton extends ColorIcon {
 	public ThemeButton(Window win, String name, String tooltip, Direction dir, int offX, int offY) {
 		super(name, 24);
 
+		setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
 		setPadding(14);
 
 		TextTooltip tt = new KeyedTooltip(win, tooltip, dir, offX, offY);

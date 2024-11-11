@@ -8,6 +8,7 @@ import org.luke.gui.style.Styleable;
 import javafx.beans.property.ObjectProperty;
 import javafx.scene.paint.Color;
 import javafx.scene.text.FontWeight;
+import org.luke.gui.window.Window;
 
 /**
  * The AlertButton class represents a button within an Alert dialog. It extends
@@ -18,10 +19,14 @@ import javafx.scene.text.FontWeight;
  * @author SDIDSA
  */
 public class AlertButton extends Button implements Styleable {
-	private ButtonType type;
+	private final ButtonType type;
 
-	public AlertButton(Alert alert, ButtonType type) {
-		super(alert.getWindow(), type.getKey(), 5.0, 16, 38);
+	public AlertButton(Overlay alert, ButtonType type) {
+		this(alert.getWindow(), type);
+	}
+
+	public AlertButton(Window win, ButtonType type) {
+		super(win, type.getKey(), 5.0, 16, 38);
 		this.type = type;
 
 		setFont(type.isFilled() ? new Font(14, FontWeight.BOLD) : new Font(Font.DEFAULT_FAMILY_MEDIUM, 14));
@@ -31,7 +36,7 @@ public class AlertButton extends Button implements Styleable {
 			setUlOnHover(true);
 		}
 
-		applyStyle(alert.getWindow().getStyl());
+		applyStyle(win.getStyl());
 	}
 
 	@Override

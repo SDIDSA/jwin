@@ -6,17 +6,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.json.JSONObject;
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
+import org.luke.jwin.app.param.JdkParam;
 import org.luke.jwin.local.LocalStore;
 import org.luke.jwin.local.ui.DownloadJob;
 import org.luke.jwin.local.ui.DownloadState;
@@ -24,17 +22,17 @@ import org.luke.jwin.local.ui.Installed;
 
 public class JdkManager {
 
-	private static HashMap<String, String> versionCache = new HashMap<>();
+	private static final HashMap<String, String> versionCache = new HashMap<>();
 
-	private static HashMap<String, String> installable;
+	private static final HashMap<String, String> installable;
 
-	private static HashMap<String, Installed> managedCache = new HashMap<>();
+	private static final HashMap<String, Installed> managedCache = new HashMap<>();
 
-	private static HashMap<File, Installed> localCache = new HashMap<>();
+	private static final HashMap<File, Installed> localCache = new HashMap<>();
 
 	private static final File root = new File(System.getenv("appData") + "\\jwin\\jdk");
 
-	private static HashMap<String, DownloadJob> downloadJobs = new HashMap<>();
+	private static final HashMap<String, DownloadJob> downloadJobs = new HashMap<>();
 
 	static {
 		installable = new HashMap<>();
@@ -93,7 +91,7 @@ public class JdkManager {
 		if (downloadJobs.containsKey(version))
 			return null;
 		DownloadJob job = new DownloadJob(win, version, downloadUrlForVer(version), dirForVer(version),
-				f -> versionFromDir(f).getRoot());
+				f -> Objects.requireNonNull(versionFromDir(f)).getRoot());
 		job.addOnStateChanged(s -> {
 			if (s == DownloadState.DONE || s == DownloadState.CANCELED || s == DownloadState.FAILED) {
 				downloadJobs.remove(version);
@@ -105,7 +103,7 @@ public class JdkManager {
 	}
 
 	public static boolean isValid(String version) {
-		List<String> managedPaths = managedInstalls().stream().map(File::getAbsolutePath).collect(Collectors.toList());
+		List<String> managedPaths = managedInstalls().stream().map(File::getAbsolutePath).toList();
 		return (LocalStore.jdkAdded().contains(version) || managedPaths.contains(version)) && versionOf(version) != null
 				&& new File(version).exists();
 	}
@@ -125,12 +123,12 @@ public class JdkManager {
 	public static List<File> managedInstalls() {
 		ArrayList<File> res = new ArrayList<File>();
 
-		for (File sub : root.listFiles()) {
+		for (File sub : Objects.requireNonNull(root.listFiles())) {
 			res.add(sub);
 
 			String vers = versionOf(sub.getAbsolutePath());
 			if (vers == null) {
-				versionCache.put(sub.getAbsolutePath(), versionFromDir(sub).getVersion());
+				versionCache.put(sub.getAbsolutePath(), Objects.requireNonNull(versionFromDir(sub)).getVersion());
 			}
 		}
 
@@ -177,23 +175,29 @@ public class JdkManager {
 	}
 
 	public static List<LocalInstall> allInstalls() {
-		ArrayList<LocalInstall> inst = new ArrayList<LocalInstall>();
+		ArrayList<LocalInstall> inst = new ArrayList<>();
 
 		managedInstalls().forEach(f -> inst.add(versionFromDir(f)));
-		localInstalls().forEach(inst::add);
+        inst.addAll(localInstalls());
 
-		inst.sort((i1, i2) -> {
-			return compareVersions(i1.getVersion(), i2.getVersion());
-		});
+		inst.sort((i1, i2) -> compareVersions(i1.getVersion(), i2.getVersion()));
 
 		return inst;
+	}
+
+	public static LocalInstall maxVersion() {
+		List<LocalInstall> installs = allInstalls();
+		JdkParam.detectJdkCache().forEach(root -> {
+			installs.add(versionFromDir(root));
+		});
+		return installs.isEmpty() ? null : installs.getFirst();
 	}
 
 	public static LocalInstall versionFromDir(File file) {
 		if (file.listFiles() == null) {
 			return null;
 		}
-		for (File sf : file.listFiles()) {
+		for (File sf : Objects.requireNonNull(file.listFiles())) {
 			if (sf.isDirectory()) {
 				LocalInstall version = versionFromDir(sf);
 				if (version != null) {
@@ -211,7 +215,7 @@ public class JdkManager {
 
 					return new LocalInstall(root, version);
 				} catch (IOException e) {
-					e.printStackTrace();
+					ErrorHandler.handle(e, "parse jdk version from dir");
 				}
 			}
 		}
@@ -236,22 +240,19 @@ public class JdkManager {
 		return data;
 	}
 
-	public static final int majorVer(String ver) {
+	public static int majorVer(String ver) {
 		return tokenize(ver)[0];
 	}
 
-	public static final Comparator<String> COMPARATOR = (v1, v2) -> {
-		return compareVersions(v1, v2);
-	};
+	public static final Comparator<String> COMPARATOR = JdkManager::compareVersions;
 
 	public static int compareVersions(String v1, String v2) {
 		return -compare(tokenize(v1), tokenize(v2));
 	}
 
 	private static int[] tokenize(String ver) {
-		int[] tokens = Arrays.stream(ver.split("_")[1].split(" ")[0].split("\\.")).mapToInt(Integer::parseInt)
-				.toArray();
-		return tokens;
+        return Arrays.stream(ver.split("_")[1].split(" ")[0].split("\\.")).mapToInt(Integer::parseInt)
+                .toArray();
 	}
 
 	private static int compare(int[] v1, int[] v2) {

@@ -7,6 +7,7 @@ import org.luke.gui.controls.space.Separator;
 import org.luke.gui.style.Style;
 import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Page;
+import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.file.FileDealer;
 import org.luke.jwin.app.file.FileTypeAssociation;
 import org.luke.jwin.app.file.UrlProtocolAssociation;
@@ -21,10 +22,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 public class MoreSettings extends BasicOverlay {
-	private FileTypeParam fileTypeParam;
-	private UrlProtocolParam urlProtocolParam;
+	private final FileTypeParam fileTypeParam;
+	private final UrlProtocolParam urlProtocolParam;
 
-	private Button clearTemp;
+	private final Button clearTemp;
 	
 	public MoreSettings(Page ps) {
 		super(ps);
@@ -43,7 +44,8 @@ public class MoreSettings extends BasicOverlay {
 			clearTemp.startLoading();
 
 			new Thread(() -> {
-				FileDealer.clearTemp();
+				long size = FileDealer.clearTemp();
+				Jwin.instance.getConfig().logStd("cleared " + FileDealer.formatSize(size) + " of cache files");
 				Platform.runLater(clearTemp::stopLoading);
 			}).start();
 		});
@@ -83,7 +85,7 @@ public class MoreSettings extends BasicOverlay {
 	}
 
 	private static class MoreParam extends VBox implements Styleable {
-		private Label lab;
+		private final Label lab;
 		public MoreParam(Page page, String name, Node node) {
 			super(20);
 

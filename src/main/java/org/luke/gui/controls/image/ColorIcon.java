@@ -24,8 +24,8 @@ import javafx.scene.shape.Rectangle;
  * @author SDIDSA
  */
 public class ColorIcon extends StackPane implements Styleable {
-	private ImageView view;
-	private Rectangle overlay;
+	private final ImageView view;
+	private final Rectangle overlay;
 
 	private String name;
 	private double loadSize;

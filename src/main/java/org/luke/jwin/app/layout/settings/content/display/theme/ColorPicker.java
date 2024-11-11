@@ -8,10 +8,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 
 public class ColorPicker extends HBox {
-	private ObjectProperty<Color> value;
+	private final ObjectProperty<Color> value;
 
-	private SBPicker sbPicker;
-	private HuePicker huePicker;
+	private final SBPicker sbPicker;
+	private final HuePicker huePicker;
 
 	public ColorPicker(Window window, int size) {
 		super(15);
@@ -52,8 +52,8 @@ public class ColorPicker extends HBox {
 		sbPicker.onChange(updatePreview);
 		huePicker.onChange(updatePreview);
 
-		value.addListener((obs, ov, nv) -> {
-			if (ov != null && nv.equals(ov))
+		value.addListener((_, ov, nv) -> {
+			if (nv.equals(ov))
 				return;
 
 			double hue = nv.getHue();

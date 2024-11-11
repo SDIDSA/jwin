@@ -19,7 +19,7 @@ public abstract class Page extends StackPane implements Styleable {
 	protected Window window;
 	protected Dimension minSize;
 	
-	private ChangeListener<? super Boolean> onPaddingChange;
+	private final ChangeListener<? super Boolean> onPaddingChange;
 
 	protected Page(Window window, Dimension minSize) {
 		this.window = window;

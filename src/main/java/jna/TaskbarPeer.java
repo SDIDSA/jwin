@@ -13,6 +13,7 @@ import com.sun.jna.platform.win32.WinDef;
 
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.luke.gui.exception.ErrorHandler;
 
 /**
  * A utility class for interacting with the Windows Taskbar using JNA.
@@ -43,7 +44,7 @@ public final class TaskbarPeer {
 			final Long pointer = (Long) getRawHandle.invoke(tkStage);
 			return new WinDef.HWND(new Pointer(pointer));
 		} catch (Exception ex) {
-			System.err.println("Unable to determine native handle for window");
+			ErrorHandler.handle(ex, "determine native handle for window");
 			return null;
 		}
 	}

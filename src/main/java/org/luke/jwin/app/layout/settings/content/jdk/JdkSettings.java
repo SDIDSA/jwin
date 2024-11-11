@@ -84,6 +84,12 @@ public class JdkSettings extends LocalManagerSettings {
 	}
 
 	@Override
+	public void clearDefault() {
+		LocalStore.setDefaultJdk(null);
+		defCombo.setValue("");
+	}
+
+	@Override
 	public ComboItem createComboItem(ContextMenu men, String key) {
 		return new JdkVersionItem(men, key);
 	}

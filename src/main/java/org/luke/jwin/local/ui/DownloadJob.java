@@ -16,31 +16,29 @@ import org.luke.gui.controls.space.ExpandingHSpace;
 import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.factory.Backgrounds;
 import org.luke.gui.style.Style;
-import org.luke.gui.style.Styleable;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
 import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.JwinActions;
 
 import javafx.application.Platform;
-import javafx.beans.property.ObjectProperty;
 import javafx.geometry.Pos;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
 
 public class DownloadJob extends LocalInstallUi {
-	private String urlString;
+	private final String urlString;
 
 	private DownloadState state;
 
-	private ArrayList<Consumer<Double>> onProgress;
-	private ArrayList<Consumer<DownloadState>> onStateChanged;
+	private final ArrayList<Consumer<Double>> onProgress;
+	private final ArrayList<Consumer<DownloadState>> onStateChanged;
 
-	private StackPane pTrack;
-	private Rectangle pThumb;
+	private final StackPane pTrack;
+	private final Rectangle pThumb;
 	
-	private Function<File, File> rootSupplier;
+	private final Function<File, File> rootSupplier;
 
 	public DownloadJob(Window win, String version, String urlString, File targetDir, Function<File, File> rootSupplier) {
 		super(win, version, targetDir);
@@ -65,33 +63,29 @@ public class DownloadJob extends LocalInstallUi {
 		pTrack.setPrefHeight(8);
 		pThumb.setHeight(8);
 
-		ManagerButton pause = new ManagerButton(win, "wait", "Starting");
-		ManagerButton cancel = new ManagerButton(win, "close", "Cancel");
+		ManagerButton pause = new ManagerButton(win, "wait", "download_starting");
+		ManagerButton cancel = new ManagerButton(win, "close", "cancel_download");
 
-		cancel.setAction(() -> {
-			setState(DownloadState.CANCELED);
-		});
+		cancel.setAction(() -> setState(DownloadState.CANCELED));
 
-		addOnProgress(p -> {
-			Platform.runLater(() -> pThumb.setWidth(p * pTrack.getWidth()));
-		});
+		addOnProgress(p -> Platform.runLater(() -> pThumb.setWidth(p * pTrack.getWidth())));
 
-		root.getChildren().addAll(new ExpandingHSpace(), new HBox(5, pause, cancel));
+		root.getChildren().addAll(new ExpandingHSpace(), new HBox(0, pause, cancel));
 		getChildren().add(pTrack);
 
 		addOnStateChanged(s -> {
-			Platform.runLater(() -> stateLabl.set(s.getText()));
+			Platform.runLater(() -> stateLabl.setKey(s.getText()));
 
 			if (s == DownloadState.PAUSED) {
 				pause.setIcon("play");
 				pause.setAction(() -> setState(DownloadState.RUNNING));
-				pause.setTooltip("Resume");
+				pause.setTooltip("resume_download");
 			}
 
 			if (s == DownloadState.RUNNING) {
 				pause.setIcon("pause");
 				pause.setAction(() -> setState(DownloadState.PAUSED));
-				pause.setTooltip("Pause");
+				pause.setTooltip("pause_download");
 			}
 		});
 
@@ -109,12 +103,7 @@ public class DownloadJob extends LocalInstallUi {
 		super.applyStyle(style);
 	}
 
-	@Override
-	public void applyStyle(ObjectProperty<Style> style) {
-		Styleable.bindStyle(this, style);
-	}
-
-	public DownloadState getState() {
+    public DownloadState getState() {
 		return state;
 	}
 
@@ -137,10 +126,6 @@ public class DownloadJob extends LocalInstallUi {
 
 	public void cancel() {
 		setState(DownloadState.CANCELED);
-	}
-
-	public void pause() {
-		setState(DownloadState.PAUSED);
 	}
 
 	public void start() {
@@ -169,7 +154,7 @@ public class DownloadJob extends LocalInstallUi {
 				}
 				setState(DownloadState.RUNNING);
 				while ((count = is.read(buffer)) != -1 && state != DownloadState.CANCELED) {
-					while (state == DownloadState.PAUSED && state != DownloadState.CANCELED) {
+					while (state == DownloadState.PAUSED) {
 						Thread.sleep(100);
 					}
 
@@ -191,7 +176,7 @@ public class DownloadJob extends LocalInstallUi {
 
 				File temp = File.createTempFile(name, "");
 				temp.delete();
-				new Command(System.out::println, System.err::println, "cmd", "/c",
+				new Command("cmd", "/c",
 						"7z x \"" + output.getAbsolutePath() + "\" -aou -o\"" + temp.getAbsolutePath() + "\"")
 						.execute(Jwin.get7z()).waitFor();
 

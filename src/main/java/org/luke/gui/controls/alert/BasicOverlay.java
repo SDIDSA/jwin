@@ -1,6 +1,7 @@
 package org.luke.gui.controls.alert;
 
 import org.luke.gui.controls.Font;
+import org.luke.gui.controls.label.MultiText;
 import org.luke.gui.controls.label.TextTransform;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.style.Style;
@@ -24,7 +25,7 @@ public abstract class BasicOverlay extends AbstractOverlay {
 
 	protected Label head;
 	protected Label subHead;
-	private VBox mtop;
+	private final VBox mtop;
 
 	/**
 	 * Constructs a BasicOverlay with the specified session and width.
@@ -50,7 +51,11 @@ public abstract class BasicOverlay extends AbstractOverlay {
 
 		mtop.getChildren().addAll(head, subHead);
 
-		root.getChildren().add(0, mtop);
+		root.getChildren().addFirst(mtop);
+	}
+
+	public MultiText topText() {
+		return top;
 	}
 
 	/**

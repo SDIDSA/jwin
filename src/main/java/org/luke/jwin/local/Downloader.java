@@ -69,7 +69,7 @@ public class Downloader {
 
 			File temp = File.createTempFile(name, "");
 			temp.delete();
-			new Command(System.out::println, System.err::println, "cmd", "/c",
+			new Command("cmd", "/c",
 					"7z x \"" + output.getAbsolutePath() + "\" -aou -o\"" + temp.getAbsolutePath() + "\"")
 					.execute(Jwin.get7z()).waitFor();
 
@@ -110,6 +110,10 @@ public class Downloader {
 			compMat = all.getJSONObject("gradle_jdk_map");
 		}
 		int max = -1;
+		String[] verarr = ver.split("\\.");
+		if(verarr.length == 3) {
+			ver = verarr[0] + "." + verarr[1];
+		}
 		for (String over : compMat.keySet()) {
 			if (JdkManager.compareVersions(ver, over) <= 0) {
 				int jver = Integer.parseInt(compMat.getString(over));
@@ -137,7 +141,7 @@ public class Downloader {
 		try {
 			URL url = new URI(urlString).toURL();
 			InputStream is = url.openStream();
-			String cont = FileDealer.read(is);
+			String cont = FileDealer.read(is, urlString);
 			JSONArray arr = new JSONArray(cont);
 			JSONObject obj = arr.getJSONObject(0);
 			String downloadUrl = obj.getString("download_url");

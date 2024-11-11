@@ -22,11 +22,11 @@ import javafx.scene.shape.StrokeType;
  * @author SDIDSA
  */
 public class Radio extends StackPane implements Styleable {
-	private BooleanProperty checked;
-	private BooleanProperty inverted;
+	private final BooleanProperty checked;
+	private final BooleanProperty inverted;
 
-	private Circle outer;
-	private Circle inner;
+	private final Circle outer;
+	private final Circle inner;
 
 	/**
 	 * Constructs a Radio instance with the specified window and size.

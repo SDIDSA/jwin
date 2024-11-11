@@ -24,7 +24,7 @@ public interface Localized {
 	/**
 	 * Applies the passed Locale on this Node. The behavior of this method is
 	 * defined by subclasses.
-	 *
+	 * <p>
 	 * Note: Do not manually call this method; use
 	 * {@link org.luke.gui.window.Window#setLocale(Locale) Window.setLocale(Locale)}
 	 * to apply a Locale on the whole scene graph.

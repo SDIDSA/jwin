@@ -15,14 +15,14 @@ import javafx.stage.Stage;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 public class FileTypeParam extends VBox {
-	private FileChooser fc;
+	private final FileChooser fc;
 
-	private TextVal typeName;
-	private TextVal typeExtension;
-	private TextVal iconPath;
+	private final TextVal typeName;
+	private final TextVal typeExtension;
+	private final TextVal iconPath;
 	private File icon;
 
-	private KeyedCheck enable;
+	private final KeyedCheck enable;
 
 	public FileTypeParam(Window ps) {
 		super(10);
@@ -49,8 +49,8 @@ public class FileTypeParam extends VBox {
 
 		enable = new KeyedCheck(ps, "enable", 16);
 
-		line1.disableProperty().bind(enable.checkedProperty().not());
-		iconPath.disableProperty().bind(enable.checkedProperty().not());
+		line1.disableProperty().bind(enable.property().not());
+		iconPath.disableProperty().bind(enable.property().not());
 		iconPath.setEditable(false);
 		iconPath.addToBottom(selectIcon);
 		
@@ -58,7 +58,7 @@ public class FileTypeParam extends VBox {
 	}
 	
 	public boolean isEnabled() {
-		return enable.checkedProperty().get();
+		return enable.get();
 	}
 	
 	public FileTypeAssociation getValue() {
@@ -86,13 +86,13 @@ public class FileTypeParam extends VBox {
 			typeName.setValue(fileTypeAsso.getTypeName());
 			typeExtension.setValue(fileTypeAsso.getTypeExtension());
 			set(fileTypeAsso.getIcon());
-			enable.checkedProperty().set(true);
+			enable.property().set(true);
 		}else {
 			typeName.setValue("");
 			typeExtension.setValue("");
 			icon = null;
 			iconPath.setValue("");
-			enable.checkedProperty().set(false);
+			enable.property().set(false);
 		}
 	}
 }

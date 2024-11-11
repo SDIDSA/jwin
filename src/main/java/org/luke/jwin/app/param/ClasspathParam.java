@@ -3,11 +3,7 @@ package org.luke.jwin.app.param;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.Semaphore;
 import java.util.function.Consumer;
@@ -16,9 +12,11 @@ import java.util.function.Function;
 
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.unkeyed.Link;
+import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.file.FileUtils;
 import org.luke.gui.window.Window;
 import org.luke.jwin.app.Command;
+import org.luke.jwin.app.Jwin;
 import org.luke.jwin.app.JwinActions;
 import org.luke.jwin.app.file.FileDealer;
 
@@ -30,9 +28,9 @@ public class ClasspathParam extends Param {
 
 	private File root;
 
-	private ArrayList<File> files;
+	private final ArrayList<File> files;
 
-	private DirectoryChooser dc;
+	private final DirectoryChooser dc;
 
 	public ClasspathParam(Window ps, File root) {
 		super(ps, "classpath");
@@ -42,7 +40,7 @@ public class ClasspathParam extends Param {
 		files = new ArrayList<>();
 
 		dc = new DirectoryChooser();
-		addButton(ps, "add", () -> add());
+		addButton(ps, "add", this::add);
 	}
 
 	public void setRoot(File root) {
@@ -103,7 +101,7 @@ public class ClasspathParam extends Param {
 		return dir;
 	}
 
-	private Semaphore mutex = new Semaphore(1);
+	private final Semaphore mutex = new Semaphore(1);
 
 	public void add(File dir) {
 		if (!dir.exists() || !dir.isDirectory()) {
@@ -140,8 +138,7 @@ public class ClasspathParam extends Param {
 			File f = new File(ent.getValue().getAbsolutePath().concat("/").concat(ent.getKey()));
 			String content = FileUtils.readFile(f);
 			String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
-			if (formattedSource.contains("(System.in)") || formattedSource.contains("System.out")
-					|| formattedSource.contains("System.err")) {
+			if (formattedSource.contains("(System" + ".in)") || formattedSource.contains("System" + ".out")) {
 				return true;
 			}
 		}
@@ -166,7 +163,10 @@ public class ClasspathParam extends Param {
 
 		files.forEach(file -> {
 			List<String> classes = listClasses(file);
-			classes.forEach(className -> res.put(className, file));
+			classes.forEach(className -> {
+				if(className.endsWith("-info.java")) return;
+				res.put(className, file);
+			});
 		});
 
 		return res;
@@ -178,7 +178,7 @@ public class ClasspathParam extends Param {
 
 	public static List<String> listClasses(File dir, File root) {
 		ArrayList<String> res = new ArrayList<>();
-		for (File file : dir.listFiles()) {
+		for (File file : Objects.requireNonNull(dir.listFiles())) {
 			if (file.isDirectory()) {
 				res.addAll(listClasses(file, root));
 			} else if (file.getName().toLowerCase().contains(".java")) {
@@ -191,7 +191,7 @@ public class ClasspathParam extends Param {
 	public static List<File> listResources(File dir) {
 		ArrayList<File> res = new ArrayList<>();
 
-		for (File file : dir.listFiles()) {
+		for (File file : Objects.requireNonNull(dir.listFiles())) {
 			if (file.isDirectory()) {
 				res.addAll(listResources(file));
 			} else if (!file.getName().toLowerCase().contains(".java")) {
@@ -210,7 +210,7 @@ public class ClasspathParam extends Param {
 			return parent;
 		}
 
-		for (File sf : parent.listFiles()) {
+		for (File sf : Objects.requireNonNull(parent.listFiles())) {
 			if (sf.getName().equals("pom.xml")) {
 				pom = sf;
 				break;
@@ -230,7 +230,7 @@ public class ClasspathParam extends Param {
 		for (File file : files) {
 			File root = findProjectRoot(file);
 			if (root != null) {
-				for (File sf : root.listFiles()) {
+				for (File sf : Objects.requireNonNull(root.listFiles())) {
 					if (sf.getName().equals("pom.xml") && !res.contains(sf)) {
 						res.add(sf);
 						break;
@@ -260,20 +260,42 @@ public class ClasspathParam extends Param {
 
 		// manually include all classes for the javac command
 		Map<String, File> classes = listClasses();
-		List<Map.Entry<String, File>> classPaths = new ArrayList<Map.Entry<String, File>>(classes.entrySet());
-		Function<Map.Entry<String, File>, String> parametrize = ent -> {
-			return " \"" + ent.getValue().getAbsolutePath() + "\\" + ent.getKey() + "\"";
-		};
+		List<Map.Entry<String, File>> classPaths = new ArrayList<>(classes.entrySet());
+		Function<Map.Entry<String, File>, String> parametrize =
+				ent -> " \"" + ent.getValue().getAbsolutePath() + "\\" + ent.getKey() + "\"";
 
 		try {
-			String mainClassCommand = "javac -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\" \""
+			String content = FileUtils.readFile(launcher.getValue());
+
+			if (isApplication(launcher.getValue())) {
+				JwinActions.deleteDir(preBuildBin);
+				preBuildBin.mkdir();
+
+				String packageName = content.split("package")[1].trim().split(";")[0].trim();
+
+				File newLauncherFile = new File(preBuildBin.getAbsolutePath().concat("/").concat("JwinLauncher.java"));
+
+				String newLauncherContent = generateLauncher(packageName, launcher);
+
+				FileDealer.write(newLauncherContent, newLauncherFile);
+
+				Command compileNewLauncher = new Command("cmd.exe", "/C", "javac -parameters -cp \"" + cpc + "\" -d \""
+						+ preBuildBin.getAbsolutePath() + "\" \"" + newLauncherFile.getAbsolutePath() + "\"");
+				compileNewLauncher.execute(binDir).waitFor();
+
+				if (setAltMain != null) {
+					setAltMain.accept(packageName.concat((packageName.isBlank() ? "" : ".") + "JwinLauncher"));
+				}
+			}
+
+			String mainClassCommand = "javac -parameters -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\" \""
 					+ launcher.getValue().getAbsolutePath() + "\"";
 
 			Command mainCompileCommand = new Command(line -> {
 				if (!line.isBlank()) {
 					x.add(line);
 				}
-			}, "cmd.exe", "/C", mainClassCommand.toString());
+			}, "cmd.exe", "/C", mainClassCommand);
 
 			mainCompileCommand.execute(binDir, () -> {
 				if (increment != null)
@@ -282,10 +304,10 @@ public class ClasspathParam extends Param {
 
 			while (!classPaths.isEmpty()) {
 				StringBuilder com = new StringBuilder(
-						"javac -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\"");
+						"javac -parameters -cp \"" + cpc + "\" -d \"" + preBuildBin.getAbsolutePath() + "\"");
 
-				ArrayList<Map.Entry<String, File>> added = new ArrayList<Map.Entry<String, File>>();
-				ArrayList<Map.Entry<String, File>> removed = new ArrayList<Map.Entry<String, File>>();
+				ArrayList<Map.Entry<String, File>> added = new ArrayList<>();
+				ArrayList<Map.Entry<String, File>> removed = new ArrayList<>();
 
 				for (Map.Entry<String, File> source : classPaths) {
 					String path = parametrize.apply(source);
@@ -295,14 +317,14 @@ public class ClasspathParam extends Param {
 						if (!fileToCheck.exists()) {
 							com.append(path);
 							added.add(source);
+						}else {
+							removed.add(source);
 						}
 
-						removed.add(source);
 					}
 				}
 
 				classPaths.removeAll(removed);
-				
 				if(!added.isEmpty()) {
 					Command compileCommand = new Command(line -> {
 						if (!line.isBlank()) {
@@ -317,44 +339,73 @@ public class ClasspathParam extends Param {
 				}
 			}
 
-			if (!x.isEmpty()) {
-				IllegalStateException ex = new IllegalStateException("Failed to Compile");
-				ex.initCause(new IllegalStateException(String.join("\n", x)));
-				throw ex;
+			classPaths = new ArrayList<>(classes.entrySet());
+			for (Map.Entry<String, File> source : classPaths) {
+				File fileToCheck = new File(
+						preBuildBin.getAbsolutePath() + "\\" + source.getKey().replace(".java", ".class"));
+				if (!fileToCheck.exists()) {
+					throw new IllegalStateException("source file " + source.getKey() + " was not compiled");
+				}
 			}
 
-			String content = FileUtils.readFile(launcher.getValue());
-
-			String formattedSource = content.replace(" ", "").replace("\t", "").replace("\n", "");
-
-			if (formattedSource.contains("extendsApplication{")) {
-				JwinActions.deleteDir(preBuildBin);
-				preBuildBin.mkdir();
-
-				String packageName = content.trim().split(";")[0].trim().toLowerCase();
-				packageName = packageName.startsWith("") ? packageName.replace("package", "").trim() : "";
-
-				File newLauncherFile = new File(preBuildBin.getAbsolutePath().concat("/").concat("Launcher.java"));
-
-				String newLauncherContent = generateLauncher(packageName, launcher);
-
-				FileDealer.write(newLauncherContent, newLauncherFile);
-
-				Command compileNewLauncher = new Command("cmd.exe", "/C", "javac -cp \"" + cpc + "\" -d \""
-						+ preBuildBin.getAbsolutePath() + "\" \"" + newLauncherFile.getAbsolutePath() + "\"");
-				compileNewLauncher.execute(binDir).waitFor();
-
-				if (setAltMain != null) {
-					setAltMain.accept(packageName.concat((packageName.isBlank() ? "" : ".") + "Launcher"));
-				}
+			if (!x.isEmpty()) {
+                throw new IllegalStateException("Failed to Compile",
+                        new IllegalStateException(String.join("\n", x)));
 			}
 
 			return preBuildBin;
 		} catch (InterruptedException | SecurityException | UnsupportedClassVersionError e1) {
-			e1.printStackTrace();
-			JwinActions.error("Failed to compile/load your code", e1.getMessage());
+			ErrorHandler.handle(e1, "compile/load source code");
+			JwinActions.error("failed_to_compile_head", "failed_to_compile_body");
+			Jwin.instance.getConfig().logStd(e1.getMessage(), false);
 			Thread.currentThread().interrupt();
 		}
+		return null;
+	}
+
+	private boolean isApplication(File file) {
+		String content = FileUtils.readFile(file);
+
+		if(content.contains("extends")) {
+			String superName = superName(content);
+			if(superName.equalsIgnoreCase("application")) {
+				return true;
+			}else {
+				File superFile = superFile(file, content, superName);
+				return superFile != null && isApplication(superFile);
+			}
+		}else {
+			return false;
+		}
+	}
+
+	private String superName(String content) {
+		return content.split("extends")[1].split("\\{")[0].trim();
+	}
+
+	private File superFile(File file, String content, String name) {
+		String fullName = null;
+		String[] imports = content.split("import");
+		for(String importString : imports) {
+			String importTrimmed = importString.split(";")[0].trim();
+			if(importTrimmed.endsWith(name)) {
+				fullName = importTrimmed;
+				break;
+			}
+		}
+		if(fullName == null) {
+			File potentialParent = new File(file.getParentFile(), name + ".java");
+			if(potentialParent.exists()) return potentialParent;
+			return null;
+		} else {
+			for(Entry<String, File> clas : Jwin.instance.getConfig().getClasspath().listClasses().entrySet()) {
+				String className = clas.getKey().replace(".java", "").replace("\\", ".");
+				if(className.equals(fullName)) {
+					return new File(clas.getValue().getAbsolutePath().concat("/").concat(clas.getKey()));
+				}
+			}
+		}
+
 		return null;
 	}
 
@@ -365,19 +416,19 @@ public class ClasspathParam extends Param {
 			launcherContent.append("package ").append(packageName).append(";\n\n");
 		}
 		launcherContent.append(
-				"import javafx.application.Application;\n\npublic class Launcher {\n\tpublic static void main(String[] args) {\n\t\tApplication.launch(")
+				"import javafx.application.Application;\n\npublic class JwinLauncher {\n\tpublic static " + "void main(String[] args) {\n\t\tApplication.launch(")
 				.append(launcher.getKey()).append(".class, args);\n\t}\n}").toString();
 		return launcherContent.toString();
 	}
 
-	public boolean isValidMainClass(File mainClass) {
+	public boolean isInvalidMainClass(File mainClass) {
 		for (File root : files) {
 			if (mainClass.getAbsolutePath().contains(root.getAbsolutePath())) {
-				return true;
+				return false;
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 	public void copyRes(File preBuild, DoubleConsumer onProgress) {
@@ -421,7 +472,7 @@ public class ClasspathParam extends Param {
 		try {
 			Files.copy(src.toPath(), dest.toPath());
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			ErrorHandler.handle(e1, "copy resource " + src.getName());
 		}
 	}
 

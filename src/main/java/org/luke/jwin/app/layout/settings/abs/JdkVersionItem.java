@@ -7,8 +7,8 @@ import org.luke.jwin.local.managers.JdkManager;
 
 public class JdkVersionItem extends MenuItem implements ComboItem {
 
-	private String path;
-	private String version;
+	private final String path;
+	private final String version;
 
 	public JdkVersionItem(ContextMenu menu, String text) {
 		super(menu, JdkManager.versionOf(text), false);

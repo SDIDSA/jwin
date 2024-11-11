@@ -34,9 +34,9 @@ import javafx.scene.text.FontWeight;
  * @author SDIDSA
  */
 public abstract class AbstractOverlay extends Overlay implements Styleable {
-	private StackPane preRoot;
-	private HBox bottom;
-	private Button cancel;
+	private final StackPane preRoot;
+	private final HBox bottom;
+	private final Button cancel;
 
 	protected ColorIcon closeIcon;
 	protected VBox root;
@@ -103,7 +103,7 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 		cancel.setUlOnHover(true);
 		cancel.setAction(this::hide);
 
-		done = new Button(session.getWindow(), "done", 5.0, 16, 38);
+		done = new AlertButton(this, ButtonType.DONE);
 		done.setFont(new Font(14, FontWeight.BOLD));
 
 		bottom.getChildren().addAll(new ExpandingHSpace(), cancel, done);
@@ -125,6 +125,14 @@ public abstract class AbstractOverlay extends Overlay implements Styleable {
 	 */
 	public void removeBottom() {
 		removeContent(bottom);
+	}
+
+	public void removeDone() {
+		bottom.getChildren().remove(done);
+	}
+
+	public void removeClose() {
+		preRoot.getChildren().remove(closeIcon);
 	}
 
 	/**

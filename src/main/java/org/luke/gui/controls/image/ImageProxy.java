@@ -22,7 +22,7 @@ import net.coobird.thumbnailator.resizers.Resizer;
  * @author SDIDSA
  */
 public class ImageProxy {
-	private static HashMap<String, Image> cache = new HashMap<>();
+	private static final HashMap<String, Image> cache = new HashMap<>();
 
 	private ImageProxy() {
 

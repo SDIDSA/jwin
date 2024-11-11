@@ -28,8 +28,8 @@ import javafx.scene.layout.StackPane;
  * @author SDIDSA
  */
 public class TabTitle extends StackPane implements Styleable {
-	private Label title;
-	private BooleanProperty selected;
+	private final Label title;
+	private final BooleanProperty selected;
 
 	/**
 	 * Constructs a TabTitle with the specified window and tab.

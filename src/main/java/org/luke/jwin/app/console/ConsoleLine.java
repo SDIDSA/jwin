@@ -9,12 +9,19 @@ import org.luke.gui.window.Window;
 import javafx.beans.property.ObjectProperty;
 
 public class ConsoleLine extends Label implements Styleable {
-	private static Font f = new Font(Font.DEFAULT_MONO_FAMILY, 16);
+	private static final Font f = new Font(Font.DEFAULT_MONO_FAMILY, 16);
 	
-	private ConsoleLineType type;
+	private final ConsoleLineType type;
 
 	public ConsoleLine(Window window, String content, ConsoleLineType type) {
-		super(window, content, f);
+		this(window, content, type, true);
+	}
+
+	public ConsoleLine(Window window, String content, ConsoleLineType type, boolean keyed) {
+		super(window, keyed ? content : "", f);
+
+		if(!keyed)
+			setText(content);
 
 		this.type = type;
 		

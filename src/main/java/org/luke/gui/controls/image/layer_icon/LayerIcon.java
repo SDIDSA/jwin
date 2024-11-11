@@ -20,8 +20,8 @@ import javafx.scene.paint.Paint;
  * @author SDIDSA
  */
 public class LayerIcon extends StackPane {
-	private ArrayList<ColorIcon> layers;
-	private double size;
+	private final ArrayList<ColorIcon> layers;
+	private final double size;
 
 	/**
 	 * Constructs a {@code LayerIcon} with the specified size and adds layers based

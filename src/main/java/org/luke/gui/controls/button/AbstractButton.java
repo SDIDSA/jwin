@@ -45,20 +45,20 @@ public class AbstractButton extends StackPane implements Styleable {
 	protected static final double DEFAULT_RADIUS = 5;
 
 	private CornerRadii radius;
-	private ObjectProperty<CornerRadii> radiusProperty;
+	private final ObjectProperty<CornerRadii> radiusProperty;
 	private Timeline enter;
 	private Timeline exit;
 
 	private Runnable mouseAction;
 	private Runnable keyAction;
 
-	private Loading load;
+	private final Loading load;
 
-	private HBox content;
+	private final HBox content;
 
 	protected Back back;
 
-	private BooleanProperty loading;
+	private final BooleanProperty loading;
 
 	public AbstractButton(Window window, double radius, double height) {
 		this(window, new CornerRadii(radius), height, DEFAULT_WIDTH);
