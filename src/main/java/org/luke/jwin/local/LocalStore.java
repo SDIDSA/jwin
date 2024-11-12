@@ -44,10 +44,6 @@ public class LocalStore {
 		}
 	}
 
-	public static File lockFile() {
-		return new File(json.getParentFile(), "/.lock");
-	}
-
 	private static void save() {
 		FileDealer.write(new JSONObject(loaded).toString(4), json);
 	}
