@@ -459,6 +459,10 @@ public class JwinActions {
 					convertCommand += " /icon \"" + config().getIcon().getValue().getAbsolutePath() + "\"";
 				}
 
+				convertCommand += " /productversion " + config().getVersion().getValue();
+				convertCommand += " /productname " + config().getAppName().getValue();
+				convertCommand += " /company " + config().getPublisher().getValue();
+
 				Command convert = new Command("cmd.exe", "/C", convertCommand);
 
 				try {

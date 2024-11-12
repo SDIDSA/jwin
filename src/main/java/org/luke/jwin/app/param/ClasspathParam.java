@@ -292,7 +292,7 @@ public class ClasspathParam extends Param {
 					+ launcher.getValue().getAbsolutePath() + "\"";
 
 			Command mainCompileCommand = new Command(null, line -> {
-				if (!line.isBlank()) {
+				if (!line.isBlank() && !line.toLowerCase().startsWith("note:")) {
 					x.add(line);
 				}
 			}, "cmd.exe", "/C", mainClassCommand);
@@ -363,6 +363,8 @@ public class ClasspathParam extends Param {
 			ErrorHandler.handle(e1, "compile/load source code");
 			JwinActions.error("failed_to_compile_head", "failed_to_compile_body");
 			Jwin.instance.getConfig().logStd(e1.getMessage(), false);
+
+
 			Thread.currentThread().interrupt();
 		}
 		return null;
