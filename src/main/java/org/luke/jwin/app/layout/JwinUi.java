@@ -242,15 +242,16 @@ public abstract class JwinUi extends StackPane {
 		clearLogs();
 		logStd("loading_project");
 		setState("loading_project");
-		rootFiles.getFiles().clear();
+		rootFiles.getInclude().clear();
 		rootFiles.getExclude().clear();
 		console.unset();
 		new Thread(() -> {
 			runOnUiThread(Param::clearAll);
 			project.getClasspath().forEach(f -> runOnUiThread(() -> classpath.add(f)));
 			runOnUiThread(() -> classpath.setRoot(project.getRoot()));
-			runOnUiThread(() -> rootFiles.getFiles().addAll(project.getRootFiles()));
+			runOnUiThread(() -> rootFiles.getInclude().addAll(project.getRootFilesInclude()));
 			runOnUiThread(() -> rootFiles.getExclude().addAll(project.getRootFilesExclude()));
+			runOnUiThread(() -> rootFiles.getRun().addAll(project.getRootFilesRun()));
 			mainClass.setAltMain(null);
 			runOnUiThread(() -> mainClass.set(project.getMainClass()));
 			runOnUiThread(() -> jdk.setFile(project.getJdk()));

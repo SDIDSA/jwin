@@ -243,6 +243,7 @@
 	"category_license": "License",
 	"root_file_excluded": "Exclude",
 	"root_file_included": "Include",
+	"root_file_run": "Run",
 	"root_file_unset": "Not set",
 	"include_all": "Include all",
 	"exclude_all": "Exclude all",

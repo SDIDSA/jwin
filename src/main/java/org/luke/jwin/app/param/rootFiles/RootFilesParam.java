@@ -11,16 +11,18 @@ import java.util.List;
 
 public class RootFilesParam extends JavaParam {
     private RootFilesOverlay overlay;
-    private final ArrayList<File> files;
+    private final ArrayList<File> include;
     private final ArrayList<File> exclude;
+    private final ArrayList<File> run;
     private final JwinUi config;
 
     public RootFilesParam(Window window, JwinUi config) {
         super(window, "root_files");
         this.config = config;
 
-        files = new ArrayList<>();
+        include = new ArrayList<>();
         exclude = new ArrayList<>();
+        run = new ArrayList<>();
     }
 
     public void showOverlay(List<RootFileScanner.DetectedFile> detectedFiles) {
@@ -37,11 +39,15 @@ public class RootFilesParam extends JavaParam {
         overlay.show(detectedFiles);
     }
 
-    public ArrayList<File> getFiles() {
-        return files;
+    public ArrayList<File> getInclude() {
+        return include;
     }
 
     public ArrayList<File> getExclude() {
         return exclude;
+    }
+
+    public ArrayList<File> getRun() {
+        return run;
     }
 }

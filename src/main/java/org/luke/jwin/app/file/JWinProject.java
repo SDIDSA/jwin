@@ -17,8 +17,9 @@ import javax.xml.parsers.*;
 public class JWinProject {
 	private static final String PROJECT_ROOT = "root";
 	private static final String CLASSPATH = "classpath";
-	private static final String ROOT_FILES = "rootFiles";
+	private static final String ROOT_FILES_INCLUDE = "rootFilesInclude";
 	private static final String ROOT_FILES_EXCLUDE = "rootFilesExclude";
+	private static final String ROOT_FILES_RUN = "rootFileRun";
 	private static final String MAIN_CLASS = "mainClass";
 	private static final String JDK = "jdk";
 	private static final String JRE = "jre";
@@ -42,8 +43,9 @@ public class JWinProject {
 
 	private final ArrayList<File> classpath;
 
-	private final ArrayList<File> rootFiles;
+	private final ArrayList<File> rootFilesInclude;
 	private final ArrayList<File> rootFilesExclude;
+	private final ArrayList<File> rootFilesRun;
 
 	private final Entry<String, File> mainClass;
 
@@ -67,13 +69,14 @@ public class JWinProject {
 	private final UrlProtocolAssociation urlProtocolAsso;
 	private final String jvmArgs;
 
-	private JWinProject(File root, List<File> classpath, List<File> rootFiles, List<File> rootFilesExclude, Entry<String, File> mainClass, File jdk, File jre, File icon,
-			List<File> manualJars, String appName, String appVersion, String appPublisher, Boolean console,
-			Boolean admin, String guid, FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso, String jvmArgs) {
+	private JWinProject(File root, List<File> classpath, List<File> rootFilesInclude, List<File> rootFilesExclude, List<File> rootFilesRun, Entry<String, File> mainClass, File jdk, File jre, File icon,
+						List<File> manualJars, String appName, String appVersion, String appPublisher, Boolean console,
+						Boolean admin, String guid, FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso, String jvmArgs) {
 		this.root = root;
 		this.classpath = new ArrayList<>(classpath);
-		this.rootFiles = new ArrayList<>(rootFiles);
+		this.rootFilesInclude = new ArrayList<>(rootFilesInclude);
 		this.rootFilesExclude = new ArrayList<>(rootFilesExclude);
+		this.rootFilesRun = new ArrayList<>(rootFilesRun);
 		this.mainClass = mainClass;
 		this.jdk = jdk;
 		this.jre = jre;
@@ -93,8 +96,9 @@ public class JWinProject {
 	public JWinProject(JwinUi config) {
 		this.root = config.getClasspath().getRoot();
 		this.classpath = new ArrayList<>(config.getClasspath().getFiles());
-		this.rootFiles = new ArrayList<>(config.getRootFiles().getFiles());
+		this.rootFilesInclude = new ArrayList<>(config.getRootFiles().getInclude());
 		this.rootFilesExclude = new ArrayList<>(config.getRootFiles().getExclude());
+		this.rootFilesRun = new ArrayList<>(config.getRootFiles().getRun());
 		this.mainClass = config.getMainClass().getValue();
 		this.jdk = config.getJdk().getValue();
 		this.jre = config.getJre().getValue();
@@ -109,7 +113,7 @@ public class JWinProject {
 		this.fileTypeAsso = config.getMoreSettings().getFileTypeAssociation();
 		this.urlProtocolAsso = config.getMoreSettings().getUrlProtocolAssociation();
 		this.jvmArgs = config.getJre().getJvmArgs();
-	}
+    }
 
 	public File getRoot() {
 		return root;
@@ -131,12 +135,16 @@ public class JWinProject {
 		return classpath;
 	}
 
-	public List<File> getRootFiles() {
-		return rootFiles;
+	public List<File> getRootFilesInclude() {
+		return rootFilesInclude;
 	}
 
 	public List<File> getRootFilesExclude() {
 		return rootFilesExclude;
+	}
+
+	public List<File> getRootFilesRun() {
+		return rootFilesRun;
 	}
 
 	public Entry<String, File> getMainClass() {
@@ -220,8 +228,9 @@ public class JWinProject {
 		mc.put(FILE_PATH, mainClass == null ? "" : mainClass.getValue());
 		data.put(PROJECT_ROOT, root);
 		data.put(CLASSPATH, serializeFileList(classpath));
-		data.put(ROOT_FILES, serializeFileList(rootFiles));
+		data.put(ROOT_FILES_INCLUDE, serializeFileList(rootFilesInclude));
 		data.put(ROOT_FILES_EXCLUDE, serializeFileList(rootFilesExclude));
+		data.put(ROOT_FILES_RUN, serializeFileList(rootFilesRun));
 		data.put(MAIN_CLASS, mc);
 		data.put(JDK, jdk == null ? "" : jdk.getAbsolutePath());
 		data.put(JRE, jre == null ? "" : jre.getAbsolutePath());
@@ -257,8 +266,9 @@ public class JWinProject {
 
 		return new JWinProject(root == null ? null : new File(root),
 				deserializeFileList(obj.getJSONArray(CLASSPATH)),
-				deserializeFileList(obj.getJSONArray(ROOT_FILES)),
-				deserializeFileList(obj.getJSONArray(ROOT_FILES_EXCLUDE)),
+				deserializeFileList(obj, ROOT_FILES_INCLUDE),
+				deserializeFileList(obj, ROOT_FILES_EXCLUDE),
+				deserializeFileList(obj, ROOT_FILES_RUN),
 				Map.entry(mc.getString(CLASS_NAME), new File(mc.getString(FILE_PATH))),
 				new File(obj.getString(JDK)),
 				new File(obj.getString(JRE)),
@@ -342,7 +352,7 @@ public class JWinProject {
 		//TODO maybe load jvmArgs
 		String jvmArgs = "";
 
-		return new JWinProject(root, classpath, new ArrayList<>(), new ArrayList<>(), mainClass, jdk, jre, icon, manualJars, appName, appVersion,
+		return new JWinProject(root, classpath, new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), mainClass, jdk, jre, icon, manualJars, appName, appVersion,
 				appPublisher, console, admin, guid, fileTypeAsso, urlProtocolAsso, "");
 	}
 
@@ -456,6 +466,15 @@ public class JWinProject {
 	private static List<File> deserializeFileList(JSONArray arr) {
 		ArrayList<File> res = new ArrayList<>();
 		arr.forEach(obj -> res.add(new File((String) obj)));
+		return res;
+	}
+
+	private static List<File> deserializeFileList(JSONObject obj, String name) {
+		if(!obj.has(name)) {
+			return new ArrayList<>();
+		}
+		ArrayList<File> res = new ArrayList<>();
+		obj.getJSONArray(name).forEach(element -> res.add(new File((String) element)));
 		return res;
 	}
 }

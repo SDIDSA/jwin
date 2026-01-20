@@ -228,7 +228,7 @@ public class JwinActions {
         }
 
 		if(detectedFiles != null && !detectedFiles.isEmpty()) {
-			List<File> files = config().getRootFiles().getFiles();
+			List<File> files = config().getRootFiles().getInclude();
 			List<File> exclude = config().getRootFiles().getExclude();
 			boolean found = false;
 			for(RootFileScanner.DetectedFile df: detectedFiles) {
@@ -251,7 +251,7 @@ public class JwinActions {
 		}
 
 		if(detectedFiles != null && !detectedFiles.isEmpty()) {
-			List<File> files = config().getRootFiles().getFiles();
+			List<File> files = config().getRootFiles().getInclude();
 			List<File> exclude = config().getRootFiles().getExclude();
 			for (RootFileScanner.DetectedFile df : detectedFiles) {
 				if (!exclude.contains(df.file()) && !files.contains(df.file())) {
@@ -261,11 +261,19 @@ public class JwinActions {
 			}
 		}
 
-		for(File toInclude : config().getRootFiles().getFiles()) {
+		for(File toInclude : config().getRootFiles().getInclude()) {
 			try {
 				Files.copy(toInclude.toPath(), new File(preBuild, toInclude.getName()).toPath());
 			} catch (IOException e) {
 				ErrorHandler.handle(e, "copy file " + toInclude.getName());
+			}
+		}
+
+		for(File toRun : config().getRootFiles().getRun()) {
+			try {
+				Files.copy(toRun.toPath(), new File(preBuild, toRun.getName()).toPath());
+			} catch (IOException e) {
+				ErrorHandler.handle(e, "copy file " + toRun.getName());
 			}
 		}
 
@@ -536,6 +544,19 @@ public class JwinActions {
 					template = template.replace(key("add_define"), "").replace(key("add_to_setup"), "");
 				}
 
+				List<File> pinst = config().getRootFiles().getRun();
+
+				if(pinst.isEmpty()) {
+					template = template.replace(key("post_install"), "");
+				} else {
+					StringBuilder piBuilder = new StringBuilder();
+					String piTemp = FileDealer.read("/post_install.txt");
+					pinst.forEach(pi -> {
+						piBuilder.append(piTemp.replace(key("runnable"), pi.getName())).append("\n");
+					});
+					template = template.replace(key("post_install"), piBuilder.toString().trim());
+				}
+
 				File buildScript = new File(
 						System.getProperty("java.io.tmpdir") + "/jwin_iss_" + random.nextInt(999999) + ".iss");
 				FileDealer.write(template, buildScript);
@@ -574,6 +595,8 @@ public class JwinActions {
 				};
 				Command build = new Command(buildLine, buildLine, "cmd.exe", "/C",
 						"ISCC \"" + buildScript.getAbsolutePath() + "\"");
+				build.addErrorHandler(System.err::println);
+				build.addInputHandler(System.out::println);
 
 				try {
 					build.execute(ise.getParentFile()).waitFor();

@@ -55,17 +55,18 @@ public class RootFileEntry extends VBox implements Styleable {
 
         RootFileStateMenu menu = new RootFileStateMenu(window, state -> {
             this.state = state;
-            if(state == RootFileState.UNSET) {
-                config.getRootFiles().getExclude().remove(file);
-                config.getRootFiles().getFiles().remove(file);
+            config.getRootFiles().getExclude().remove(file);
+            config.getRootFiles().getInclude().remove(file);
+            config.getRootFiles().getRun().remove(file);
+
+            if(state == RootFileState.INCLUDED) {
+                config.getRootFiles().getInclude().add(file);
             }
-            if(state == RootFileState.INCLUDED && !config.getRootFiles().getFiles().contains(file)) {
-                config.getRootFiles().getExclude().remove(file);
-                config.getRootFiles().getFiles().add(file);
-            }
-            if(state == RootFileState.EXCLUDED && !config.getRootFiles().getExclude().contains(file)) {
-                config.getRootFiles().getFiles().remove(file);
+            if(state == RootFileState.EXCLUDED) {
                 config.getRootFiles().getExclude().add(file);
+            }
+            if(state == RootFileState.RUN) {
+                config.getRootFiles().getRun().add(file);
             }
             stateButton.setImage(state.getText());
             ttp.setKey(state.getText());

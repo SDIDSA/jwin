@@ -136,7 +136,11 @@ public class RootFileScanner {
     }
 
     public static RootFileState state(File file, JwinUi config) {
-        if(config.getRootFiles().getFiles().contains(file)) {
+        if(config.getRootFiles().getRun().contains(file)) {
+            return RootFileState.RUN;
+        }
+
+        if(config.getRootFiles().getInclude().contains(file)) {
             return RootFileState.INCLUDED;
         }
 
