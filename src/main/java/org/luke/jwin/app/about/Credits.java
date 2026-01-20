@@ -57,7 +57,7 @@ public class Credits extends BasicOverlay {
 
 		head.setKey("about_jwin");
 
-		version = new Text("1.3.0", new Font("monospace", 16));
+		version = new Text("1.3.1", new Font("monospace", 16));
 
 		copyRighted = new Label(ps.getWindow(), "copyright", new Font(12));
 		copyRighted.setLineSpacing(5);
