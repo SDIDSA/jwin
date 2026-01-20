@@ -219,6 +219,7 @@ public class JwinActions {
 			config().onErr();
 			return false;
 		}
+
 		List<RootFileScanner.DetectedFile> detectedFiles = null;
         try {
             detectedFiles = RootFileScanner.scanRoot(config().getClasspath().getRoot());
@@ -243,14 +244,6 @@ public class JwinActions {
 				Platform.runLater(() -> config().getRootFiles().showOverlay(fdfs, wait::release));
 				wait.acquireUninterruptibly();
 			}
-
-			for(File toInclude : config().getRootFiles().getFiles()) {
-                try {
-                    Files.copy(toInclude.toPath(), new File(preBuild, toInclude.getName()).toPath());
-                } catch (IOException e) {
-                    ErrorHandler.handle(e, "copy file " + toInclude.getName());
-                }
-            }
 		}
 
 		if(project != config().getProjectInUse()) {
@@ -265,6 +258,14 @@ public class JwinActions {
 					exclude.add(df.file());
 					config().logStd(Locale.key("default_excluded", "file", df.file().getName()));
 				}
+			}
+		}
+
+		for(File toInclude : config().getRootFiles().getFiles()) {
+			try {
+				Files.copy(toInclude.toPath(), new File(preBuild, toInclude.getName()).toPath());
+			} catch (IOException e) {
+				ErrorHandler.handle(e, "copy file " + toInclude.getName());
 			}
 		}
 
