@@ -5,6 +5,7 @@ import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.layout.HBox;
+import org.apache.commons.exec.CommandLine;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.image.ColorIcon;
@@ -16,6 +17,12 @@ import org.luke.jwin.app.console.ConsoleLineType;
 import org.luke.jwin.app.console.ConsoleOutput;
 import org.luke.jwin.app.layout.JwinUi;
 import org.luke.jwin.ui.TextVal;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class JvmArgsOverlay extends BasicOverlay {
@@ -44,12 +51,9 @@ public class JvmArgsOverlay extends BasicOverlay {
 
         send.setAction(() -> {
             String line = input.getValue();
-
-            for (String arg : line.split(" ")) {
-                if (!arg.isBlank())
-                    output.addLine(arg, ConsoleLineType.ARG);
+            for (String argument : parse(line)) {
+                output.addLine(argument, ConsoleLineType.ARG);
             }
-
             input.setValue("");
         });
 
@@ -69,9 +73,8 @@ public class JvmArgsOverlay extends BasicOverlay {
         addOnShowing(() -> {
             output.clear();
             String vmArgs = config.getJre().getJvmArgs();
-            for (String arg : vmArgs.split(" ")) {
-                if (!arg.isBlank())
-                    output.addLine(arg, ConsoleLineType.ARG);
+            for (String arg : parse(vmArgs)) {
+                output.addLine(arg, ConsoleLineType.ARG);
             }
         });
 
@@ -88,6 +91,15 @@ public class JvmArgsOverlay extends BasicOverlay {
         });
 
         applyStyle(ps.getWindow().getStyl());
+    }
+
+    public List<String> parse(String args) {
+        return new ArrayList<>(
+                Arrays.asList(
+                        CommandLine.parse("java " + args)
+                                .getArguments()
+                )
+        );
     }
 
     public String stringify() {
