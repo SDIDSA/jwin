@@ -20,6 +20,7 @@ import java.util.zip.ZipFile;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.alert.AlertType;
 import org.luke.gui.controls.alert.ButtonType;
+import org.luke.gui.controls.input.DeprecatedTextInput;
 import org.luke.gui.controls.label.unkeyed.Link;
 import org.luke.gui.exception.ErrorHandler;
 import org.luke.gui.locale.Locale;
@@ -36,11 +37,20 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 
 public class JreParam extends JavaParam {
+	private final JwinUi config;
 	private final DirectoryChooser dc;
 	private final FileChooser fc;
 
+	private final DeprecatedTextInput jvmArgs;
+	private JvmArgsOverlay jvmArgsOverlay;
+
 	public JreParam(Window ps, JwinUi config) {
 		super(ps, "jre_pack");
+		this.config = config;
+
+		jvmArgs = new DeprecatedTextInput(ps, Font.DEFAULT, "jvm_args");
+		jvmArgs.setPrompt("JVM arguments (e.g., -Xmx2G -Xms512M)");
+		root.getChildren().add(jvmArgs);
 
 		dc = new DirectoryChooser();
 		addButton(ps, "directory", this::browseDir);
@@ -54,6 +64,21 @@ public class JreParam extends JavaParam {
 		root.getChildren().addFirst(generateFromJdk);
 
 		generateFromJdk.setAction(() -> generateFromJdk(ps, config));
+	}
+
+	public void showJvmArgsOverlay() {
+		if(jvmArgsOverlay == null) {
+			jvmArgsOverlay = new JvmArgsOverlay(getWindow().getLoadedPage(), config);
+		}
+		jvmArgsOverlay.show();
+	}
+
+	public String getJvmArgs() {
+		return jvmArgs.getValue();
+	}
+
+	public void setJvmArgs(String jvmArgs) {
+		this.jvmArgs.setValue(jvmArgs);
 	}
 
 	public void browseDir() {
@@ -232,6 +257,8 @@ public class JreParam extends JavaParam {
 							}
 						}
 					}, "cmd", "/c", "jdeps --multi-release " + mr + sb);
+					analLibs.addInputHandler(System.out::println);
+					analLibs.addErrorHandler(System.err::println);
 					analLibs.execute(jdkBin).waitFor();
 				}
 
@@ -240,6 +267,8 @@ public class JreParam extends JavaParam {
 						"jlink --no-header-files --no-man-pages --strip-debug --module-path \""
 								+ preGenLibs.getAbsolutePath() + "\" --add-modules " + String.join(",", deps)
 								+ " --output \"" + preGen.getAbsolutePath().concat("/rt") + "\"");
+				gen.addInputHandler(System.out::println);
+				gen.addErrorHandler(System.err::println);
 
 				gen.execute(jdkBin).waitFor();
 

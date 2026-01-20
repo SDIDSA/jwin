@@ -259,6 +259,7 @@ public abstract class JwinUi extends StackPane {
 			runOnUiThread(() -> appName.setValue(project.getAppName()));
 			runOnUiThread(() -> version.setValue(project.getAppVersion()));
 			runOnUiThread(() -> publisher.setValue(project.getAppPublisher()));
+			runOnUiThread(() -> jre.setJvmArgs(project.getJvmArgs()));
 			if(project.isConsole() != null) {
 				runOnUiThread(() -> {
 					console.set(project.isConsole());

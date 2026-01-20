@@ -297,7 +297,9 @@ public class JwinActions {
 				}
 			};
 
-			String c = "\"rt/bin/java\" -cp \"bin;res;lib/*\" "
+			String c = "\"rt/bin/java\" " + //TODO fix vm args
+					config().getJre().getJvmArgs()
+					+ " -cp \"bin;res;lib/*\" "
 					+ (config().getMainClass().getAltMain() == null ? config().getMainClass().getValue().getKey()
 							: config().getMainClass().getAltMain());
 			Command command = new Command(_ -> {
@@ -436,7 +438,9 @@ public class JwinActions {
 						preBuild.getAbsolutePath().concat("/").concat(config().getAppName().getValue()).concat(".bat"));
 
 				FileDealer.write(
-						"set batdir=%~dp0 \n" + "pushd \"%batdir%\" \ncls\n" + "\"rt/bin/java\" -cp \"res;bin;lib/*\" "
+						"set batdir=%~dp0 \n" + "pushd \"%batdir%\" \ncls\n" + "\"rt/bin/java\" " + //TODO fix vm args
+								config().getJre().getJvmArgs()
+								+ " -cp \"res;bin;lib/*\" "
 								+ (config().getMainClass().getAltMain() == null
 										? config().getMainClass().getValue().getKey()
 										: config().getMainClass().getAltMain())

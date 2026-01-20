@@ -36,6 +36,11 @@ public class SettingsMenu extends ContextMenu {
 		addMenuItem(jdkMen);
 		addMenuItem(deps);
 		addMenuItem(jreMen);
+
+		addMenuItem("jvm_args_menu", () -> {
+			config.getJre().showJvmArgsOverlay();
+		});
+
 		addMenuItem(conMen);
 		addMenuItem(adMen);
 

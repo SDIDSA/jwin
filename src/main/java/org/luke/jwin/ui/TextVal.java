@@ -1,5 +1,6 @@
 package org.luke.jwin.ui;
 
+import javafx.beans.property.StringProperty;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.label.keyed.Label;
 import org.luke.gui.style.Style;
@@ -33,6 +34,10 @@ public class TextVal extends VBox implements Styleable {
 		getChildren().addAll(lab, bottom);
 		
 		applyStyle(window.getStyl());
+	}
+
+	public StringProperty valueProperty() {
+		return field.valueProperty();
 	}
 
 	public void setPrompt(String prompt) {

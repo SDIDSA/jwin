@@ -82,8 +82,7 @@ public class IconSetting extends Input implements Styleable {
 
 	@Override
 	public void setFont(Font font) {
-		// TODO Auto-generated method stub
-		
+		//ignored
 	}
 
 	@Override

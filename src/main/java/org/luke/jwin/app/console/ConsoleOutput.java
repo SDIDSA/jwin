@@ -26,190 +26,206 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 public class ConsoleOutput extends VBox implements Styleable {
-	private final AtomicBoolean ignoreChanges = new AtomicBoolean(false);
+    private final AtomicBoolean ignoreChanges = new AtomicBoolean(false);
 
-	private final Window win;
-	private final VBox lines;
+    private final Window win;
+    private final VBox lines;
 
-	private final Scrollable sc;
+    private final Scrollable sc;
 
-	ConsoleToggleAction wrap;
-	ConsoleToggleAction autoScroll;
+    ConsoleToggleAction wrap;
+    ConsoleToggleAction autoScroll;
 
-	ArrayList<ConsoleLine> allLines;
+    ArrayList<ConsoleLine> allLines;
 
-	private final ConsoleAction stop;
-	private final ConsoleLine emptyLine;
+    private final ConsoleAction stop;
+    private final ConsoleIOLine emptyLine;
 
-	public ConsoleOutput(Window win) {
-		super(5);
-		this.win = win;
+    public ConsoleOutput(Window win) {
+        super(5);
+        this.win = win;
 
-		allLines = new ArrayList<>();
+        allLines = new ArrayList<>();
 
-		lines = new VBox(6);
-		setPadding(new Insets(5));
-		lines.setPadding(new Insets(5));
+        lines = new VBox(6);
+        setPadding(new Insets(5));
+        lines.setPadding(new Insets(5));
 
-		sc = new Scrollable();
-		VBox.setVgrow(sc, Priority.ALWAYS);
-		sc.setContent(lines);
+        sc = new Scrollable();
+        VBox.setVgrow(sc, Priority.ALWAYS);
+        sc.setContent(lines);
 
-		sc.setMinWidth(0);
-		sc.maxWidthProperty().bind(widthProperty().subtract(10));
+        sc.setMinWidth(0);
+        sc.maxWidthProperty().bind(widthProperty().subtract(10));
 
-		wrap = new ConsoleToggleAction(win, "wrap", "soft_wrap");
-		wrap.enabledProperty().addListener((_, ov, nv) -> {
-			if (ov.booleanValue() != nv.booleanValue()) {
-				allLines.forEach(l ->
-						l.setWrappingWidth(wrap.isEnabled() ? (sc.getWidth() - 15) : 0));
-			}
-		});
+        wrap = new ConsoleToggleAction(win, "wrap", "soft_wrap");
+        wrap.enabledProperty().addListener((_, ov, nv) -> {
+            if (ov.booleanValue() != nv.booleanValue()) {
+                allLines.forEach(l ->
+                        l.setWrappingWidth(wrap.isEnabled() ? (sc.getWidth() - 15) : 0));
+            }
+        });
 
-		emptyLine = new ConsoleLine(win, "", ConsoleLineType.STDOUT, false);
+        emptyLine = new ConsoleIOLine(win, "", ConsoleLineType.STDOUT, false);
 
-		autoScroll = new ConsoleToggleAction(win, "auto-scroll", "auto_scroll_on_output");
-		autoScroll.setEnabled(true);
+        autoScroll = new ConsoleToggleAction(win, "auto-scroll", "auto_scroll_on_output");
+        autoScroll.setEnabled(true);
 
-		ConsoleAction erase = new ConsoleAction(win, "erase", "clear_all");
-		ConsoleAction gup = new ConsoleAction(win, "scroll-up", "go_up");
-		ConsoleAction gdown = new ConsoleAction(win, "scroll-up", "go_down");
-		gdown.setRotate(180);
+        ConsoleAction erase = new ConsoleAction(win, "erase", "clear_all");
+        ConsoleAction gup = new ConsoleAction(win, "scroll-up", "go_up");
+        ConsoleAction gdown = new ConsoleAction(win, "scroll-up", "go_down");
+        gdown.setRotate(180);
 
-		erase.setDisable(true);
-		lines.getChildren().addListener((ListChangeListener<? super Node>) _ -> {
-			if(ignoreChanges.get()) {
-				return;
-			}
-			erase.setDisable(allLines.isEmpty());
-			Platform.runLater(() -> {
-				ignoreChanges.set(true);
-				lines.getChildren().remove(emptyLine);
-				lines.getChildren().add(emptyLine);
-				ignoreChanges.set(false);
-			});
-		});
+        erase.setDisable(true);
+        lines.getChildren().addListener((ListChangeListener<? super Node>) _ -> {
+            if (ignoreChanges.get()) {
+                return;
+            }
+            erase.setDisable(allLines.isEmpty());
+            Platform.runLater(() -> {
+                ignoreChanges.set(true);
+                lines.getChildren().remove(emptyLine);
+                lines.getChildren().add(emptyLine);
+                ignoreChanges.set(false);
+            });
+        });
 
-		erase.setAction(() -> {
-			allLines.clear();
-			lines.getChildren().clear();
-		});
+        erase.setAction(() -> {
+            allLines.clear();
+            lines.getChildren().clear();
+        });
 
-		gup.setAction(() -> sc.getVerticalScrollBar().positionProperty().set(0));
-		gdown.setAction(() -> sc.getVerticalScrollBar().positionProperty().set(1));
+        gup.setAction(() -> sc.getVerticalScrollBar().positionProperty().set(0));
+        gdown.setAction(() -> sc.getVerticalScrollBar().positionProperty().set(1));
 
-		ConsoleToggleAction consIn = new ConsoleToggleAction(win, "consin", "display_input_lines");
-		consIn.setEnabled(true);
-		ConsoleToggleAction consOut = new ConsoleToggleAction(win, "consout", "display_output_lines");
-		consOut.setEnabled(true);
-		ConsoleToggleAction consErr = new ConsoleToggleAction(win, "conserr", "display_error_lines");
-		consErr.setEnabled(true);
+        ConsoleToggleAction consIn = new ConsoleToggleAction(win, "consin", "display_input_lines");
+        consIn.setEnabled(true);
+        ConsoleToggleAction consOut = new ConsoleToggleAction(win, "consout", "display_output_lines");
+        consOut.setEnabled(true);
+        ConsoleToggleAction consErr = new ConsoleToggleAction(win, "conserr", "display_error_lines");
+        consErr.setEnabled(true);
 
-		stop = new ConsoleAction(win, "stop", "stop_running_app");
-		stop.setDisable(true);
+        stop = new ConsoleAction(win, "stop", "stop_running_app");
+        stop.setDisable(true);
 
-		ChangeListener<Boolean> refreshLines = (_, _, _) ->
-				refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
+        ChangeListener<Boolean> refreshLines = (_, _, _) ->
+                refreshLines(consIn.isEnabled(), consOut.isEnabled(), consErr.isEnabled());
 
-		consIn.enabledProperty().addListener(refreshLines);
-		consOut.enabledProperty().addListener(refreshLines);
-		consErr.enabledProperty().addListener(refreshLines);
+        consIn.enabledProperty().addListener(refreshLines);
+        consOut.enabledProperty().addListener(refreshLines);
+        consErr.enabledProperty().addListener(refreshLines);
 
-		HBox top = new HBox(5, new ExpandingHSpace(), consIn, consOut, consErr,
-				new Separator(win, Orientation.VERTICAL), wrap, autoScroll, new Separator(win, Orientation.VERTICAL),
-				new HBox(gup, gdown), erase, stop);
+        HBox top = new HBox(5, new ExpandingHSpace(), consIn, consOut, consErr,
+                new Separator(win, Orientation.VERTICAL), wrap, autoScroll, new Separator(win, Orientation.VERTICAL),
+                new HBox(gup, gdown), erase, stop);
 
-		getChildren().addAll(top, new Separator(win, Orientation.HORIZONTAL), sc);
+        getChildren().addAll(top, new Separator(win, Orientation.HORIZONTAL), sc);
 
-		applyStyle(win.getStyl());
-	}
+        applyStyle(win.getStyl());
+    }
 
-	public void setOnStop(Runnable onStop) {
-		stop.setAction(onStop);
-		stop.setDisable(onStop == null);
-	}
+    public ArrayList<ConsoleLine> getAllLines() {
+        return allLines;
+    }
 
-	public void refreshLines(boolean input, boolean output, boolean err) {
-		lines.getChildren().clear();
+    public void hideControls() {
+        getChildren().setAll(sc);
+    }
 
-		HashMap<ConsoleLineType, Boolean> enabled = new HashMap<>();
-		enabled.put(ConsoleLineType.IN, input);
-		enabled.put(ConsoleLineType.STDOUT, output);
-		enabled.put(ConsoleLineType.ERROUT, err);
-		allLines.forEach(line -> {
-			if (enabled.get(line.getType()))
-				lines.getChildren().add(line);
-		});
-	}
+    public void setOnStop(Runnable onStop) {
+        stop.setAction(onStop);
+        stop.setDisable(onStop == null);
+    }
 
-	public void addLine(String line, ConsoleLineType type) {
-		addLine(line, type, true);
-	}
+    public void refreshLines(boolean input, boolean output, boolean err) {
+        lines.getChildren().clear();
 
-	public void addLine(String line, ConsoleLineType type, boolean keyed) {
-		ConsoleLine l = new ConsoleLine(win, line, type, keyed);
-		allLines.add(l);
-		l.setWrappingWidth(wrap.isEnabled() ? (sc.getWidth() - 20) : 0);
-		lines.getChildren().add(l);
+        HashMap<ConsoleLineType, Boolean> enabled = new HashMap<>();
+        enabled.put(ConsoleLineType.IN, input);
+        enabled.put(ConsoleLineType.STDOUT, output);
+        enabled.put(ConsoleLineType.ERROUT, err);
+        allLines.forEach(line -> {
+            if (enabled.getOrDefault(line.getType(), true))
+                lines.getChildren().add((Node) line);
+        });
+    }
 
-		if (autoScroll.isEnabled()) {
-			sc.getVerticalScrollBar().positionProperty().set(1);
-		}
-	}
+    public void addLine(String line, ConsoleLineType type) {
+        addLine(line, type, true);
+    }
 
-	public void overrideLast(String content) {
-		overrideLast(content, true);
-	}
+    public void addLine(String line, ConsoleLineType type, boolean keyed) {
+        ConsoleLine l = type == ConsoleLineType.ARG ?
+                new ConsoleArgLine(win, line)
+                : new ConsoleIOLine(win, line, type, keyed);
+        if(l instanceof  ConsoleArgLine argLine) {
+            argLine.setOnRemove(() -> {
+                allLines.remove(argLine);
+                refreshLines(true, true, true);
+            });
+        }
+        allLines.add(l);
+        l.setWrappingWidth(wrap.isEnabled() ? (sc.getWidth() - 20) : 0);
+        lines.getChildren().add((Node) l);
 
-	public void overrideLast(String content, boolean keyed) {
-		if (allLines.isEmpty()) {
-			addOutput(content);
-		} else {
-			if(keyed) {
-				allLines.getLast().setKey(content);
-			}else {
-				allLines.getLast().setText(content);
-			}
-		}
-	}
+        if (autoScroll.isEnabled()) {
+            sc.getVerticalScrollBar().positionProperty().set(1);
+        }
+    }
 
-	public void addError(String line, boolean keyed) {
-		addLine(line, ConsoleLineType.ERROUT, keyed);
-	}
+    public void overrideLast(String content) {
+        overrideLast(content, true);
+    }
 
-	public void addOutput(String line, boolean keyed) {
-		addLine(line, ConsoleLineType.STDOUT, keyed);
-	}
+    public void overrideLast(String content, boolean keyed) {
+        if (allLines.isEmpty()) {
+            addOutput(content);
+        } else {
+            if (keyed) {
+                allLines.getLast().setKey(content);
+            } else {
+                allLines.getLast().setText(content);
+            }
+        }
+    }
 
-	public void addInput(String line, boolean keyed) {
-		addLine(line, ConsoleLineType.IN, keyed);
-	}
+    public void addError(String line, boolean keyed) {
+        addLine(line, ConsoleLineType.ERROUT, keyed);
+    }
 
-	public void addError(String line) {
-		addError(line, true);
-	}
+    public void addOutput(String line, boolean keyed) {
+        addLine(line, ConsoleLineType.STDOUT, keyed);
+    }
 
-	public void addOutput(String line) {
-		addOutput(line, true);
-	}
+    public void addInput(String line, boolean keyed) {
+        addLine(line, ConsoleLineType.IN, keyed);
+    }
 
-	public void addInput(String line) {
-		addInput(line, true);
-	}
+    public void addError(String line) {
+        addError(line, true);
+    }
 
-	@Override
-	public void applyStyle(Style style) {
-		setBackground(Backgrounds.make(style.getBackgroundTertiaryOr(), 8));
-		setEffect(new DropShadow(10, Color.gray(0, .3)));
-	}
+    public void addOutput(String line) {
+        addOutput(line, true);
+    }
 
-	@Override
-	public void applyStyle(ObjectProperty<Style> style) {
-		Styleable.bindStyle(this, style);
-	}
+    public void addInput(String line) {
+        addInput(line, true);
+    }
 
-	public void clear() {
-		allLines.clear();
-		lines.getChildren().clear();
-	}
+    @Override
+    public void applyStyle(Style style) {
+        setBackground(Backgrounds.make(style.getBackgroundTertiaryOr(), 8));
+        setEffect(new DropShadow(10, Color.gray(0, .3)));
+    }
+
+    @Override
+    public void applyStyle(ObjectProperty<Style> style) {
+        Styleable.bindStyle(this, style);
+    }
+
+    public void clear() {
+        allLines.clear();
+        lines.getChildren().clear();
+    }
 }

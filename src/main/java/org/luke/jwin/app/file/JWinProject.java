@@ -36,6 +36,8 @@ public class JWinProject {
 	private static final String CLASS_NAME = "className";
 	private static final String FILE_PATH = "filePath";
 
+	private static final String JVM_ARGS = "jvmArgs";
+
 	private File root;
 
 	private final ArrayList<File> classpath;
@@ -63,10 +65,11 @@ public class JWinProject {
 
 	private final FileTypeAssociation fileTypeAsso;
 	private final UrlProtocolAssociation urlProtocolAsso;
+	private final String jvmArgs;
 
 	private JWinProject(File root, List<File> classpath, List<File> rootFiles, List<File> rootFilesExclude, Entry<String, File> mainClass, File jdk, File jre, File icon,
 			List<File> manualJars, String appName, String appVersion, String appPublisher, Boolean console,
-			Boolean admin, String guid, FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso) {
+			Boolean admin, String guid, FileTypeAssociation fileTypeAsso, UrlProtocolAssociation urlProtocolAsso, String jvmArgs) {
 		this.root = root;
 		this.classpath = new ArrayList<>(classpath);
 		this.rootFiles = new ArrayList<>(rootFiles);
@@ -84,6 +87,7 @@ public class JWinProject {
 		this.guid = guid;
 		this.fileTypeAsso = fileTypeAsso;
 		this.urlProtocolAsso = urlProtocolAsso;
+		this.jvmArgs = jvmArgs;
 	}
 
 	public JWinProject(JwinUi config) {
@@ -104,6 +108,7 @@ public class JWinProject {
 		this.guid = config.getGuid().getValue();
 		this.fileTypeAsso = config.getMoreSettings().getFileTypeAssociation();
 		this.urlProtocolAsso = config.getMoreSettings().getUrlProtocolAssociation();
+		this.jvmArgs = config.getJre().getJvmArgs();
 	}
 
 	public File getRoot() {
@@ -178,6 +183,10 @@ public class JWinProject {
 		return guid;
 	}
 
+	public String getJvmArgs() {
+		return jvmArgs;
+	}
+
 	public List<String> compare(JWinProject other) {
 		ArrayList<String> res = new ArrayList<>();
 
@@ -235,6 +244,8 @@ public class JWinProject {
 			data.put(URL_PROTOCOL_ASSO, urlProtocolAsso.serialize());
 		}
 
+		data.put(JVM_ARGS, jvmArgs);
+
 		return data.toString(4);
 	}
 
@@ -261,7 +272,8 @@ public class JWinProject {
 				obj.optString(GUID, ""),
 				obj.has(FILE_TYPE_ASSO) ? FileTypeAssociation.deserialize(obj.getJSONObject(FILE_TYPE_ASSO)) : null,
 				obj.has(URL_PROTOCOL_ASSO) ? UrlProtocolAssociation.deserialize(obj.getJSONObject(URL_PROTOCOL_ASSO))
-						: null);
+						: null,
+				obj.has(JVM_ARGS) ? obj.getString(JVM_ARGS) : "");
 	}
 
 	public static JWinProject fromJavaProject(File root) {
@@ -327,8 +339,11 @@ public class JWinProject {
 			appName = root.getName();
 		}
 
+		//TODO maybe load jvmArgs
+		String jvmArgs = "";
+
 		return new JWinProject(root, classpath, new ArrayList<>(), new ArrayList<>(), mainClass, jdk, jre, icon, manualJars, appName, appVersion,
-				appPublisher, console, admin, guid, fileTypeAsso, urlProtocolAsso);
+				appPublisher, console, admin, guid, fileTypeAsso, urlProtocolAsso, "");
 	}
 
 	private static List<File> loadEclipseClasspath(File root, File cpFile) {

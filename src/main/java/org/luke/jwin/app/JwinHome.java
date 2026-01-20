@@ -21,7 +21,7 @@ public class JwinHome extends Page {
 	private JwinUi config;
 
 	protected JwinHome(Window window) {
-		super(window, new Dimension(500 * 2 + 15 * 4 + 30, 600));
+		super(window, new Dimension(500 * 2 + 15 * 4 + 30, 640));
 
 		setConfig(LocalStore.getUiLayout().equals("sim") ? JwinUi2.class : JwinUi1.class);
 	}
