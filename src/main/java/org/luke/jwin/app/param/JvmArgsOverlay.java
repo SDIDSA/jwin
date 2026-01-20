@@ -9,7 +9,6 @@ import org.apache.commons.exec.CommandLine;
 import org.luke.gui.controls.Font;
 import org.luke.gui.controls.alert.BasicOverlay;
 import org.luke.gui.controls.image.ColorIcon;
-import org.luke.gui.locale.Locale;
 import org.luke.gui.style.Style;
 import org.luke.gui.window.Page;
 import org.luke.jwin.app.console.ConsoleLine;
@@ -21,13 +20,10 @@ import org.luke.jwin.ui.TextVal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class JvmArgsOverlay extends BasicOverlay {
     private final ColorIcon send;
-    private final HBox preInput;
     private final ConsoleOutput output;
 
     public JvmArgsOverlay(Page ps, JwinUi config) {
@@ -65,7 +61,7 @@ public class JvmArgsOverlay extends BasicOverlay {
         output.setMinWidth(0);
         output.maxWidthProperty().bind(center.widthProperty().subtract(32));
 
-        preInput = new HBox(10, input, send);
+        HBox preInput = new HBox(10, input, send);
         preInput.setAlignment(Pos.BOTTOM_CENTER);
 
         center.getChildren().addAll(output, preInput);
